@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TienDaoAPI.Data;
 
@@ -11,9 +12,11 @@ using TienDaoAPI.Data;
 namespace TienDaoAPI.Migrations
 {
     [DbContext(typeof(TienDaoDbContext))]
-    partial class TienDaoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240205083759_InitializeDatabase")]
+    partial class InitializeDatabase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -202,29 +205,6 @@ namespace TienDaoAPI.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("Roles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            ConcurrencyStamp = "AdminRole",
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            ConcurrencyStamp = "ConverterRole",
-                            Name = "Converter",
-                            NormalizedName = "CONVERTER"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            ConcurrencyStamp = "ReaderRole",
-                            Name = "Reader",
-                            NormalizedName = "READER"
-                        });
                 });
 
             modelBuilder.Entity("TienDaoAPI.Models.Story", b =>

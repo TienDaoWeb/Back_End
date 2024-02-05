@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TienDaoAPI.Models
 {
-    [Table("Genre")]
+    [Table("Genres")]
     public class Genre
     {
         [Key]
