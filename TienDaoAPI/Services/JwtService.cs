@@ -2,15 +2,15 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using TienDaoAPI.IRepositories;
 using TienDaoAPI.Models;
+using TienDaoAPI.Services.IServices;
 
-namespace TienDaoAPI.Repositories
+namespace TienDaoAPI.Services
 {
-    public class JwtRepository : IJwtRepository
+    public class JwtService : IJwtService
     {
         private readonly IConfiguration _configuration;
-        public JwtRepository(IConfiguration configuration)
+        public JwtService(IConfiguration configuration)
         {
             this._configuration = configuration;
         }
@@ -26,7 +26,7 @@ namespace TienDaoAPI.Repositories
             }
 
             // create key
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? ""));
 
             // create credentials 
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -41,7 +41,5 @@ namespace TienDaoAPI.Repositories
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
     }
 }
-

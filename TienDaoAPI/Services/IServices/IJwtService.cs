@@ -1,8 +1,8 @@
 ﻿using TienDaoAPI.Models;
 
-namespace TienDaoAPI.IRepositories
+namespace TienDaoAPI.Services.IServices
 {
-    public interface IJwtRepository
+    public interface IJwtService
     {
         string CreateJWTToken(User user, List<string> roles);
     }

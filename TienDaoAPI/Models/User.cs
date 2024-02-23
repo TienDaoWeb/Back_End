@@ -5,5 +5,6 @@ namespace TienDaoAPI.Models
     public class User : IdentityUser<int>
     {
 
+
     }
 }

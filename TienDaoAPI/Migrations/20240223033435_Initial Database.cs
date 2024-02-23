@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace TienDaoAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class InitializeDatabase : Migration
+    public partial class InitialDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,13 +17,14 @@ namespace TienDaoAPI.Migrations
                 name: "Genres",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    description = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Genres", x => x.Id);
+                    table.PrimaryKey("PK_Genres", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -66,31 +69,6 @@ namespace TienDaoAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Stories",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Author = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    GenreId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Stories", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Stories_Genres_GenreId",
-                        column: x => x.GenreId,
-                        principalTable: "Genres",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "RoleClaims",
                 columns: table => new
                 {
@@ -107,6 +85,41 @@ namespace TienDaoAPI.Migrations
                         name: "FK_RoleClaims_Roles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "Roles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Stories",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    author = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    image = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    views = table.Column<int>(type: "int", nullable: false),
+                    rating = table.Column<float>(type: "real", nullable: false),
+                    create_date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    status = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    genre_id = table.Column<int>(type: "int", nullable: false),
+                    user_id = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Stories", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_Stories_Genres_genre_id",
+                        column: x => x.genre_id,
+                        principalTable: "Genres",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Stories_Users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -200,29 +213,120 @@ namespace TienDaoAPI.Migrations
                 name: "Chapters",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PuslishedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Story_Id = table.Column<int>(type: "int", nullable: false),
-                    StoryId = table.Column<long>(type: "bigint", nullable: false)
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    content = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    order = table.Column<int>(type: "int", nullable: true),
+                    emoji = table.Column<int>(type: "int", nullable: false),
+                    published_date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    story_id = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Chapters", x => x.Id);
+                    table.PrimaryKey("PK_Chapters", x => x.id);
                     table.ForeignKey(
-                        name: "FK_Chapters_Stories_StoryId",
-                        column: x => x.StoryId,
+                        name: "FK_Chapters_Stories_story_id",
+                        column: x => x.story_id,
                         principalTable: "Stories",
-                        principalColumn: "Id",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Comments",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    time = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    story_id = table.Column<int>(type: "int", nullable: false),
+                    chapter_number = table.Column<int>(type: "int", nullable: false),
+                    user_id = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Comments", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_Comments_Stories_story_id",
+                        column: x => x.story_id,
+                        principalTable: "Stories",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Comments_Users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Reviews",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    rating_character = table.Column<float>(type: "real", nullable: false),
+                    rating_plot = table.Column<float>(type: "real", nullable: false),
+                    rating_world = table.Column<float>(type: "real", nullable: false),
+                    rating_translation = table.Column<float>(type: "real", nullable: false),
+                    review_content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    time = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    story_id = table.Column<int>(type: "int", nullable: false),
+                    chapter_number = table.Column<int>(type: "int", nullable: false),
+                    user_id = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reviews", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_Reviews_Stories_story_id",
+                        column: x => x.story_id,
+                        principalTable: "Stories",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Reviews_Users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.InsertData(
+                table: "Roles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[,]
+                {
+                    { 1, "AdminRole", "Admin", "ADMIN" },
+                    { 2, "ConverterRole", "Converter", "CONVERTER" },
+                    { 3, "ReaderRole", "Reader", "READER" }
+                });
+
             migrationBuilder.CreateIndex(
-                name: "IX_Chapters_StoryId",
+                name: "IX_Chapters_story_id",
                 table: "Chapters",
-                column: "StoryId");
+                column: "story_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comments_story_id",
+                table: "Comments",
+                column: "story_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comments_user_id",
+                table: "Comments",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reviews_story_id",
+                table: "Reviews",
+                column: "story_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reviews_user_id",
+                table: "Reviews",
+                column: "user_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoleClaims_RoleId",
@@ -237,9 +341,14 @@ namespace TienDaoAPI.Migrations
                 filter: "[NormalizedName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Stories_GenreId",
+                name: "IX_Stories_genre_id",
                 table: "Stories",
-                column: "GenreId");
+                column: "genre_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Stories_user_id",
+                table: "Stories",
+                column: "user_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserClaims_UserId",
@@ -276,6 +385,12 @@ namespace TienDaoAPI.Migrations
                 name: "Chapters");
 
             migrationBuilder.DropTable(
+                name: "Comments");
+
+            migrationBuilder.DropTable(
+                name: "Reviews");
+
+            migrationBuilder.DropTable(
                 name: "RoleClaims");
 
             migrationBuilder.DropTable(
@@ -297,10 +412,10 @@ namespace TienDaoAPI.Migrations
                 name: "Roles");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "Genres");
 
             migrationBuilder.DropTable(
-                name: "Genres");
+                name: "Users");
         }
     }
 }

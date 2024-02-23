@@ -8,8 +8,13 @@ namespace TienDaoAPI.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("id")]
         public int Id { get; set; }
         [Required]
-        public string Name { get; set; }
+        [Column("name")]
+        public string? Name { get; set; }
+        [Required]
+        [Column("description")]
+        public string? Description { get; set; }
     }
 }

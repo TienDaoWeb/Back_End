@@ -4,5 +4,6 @@ namespace TienDaoAPI.Models
 {
     public class Role : IdentityRole<int>
     {
+
     }
 }
