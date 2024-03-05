@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using System.Linq.Expressions;
 using TienDaoAPI.Data;
 using TienDaoAPI.Repositories.IRepositories;
@@ -42,7 +43,11 @@ namespace TienDaoAPI.Repositories
         {
             return await dbSet.FindAsync(id);
         }
-
+        public async Task UpdateAsync(T entity)
+        {
+            dbSet.Update(entity);
+            await SaveAsync();
+        }
         public async Task RemoveAsync(T entity)
         {
             dbSet.Remove(entity);
@@ -53,5 +58,6 @@ namespace TienDaoAPI.Repositories
         {
             await _dbContext.SaveChangesAsync();
         }
+
     }
 }

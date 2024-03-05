@@ -8,7 +8,9 @@ namespace TienDaoAPI.Repositories.IRepositories
         Task<T?> GetById(int id);
         Task<T?> Find(Expression<Func<T, bool>> predicate);
         Task<T> CreateAsync(T entity);
+        Task UpdateAsync(T entiry);
         Task RemoveAsync(T entity);
         Task SaveAsync();
+
     }
 }

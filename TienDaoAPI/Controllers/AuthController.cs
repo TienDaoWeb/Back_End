@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Text;
-using TienDaoAPI.DTOs;
+using TienDaoAPI.DTOs.Requests;
 using TienDaoAPI.Models;
 using TienDaoAPI.Response;
 using TienDaoAPI.Services.IServices;

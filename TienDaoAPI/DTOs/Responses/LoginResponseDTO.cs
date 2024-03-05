@@ -1,4 +1,4 @@
-﻿namespace TienDaoAPI.DTOs
+﻿namespace TienDaoAPI.DTOs.Response
 {
     public class LoginResponseDTO
     {
