@@ -11,6 +11,5 @@ namespace TienDaoAPI.Repositories.IRepositories
         Task UpdateAsync(T entiry);
         Task RemoveAsync(T entity);
         Task SaveAsync();
-
     }
 }

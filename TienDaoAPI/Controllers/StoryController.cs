@@ -1,8 +1,10 @@
-﻿using MailKit.Search;
+﻿using Google.Cloud.Storage.V1;
+using MailKit.Search;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MimeKit.Cryptography;
 using Org.BouncyCastle.Utilities.Collections;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
@@ -26,11 +28,12 @@ namespace TienDaoAPI.Controllers
     [Route("[controller]")]
     public class StoryController : ControllerBase
     {
-        private readonly IStoryRepository _data;
+        private readonly IStoryRepository _data; 
         private readonly IFirebaseStorageService _filebaseStorage;
 
-        public StoryController(IStoryRepository data , IFirebaseStorageService filebaseStorage)
+        public StoryController(IStoryRepository data,TienDaoDbContext datacontext , IFirebaseStorageService filebaseStorage)
         {
+   
             _data = data;
             _filebaseStorage = filebaseStorage;
         }
@@ -47,24 +50,29 @@ namespace TienDaoAPI.Controllers
                 if (storyRequest.UrlImage != null)
                 {
                     string FileName = storyRequest.Image;
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + FileName;
-                    //var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "Assets/images/", uniqueFileName);
-                    //var fs =  new FileStream(imagePath, FileMode.Open);
-                    //await storyRequest.UrlImage.CopyToAsync(new FileStream(imagePath, FileMode.Create));
+                    string uniqueFileName = Guid.NewGuid().ToString()+ "_" + FileName;
                     _filebaseStorage.UploadFile(uniqueFileName, storyRequest.UrlImage);
-                    var newStory = new Story
+                
+                    Story newStory = new Story
                     {
                         Title = storyRequest.Title,
                         Author = storyRequest.Author,
                         Description = storyRequest.Description,
                         Status = storyRequest.Status,
                         Image = uniqueFileName,
+                        Rating = 0,
                         CreateDate = DateTime.Now,
                         UpdateDate = DateTime.Now
                     };
 
-                    _data.CreateAsync(newStory);
-          
+                    try
+                    {
+                        await _data.CreateAsync(newStory);
+                    }
+                    catch (Exception ex)
+                    {
+                        return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                    }
 
 
                     return StatusCode(StatusCodes.Status200OK, new CustomResponse
@@ -147,16 +155,12 @@ namespace TienDaoAPI.Controllers
                 {
                     if (Story.Image != null)
                     {
-                        string UploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets/images/");
-
-                        string fileLoad = Path.Combine(UploadDir, Story.Image);
-                        if (System.IO.File.Exists(fileLoad))
-                        {
-                            System.IO.File.Delete(fileLoad);
-                        }
+                        var storage = StorageClient.Create();
+                        // Xóa file ảnh
+                        await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{Story.Image}");
                     }
-                    _data.RemoveAsync(Story);
-                    _data.SaveAsync();
+                    await _data.RemoveAsync(Story);
+                   
                     return StatusCode(StatusCodes.Status200OK, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.OK,
@@ -191,7 +195,7 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> StoryUpdate(int id, [FromBody] Story newStory)
+        public async Task<IActionResult> StoryUpdate(int id, [FromForm] StoryRequestDTO newStory)
         {
             try
             {
@@ -210,9 +214,21 @@ namespace TienDaoAPI.Controllers
                     Story.Author = newStory.Author;
                     Story.Description = newStory.Description;
                     Story.Status = newStory.Status;
-                    Story.Image = newStory.Image;
-                    _data.UpdateAsync(Story);
-                    _data.SaveAsync();
+                    if(newStory.UrlImage != null)
+                    {
+                        // Xóa file ảnh
+                        var storage = StorageClient.Create();
+                        await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{Story.Image}");
+
+
+                        string FileName = newStory.Image;
+                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + FileName;
+                        _filebaseStorage.UploadFile(uniqueFileName, newStory.UrlImage);
+                        Story.Image = uniqueFileName;
+                    }
+                    
+                    await _data.UpdateAsync(Story);
+                    
                     return StatusCode(StatusCodes.Status200OK, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.OK,

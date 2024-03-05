@@ -33,8 +33,8 @@ namespace TienDaoAPI.Controllers
                         Name = genre.Name,
                         Description = genre.Description
                     };
-                    _genreRepository.CreateAsync(newgenre);
-                    _genreRepository.SaveAsync();
+                    await _genreRepository.CreateAsync(newgenre);
+          
                     return StatusCode(StatusCodes.Status200OK, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.OK,
@@ -76,8 +76,8 @@ namespace TienDaoAPI.Controllers
 
                 if (genre != null)
                 {
-                    _genreRepository.RemoveAsync(genre);
-                    _genreRepository.SaveAsync();
+                    await _genreRepository.RemoveAsync(genre);
+                    
                     return  StatusCode(StatusCodes.Status200OK, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.OK,
