@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using TienDaoAPI.Data;
 using TienDaoAPI.DTOs.Requests;
 using TienDaoAPI.Models;
-using TienDaoAPI.Repositories;
-using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Response;
+using TienDaoAPI.UnitOfWork;
 
 namespace TienDaoAPI.Controllers
 {
@@ -13,17 +11,18 @@ namespace TienDaoAPI.Controllers
     [Route("[controller]")]
     public class GenreController : ControllerBase
     {
-        private readonly IGenreRepository _genreRepository;
-        public GenreController(IGenreRepository genreRepository)
+        private readonly IUnitOfWork _unitOfWork;
+        public GenreController(IUnitOfWork unitOfWork)
         {
-            _genreRepository = genreRepository;
+            _unitOfWork = unitOfWork;
         }
         [HttpPost]
         [Route("Create")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Create([FromBody] GenreRequestDTO genre) {
+        public async Task<IActionResult> Create([FromBody] GenreRequestDTO genre)
+        {
             try
             {
                 if (genre != null)
@@ -33,8 +32,10 @@ namespace TienDaoAPI.Controllers
                         Name = genre.Name,
                         Description = genre.Description
                     };
-                    await _genreRepository.CreateAsync(newgenre);
-          
+
+                    _unitOfWork.GenreRepository.Create(newgenre);
+                    await _unitOfWork.SaveAsync();
+
                     return StatusCode(StatusCodes.Status200OK, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.OK,
@@ -50,10 +51,10 @@ namespace TienDaoAPI.Controllers
                     });
 
                 }
-                
+
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
                 {
@@ -72,13 +73,14 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-                var genre = await _genreRepository.Find(item=>item.Id == Id);
+                var genre = _unitOfWork.GenreRepository.Get(item => item.Id == Id);
 
                 if (genre != null)
                 {
-                    await _genreRepository.RemoveAsync(genre);
-                    
-                    return  StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    _unitOfWork.GenreRepository.Remove(genre);
+                    await _unitOfWork.SaveAsync();
+
+                    return StatusCode(StatusCodes.Status200OK, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.OK,
                         Message = "Delete genre successfully",
@@ -90,11 +92,11 @@ namespace TienDaoAPI.Controllers
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         IsSuccess = false,
-   
+
                     });
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
                 {
@@ -105,20 +107,21 @@ namespace TienDaoAPI.Controllers
             }
         }
         [HttpPost]
-        [Route("update/{Id}")]
+        [Route("update/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Update([FromBody] GenreRequestDTO genre,int Id)
+        public async Task<IActionResult> Update([FromBody] GenreRequestDTO genre, int id)
         {
             try
             {
-                var genreold = _genreRepository.GetById(Id);
+
+                var oldGenre = _unitOfWork.GenreRepository.GetById(id);
                 if (genre != null)
                 {
-                    if (genreold != null)
+                    if (oldGenre != null)
                     {
-                        
+
                         return StatusCode(StatusCodes.Status200OK, new CustomResponse
                         {
                             StatusCode = HttpStatusCode.OK,
@@ -153,5 +156,5 @@ namespace TienDaoAPI.Controllers
                 });
             }
         }
-    } 
+    }
 }

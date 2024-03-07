@@ -23,10 +23,10 @@ namespace TienDaoAPI.Services
         //    return await _userManager.CreateAsync(user);
         //}
 
-        public async Task<User?> FindByEmailAsync(string email)
-        {
-            return await _userRepository.Get(u => u.Email == email);
-        }
+        //public async Task<User?> FindByEmailAsync(string email)
+        //{
+        //    return await _userRepository.Get(u => u.Email == email);
+        //}
 
 
 
@@ -36,6 +36,11 @@ namespace TienDaoAPI.Services
         }
 
         public bool CheckPassword(User user, string password)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<User?> FindByEmailAsync(string email)
         {
             throw new NotImplementedException();
         }

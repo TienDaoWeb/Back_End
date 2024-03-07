@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Text;
 using TienDaoAPI.DTOs.Requests;
+using TienDaoAPI.DTOs.Response;
 using TienDaoAPI.Models;
 using TienDaoAPI.Response;
 using TienDaoAPI.Services.IServices;
@@ -276,7 +277,7 @@ namespace TienDaoAPI.Controllers
             }
         }
 
-        [HttpPost]
-        [Route("RefreshToken")]
+        //[HttpPost]
+        //[Route("RefreshToken")]
     }
 }
