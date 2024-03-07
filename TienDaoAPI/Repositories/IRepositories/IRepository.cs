@@ -4,11 +4,10 @@ namespace TienDaoAPI.Repositories.IRepositories
 {
     public interface IRepository<T> where T : class
     {
-        Task<List<T>> GetAllAsync();
-        Task<T?> GetById(int id);
-        Task<T?> Find(Expression<Func<T, bool>> predicate);
-        Task<T> CreateAsync(T entity);
-        Task RemoveAsync(T entity);
-        Task SaveAsync();
+        IEnumerable<T> GetAll(Expression<Func<T, bool>>? filter, string includeProperties = "", int size = 20, int page = 1);
+        T? GetById(int id);
+        T? Get(Expression<Func<T, bool>> filter, string includeProperties = "");
+        T? Create(T entity);
+        void Remove(T entity);
     }
 }

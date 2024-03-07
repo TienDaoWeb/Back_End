@@ -18,6 +18,7 @@ namespace TienDaoAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly IJwtService _jwtService;
+        private readonly IRefreshTokenService _refreshTokenService;
         private readonly IEmailSender _emailSender;
         private readonly UserManager<User> _userManager;
 
@@ -67,7 +68,7 @@ namespace TienDaoAPI.Controllers
                             return StatusCode(StatusCodes.Status200OK, new CustomResponse
                             {
                                 StatusCode = HttpStatusCode.OK,
-                                Message = "User was registered! Please login"
+                                Message = "User was registered"
                             });
                         }
                     }
@@ -100,10 +101,10 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-                var user = await _userService.FindByEmailAsync(loginRequestDTO.Email);
+                var user = await _userManager.FindByEmailAsync(loginRequestDTO.Email);
                 if (user != null)
                 {
-                    var checkPassword = _userService.CheckPassword(user, loginRequestDTO.Password);
+                    var checkPassword = await _userManager.CheckPasswordAsync(user, loginRequestDTO.Password);
                     if (checkPassword)
                     {
                         var roles = await _userManager.GetRolesAsync(user);
@@ -114,7 +115,7 @@ namespace TienDaoAPI.Controllers
                             {
                                 StatusCode = HttpStatusCode.OK,
                                 Message = "Login successfully",
-                                Result = new { Token = jwtToken }
+                                Result = new LoginResponseDTO { AccessToken = jwtToken, RefreshToken = "" }
                             });
                         }
                     }
@@ -144,7 +145,7 @@ namespace TienDaoAPI.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("ConfirmEmail")]
         public async Task<IActionResult> ConfirmEmail(int userId, string code)
         {
@@ -188,5 +189,94 @@ namespace TienDaoAPI.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("ForgetPassword")]
+        public async Task<IActionResult> ForgetPassword(string email)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user == null)
+                {
+                    return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.NotFound,
+                        IsSuccess = false,
+                        Message = "User does not exsit"
+                    });
+                }
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+                // https: //localhost:8080/ConfirmEmail/email=???&encodedToken=???
+                string callbackUrl = Request.Scheme + "://" + Request.Host +
+                    Url.Action("ResetPassword", "Auth", new { email = user.Email, token = encodedToken });
+
+                await _emailSender.SendEmailAsync(user.Email, "Đặt lại mật khẩu",
+                $"Đặt lại mật khẩu bằng cách <a href='{callbackUrl}'>Bấm vào đây</a>.");
+
+                return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Message = "Send email to reset password successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    Message = "Internal Server Error: " + ex.Message
+                });
+            }
+        }
+
+        [HttpPost]
+        [Route("ResetPassword")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(resetPasswordRequestDTO.Email);
+                if (user == null)
+                {
+                    return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.NotFound,
+                        IsSuccess = false,
+                        Message = "User does not exsit"
+                    });
+                }
+                var token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(resetPasswordRequestDTO.Token));
+                var identityResult = await _userManager.ResetPasswordAsync(user, token, resetPasswordRequestDTO.NewPassword);
+                if (identityResult.Succeeded)
+                {
+                    return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.OK,
+                        Message = "Reset password successfully"
+                    });
+                }
+                return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                {
+                    StatusCode = HttpStatusCode.BadRequest,
+                    IsSuccess = false,
+                    Message = "Reset password failed"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    Message = "Internal Server Error: " + ex.Message
+                });
+            }
+        }
+
+        [HttpPost]
+        [Route("RefreshToken")]
     }
 }

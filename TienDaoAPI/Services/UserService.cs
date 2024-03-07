@@ -25,7 +25,7 @@ namespace TienDaoAPI.Services
 
         public async Task<User?> FindByEmailAsync(string email)
         {
-            return await _userRepository.Find(u => u.Email == email);
+            return await _userRepository.Get(u => u.Email == email);
         }
 
 

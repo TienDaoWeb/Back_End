@@ -11,6 +11,7 @@ using TienDaoAPI.Repositories;
 using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services;
 using TienDaoAPI.Services.IServices;
+using TienDaoAPI.UnitOfWork;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -107,6 +108,8 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 var app = builder.Build();
 
