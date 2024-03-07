@@ -12,8 +12,8 @@ using TienDaoAPI.Data;
 namespace TienDaoAPI.Migrations
 {
     [DbContext(typeof(TienDaoDbContext))]
-    [Migration("20240223033435_Initial Database")]
-    partial class InitialDatabase
+    [Migration("20240305144210_newdatabase")]
+    partial class newdatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -361,10 +361,6 @@ namespace TienDaoAPI.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("description");
 
-                    b.Property<int>("GenreId")
-                        .HasColumnType("int")
-                        .HasColumnName("genre_id");
-
                     b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("image");
@@ -386,19 +382,11 @@ namespace TienDaoAPI.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("update_date");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int")
-                        .HasColumnName("user_id");
-
                     b.Property<int>("Views")
                         .HasColumnType("int")
                         .HasColumnName("views");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("GenreId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Stories");
                 });
@@ -563,25 +551,6 @@ namespace TienDaoAPI.Migrations
                         .HasForeignKey("UserId");
 
                     b.Navigation("Story");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("TienDaoAPI.Models.Story", b =>
-                {
-                    b.HasOne("TienDaoAPI.Models.Genre", "Genre")
-                        .WithMany()
-                        .HasForeignKey("GenreId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TienDaoAPI.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Genre");
 
                     b.Navigation("User");
                 });

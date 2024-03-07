@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TienDaoAPI.Services.Validation;
 
 namespace TienDaoAPI.Models
 {
@@ -35,6 +36,10 @@ namespace TienDaoAPI.Models
         public int? UserId { get; set; }
         public virtual User? User { get; set; }
 
+        //[Column("user_id")]
+        //public int UserId { get; set; }
+        //[ForeignKey("UserId")]
+        //public virtual User? User { get; set; }
         public ICollection<Chapter>? Chapters { get; set; } = new HashSet<Chapter>();
         public ICollection<Comment>? Comments { get; set; } = new HashSet<Comment>();
         public ICollection<Review>? Reviews { get; set; } = new HashSet<Review>();

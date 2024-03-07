@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TienDaoAPI.DTOs
+namespace TienDaoAPI.DTOs.Requests
 {
     public class LoginRequestDTO
     {

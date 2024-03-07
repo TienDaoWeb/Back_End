@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using System.Linq.Expressions;
 using TienDaoAPI.Data;
 using TienDaoAPI.Repositories.IRepositories;
@@ -69,5 +70,6 @@ namespace TienDaoAPI.Repositories
         {
             dbSet.Remove(entity);
         }
+
     }
 }
