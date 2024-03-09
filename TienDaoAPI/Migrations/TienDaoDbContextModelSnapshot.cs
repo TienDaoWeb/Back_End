@@ -405,6 +405,10 @@ namespace TienDaoAPI.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("GenreId");
+
+                    b.HasIndex("UserId");
+
                     b.ToTable("Stories");
                 });
 

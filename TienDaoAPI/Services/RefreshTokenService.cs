@@ -1,21 +1,23 @@
 ﻿using TienDaoAPI.Models;
+using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services.IServices;
-using TienDaoAPI.UnitOfWork;
 
 namespace TienDaoAPI.Services
 {
     public class RefreshTokenService : IRefreshTokenService
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserRepository _userRepository;
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
 
-        public RefreshTokenService(IUnitOfWork unitOfWork)
+        public RefreshTokenService(IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository)
         {
-            _unitOfWork = unitOfWork;
+            _userRepository = userRepository;
+            _refreshTokenRepository = refreshTokenRepository;
         }
 
         public async Task<RefreshToken?> createRefreshTokenAsync(string email)
         {
-            var user = _unitOfWork.UserRepository.Get(u => u.Email == email);
+            var user = await _userRepository.GetAsync(u => u.Email == email);
             if (user == null)
             {
                 return null;
@@ -28,8 +30,7 @@ namespace TienDaoAPI.Services
                 UserId = user.Id
             };
 
-            refreshToken = _unitOfWork.RefreshTokenRepository.Create(refreshToken);
-            await _unitOfWork.SaveAsync();
+            refreshToken = await _refreshTokenRepository.CreateAsync(refreshToken);
             return refreshToken;
         }
     }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -69,7 +70,8 @@ namespace TienDaoAPI.Controllers
                             return StatusCode(StatusCodes.Status200OK, new CustomResponse
                             {
                                 StatusCode = HttpStatusCode.OK,
-                                Message = "User was registered"
+                                Message = "User was registered",
+
                             });
                         }
                     }
@@ -87,7 +89,8 @@ namespace TienDaoAPI.Controllers
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message
+                    Message = "Internal Server Error: " + ex.Message,
+
                 });
             }
         }
@@ -112,12 +115,13 @@ namespace TienDaoAPI.Controllers
                         if (roles != null)
                         {
                             var jwtToken = _jwtService.CreateJWTToken(user, roles.ToList());
+                            var accessToken = HttpContext.GetTokenAsync(jwtToken);
                             return StatusCode(StatusCodes.Status200OK, new CustomResponse
                             {
                                 StatusCode = HttpStatusCode.OK,
                                 Message = "Login successfully",
                                 Result = new LoginResponseDTO { AccessToken = jwtToken, RefreshToken = "" }
-                            });
+                            }); ;
                         }
                     }
 

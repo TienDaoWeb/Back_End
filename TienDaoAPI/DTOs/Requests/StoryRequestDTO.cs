@@ -1,11 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
-using TienDaoAPI.Models;
-using TienDaoAPI.Services.Validation;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace TienDaoAPI.DTOs.Requests
 {
-  
+
     public class StoryRequestDTO
     {
         [Required]
@@ -15,7 +12,7 @@ namespace TienDaoAPI.DTOs.Requests
         [Required]
         public string Image { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
-        public IFormFile UrlImage { get; set; }
+        public required IFormFile UrlImage { get; set; }
 
     }
 }

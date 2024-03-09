@@ -11,11 +11,10 @@ namespace TienDaoAPI.Services
         private readonly MailSettings _mailSettings;
 
         private readonly ILogger<MailService> _logger;
-        private readonly IConfiguration _configuration;
 
         // mailSetting được Inject qua dịch vụ hệ thống
         // Có inject Logger để xuất log
-        public MailService(IOptions<MailSettings> mailSettings, ILogger<MailService> logger, IConfiguration configuration)
+        public MailService(IOptions<MailSettings> mailSettings, ILogger<MailService> logger)
         {
             _mailSettings = mailSettings.Value;
             _logger = logger;

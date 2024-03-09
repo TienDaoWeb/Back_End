@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using TienDaoAPI.DTOs.Requests;
-using TienDaoAPI.Models;
 using TienDaoAPI.Response;
-using TienDaoAPI.UnitOfWork;
+using TienDaoAPI.Services.IServices;
 
 namespace TienDaoAPI.Controllers
 {
@@ -11,13 +11,16 @@ namespace TienDaoAPI.Controllers
     [Route("[controller]")]
     public class GenreController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
-        public GenreController(IUnitOfWork unitOfWork)
+        private readonly IGenreService _genreService;
+
+        public GenreController(IGenreService genreService)
         {
-            _unitOfWork = unitOfWork;
+            _genreService = genreService;
         }
+
         [HttpPost]
         [Route("Create")]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -25,32 +28,21 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-                if (genre != null)
-                {
-                    var newgenre = new Genre
-                    {
-                        Name = genre.Name,
-                        Description = genre.Description
-                    };
-
-                    _unitOfWork.GenreRepository.Create(newgenre);
-                    await _unitOfWork.SaveAsync();
-
-                    return StatusCode(StatusCodes.Status200OK, new CustomResponse
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = "Create genre successfully",
-                    });
-                }
-                else
+                if (genre == null)
                 {
                     return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         Message = "Model state is null"
                     });
-
                 }
+                await _genreService.CreateGenreAsync(genre);
+
+                return StatusCode(StatusCodes.Status201Created, new CustomResponse
+                {
+                    StatusCode = HttpStatusCode.Created,
+                    Message = "Create genre successfully",
+                });
 
 
             }
@@ -66,27 +58,16 @@ namespace TienDaoAPI.Controllers
         }
         [HttpDelete]
         [Route("Delete/{Id}")]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Delete(int Id)
+        public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                var genre = _unitOfWork.GenreRepository.Get(item => item.Id == Id);
-
-                if (genre != null)
-                {
-                    _unitOfWork.GenreRepository.Remove(genre);
-                    await _unitOfWork.SaveAsync();
-
-                    return StatusCode(StatusCodes.Status200OK, new CustomResponse
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = "Delete genre successfully",
-                    });
-                }
-                else
+                var genre = _genreService.GetGenreByIdAsync(id);
+                if (genre == null)
                 {
                     return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
                     {
@@ -95,6 +76,13 @@ namespace TienDaoAPI.Controllers
 
                     });
                 }
+
+                await _genreService.DeleteGenreAsync(id);
+                return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Message = "Delete genre successfully",
+                });
             }
             catch (Exception ex)
             {
@@ -108,6 +96,7 @@ namespace TienDaoAPI.Controllers
         }
         [HttpPost]
         [Route("update/{id}")]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -115,36 +104,21 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-
-                var oldGenre = _unitOfWork.GenreRepository.GetById(id);
-                if (genre != null)
-                {
-                    if (oldGenre != null)
-                    {
-
-                        return StatusCode(StatusCodes.Status200OK, new CustomResponse
-                        {
-                            StatusCode = HttpStatusCode.OK,
-                            Message = "Create genre successfully",
-                        });
-                    }
-                    return StatusCode(StatusCodes.Status200OK, new CustomResponse
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = "Create genre successfully",
-                    });
-                }
-                else
+                var oldGenre = _genreService.GetGenreByIdAsync(id);
+                if (oldGenre == null)
                 {
                     return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         Message = "Model state is null"
                     });
-
                 }
-
-
+                await _genreService.UpdateGenreAsync(genre, id);
+                return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Message = "Create genre successfully",
+                });
             }
             catch (Exception ex)
             {

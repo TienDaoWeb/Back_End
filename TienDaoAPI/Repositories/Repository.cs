@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Client;
 using System.Linq.Expressions;
 using TienDaoAPI.Data;
 using TienDaoAPI.Repositories.IRepositories;
@@ -17,59 +16,56 @@ namespace TienDaoAPI.Repositories
             dbSet = _dbContext.Set<T>();
         }
 
-        public T? Create(T entity)
+        public async Task<T?> CreateAsync(T entity)
         {
             dbSet.Add(entity);
+            await SaveAsync();
             return entity;
         }
 
-        public T? Get(Expression<Func<T, bool>>? filter = null, string includeProperties = "")
+        public async Task<T?> GetAsync(Expression<Func<T, bool>>? filter = null)
         {
             IQueryable<T> query = dbSet;
             if (filter != null)
             {
                 query = query.Where(filter);
             }
-
-            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                query = query.Include(includeProperty);
-            }
-            return query.FirstOrDefault();
+            return await query.FirstOrDefaultAsync();
         }
 
-        public IEnumerable<T> GetAll(Expression<Func<T, bool>>? filter = null, string includeProperties = "", int size = 10, int page = 1)
+        public async Task<IEnumerable<T>> GetAllAsync()
         {
-            IQueryable<T> query = dbSet;
-
-            if (filter != null)
-            {
-                query = query.Where(filter);
-            }
-
-            if (size > 20 || size <= 0)
-            {
-                size = 20;
-                query = query.Skip(size * (page - 1)).Take(size);
-            }
-
-            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                query = query.Include(includeProperty);
-            }
-
-            return query.ToList();
+            return await dbSet.ToListAsync();
         }
 
-        public T? GetById(int id)
+        public async Task<T?> GetByIdAsync(int id)
         {
-            return dbSet.Find(id);
+            return await dbSet.FindAsync(id);
         }
 
-        public void Remove(T entity)
+        public async Task DeleteByIdAsync(int id)
+        {
+            T? entity = await dbSet.FindAsync(id);
+            dbSet.Remove(entity);
+            await SaveAsync();
+        }
+
+        public async Task DeleteAsync(T entity)
         {
             dbSet.Remove(entity);
+            await SaveAsync();
         }
 
+        public async Task SaveAsync()
+        {
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<T?> UpdateAsync(T entity)
+        {
+            _dbContext.Entry(entity).State = EntityState.Modified;
+            await SaveAsync();
+            return entity;
+        }
     }
 }

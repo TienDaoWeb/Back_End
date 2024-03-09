@@ -17,8 +17,10 @@ namespace TienDaoAPI.Services
         public string CreateJWTToken(User user, List<string> roles)
         {
             // Create claim
-            var claim = new List<Claim>();
-            claim.Add(new Claim(ClaimTypes.Email, user.Email));
+            var claim = new List<Claim>
+            {
+                new Claim(ClaimTypes.Email, user.Email)
+            };
 
             foreach (var role in roles)
             {
@@ -40,6 +42,13 @@ namespace TienDaoAPI.Services
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public string ExtractEmailFromToken(string token)
+        {
+            var jwtSecurityToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
+            string email = jwtSecurityToken.Claims.First(c => c.Type == ClaimTypes.Email).Value;
+            return email;
         }
     }
 }

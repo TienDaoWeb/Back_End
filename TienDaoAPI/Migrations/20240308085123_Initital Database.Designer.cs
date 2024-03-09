@@ -12,8 +12,8 @@ using TienDaoAPI.Data;
 namespace TienDaoAPI.Migrations
 {
     [DbContext(typeof(TienDaoDbContext))]
-    [Migration("20240301140256_RenameColumnAndAddNewTable")]
-    partial class RenameColumnAndAddNewTable
+    [Migration("20240308085123_Initital Database")]
+    partial class InititalDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
