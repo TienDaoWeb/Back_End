@@ -249,16 +249,16 @@ namespace TienDaoAPI.Controllers
         //        });
         //    }
         //}
-        [HttpPost]
+        [HttpGet]
         [Route("stories")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<IEnumerable<Story>>> GetAllStories(string keyword, string orderBy, int genre, int page, int limit)
+        public async Task<ActionResult<IEnumerable<Story>>> GetAllStories([FromQuery] StoryQueryObject storyQueryObject)
         {
             try
             {
-                var stories = await _storyService.GetAllStoriesAsync(item => item.Title.Contains(keyword));
+                var stories = await _storyService.GetAllStoriesAsync(storyQueryObject);
 
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {

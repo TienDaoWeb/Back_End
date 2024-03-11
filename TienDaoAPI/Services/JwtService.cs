@@ -17,6 +17,10 @@ namespace TienDaoAPI.Services
         public string CreateJWTToken(User user, List<string> roles)
         {
             // Create claim
+            if (user.Email == null)
+            {
+                throw new ArgumentNullException("Email must be not null");
+            }
             var claim = new List<Claim>
             {
                 new Claim(ClaimTypes.Email, user.Email)

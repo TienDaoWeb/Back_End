@@ -127,6 +127,11 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+builder.Services.Configure<RouteOptions>(options =>
+{
+    options.LowercaseUrls = true;
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

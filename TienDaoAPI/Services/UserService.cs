@@ -16,19 +16,6 @@ namespace TienDaoAPI.Services
             _userManager = userManager;
         }
 
-        //public async Task<User> CreateNewUser(User user)
-        //{
-        //    var hashedPassword = BCrypt.Net.BCrypt.HashPassword(user.Password);
-        //    user.Password = hashedPassword;
-        //    return await _userManager.CreateAsync(user);
-        //}
-
-        //public async Task<User?> FindByEmailAsync(string email)
-        //{
-        //    return await _userRepository.Get(u => u.Email == email);
-        //}
-
-
 
         public Task<User> CreateNewUser(User user)
         {
@@ -38,6 +25,11 @@ namespace TienDaoAPI.Services
         public bool CheckPassword(User user, string password)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<User?> GetUserByIdAsync(int id)
+        {
+            return await _userRepository.GetByIdAsync(id);
         }
 
         public Task<User?> FindByEmailAsync(string email)

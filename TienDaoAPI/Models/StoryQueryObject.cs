@@ -1,11 +1,7 @@
-﻿using TienDaoAPI.Models.Interface;
-
-namespace TienDaoAPI.Models
+﻿namespace TienDaoAPI.Models
 {
-    public class StoryQueryObject : IQueryObject
+    public class StoryQueryObject : BaseQueryObject
     {
-        public string? Keyword { get; set; }
-        public string? SortBy { get; set; }
-        public bool IsSortAscending { get; set; }
+        public int Genre { get; set; } = 0;
     }
 }

@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TienDaoAPI.Models
 {
@@ -11,7 +11,7 @@ namespace TienDaoAPI.Models
         public int Id { get; set; }
         public Guid? Token { get; set; } = new Guid();
         public DateTime ExpiredAt { get; set; }
-
+        [Required]
         public int UserId { get; set; }
         public virtual User? User { get; set; }
     }

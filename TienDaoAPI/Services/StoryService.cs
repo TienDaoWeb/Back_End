@@ -41,37 +41,42 @@ namespace TienDaoAPI.Services
             await _storyRepository.DeleteAsync(story);
         }
 
-        public async Task<IEnumerable<Story?>> GetAllStoriesAsync(string keyword, string orderBy, int genre, int page = 1, int size = 10)
+        public async Task<IEnumerable<Story?>> GetAllStoriesAsync(StoryQueryObject queryObj)
         {
-            var query = await _storyRepository.GetAllAsync();
-            if (!string.IsNullOrEmpty(keyword))
-            {
-                query = query.Where(s => s.Title.Contains(keyword));
-            }
-            if (genre > 0)
-            {
-                query = query.Where(s => s.GenreId == genre);
-            }
-            if (string.IsNullOrEmpty(orderBy))
-            {
-                query = query.OrderBy(s => s.Title);
-            }
-            if (page < 0)
-            {
-                page = 1;
-            }
-            if (size > 20 || size <= 0)
-            {
-                size = 20;
-                query = query.Skip(size * (page - 1)).Take(size);
-            }
+            var query = (await _storyRepository.GetAllAsync()).AsQueryable();
 
+            if (!string.IsNullOrEmpty(queryObj.Keyword))
+            {
+                query = query.Where(s => s.Title.Contains(queryObj.Keyword));
+            }
+            if (queryObj.Genre > 0)
+            {
+                query = query.Where(s => s.GenreId == queryObj.Genre);
+            }
+            var columnsMap = new Dictionary<string, Expression<Func<Story, object>>>
+            {
+                ["views"] = s => s.Views,
+                ["rate"] = s => s.Rating,
+                ["create_at"] = s => s.CreateDate,
+                ["update_at"] = s => s.UpdateDate,
+                ["chapter_count"] = s => s.Chapters.Count,
+                ["review_count"] = s => s.Reviews.Count,
+                ["comment_count"] = s => s.Comments.Count
+            };
+            if (!string.IsNullOrEmpty(queryObj.SortBy) && columnsMap.ContainsKey(queryObj.SortBy))
+            {
+                query = queryObj.IsSortAscending ? query.OrderBy(columnsMap[queryObj.SortBy]) : query.OrderByDescending(columnsMap[queryObj.SortBy]);
+            }
+            if (queryObj.Page <= 0)
+            {
+                queryObj.Page = 1;
+            }
+            if (queryObj.PageSize > 20 || queryObj.PageSize <= 0)
+            {
+                queryObj.PageSize = 20;
+                query = query.Skip(queryObj.PageSize * (queryObj.Page - 1)).Take(queryObj.PageSize);
+            }
             return query;
-        }
-
-        public Task<IEnumerable<Story?>> GetAllStoriesAsync(Expression<Func<Story, bool>> filter)
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<Story?> GetStoryByIdAsync(int storyId)

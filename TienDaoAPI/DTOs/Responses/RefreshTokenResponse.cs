@@ -1,6 +1,6 @@
-﻿namespace TienDaoAPI.DTOs.Response
+﻿namespace TienDaoAPI.DTOs.Responses
 {
-    public class LoginResponseDTO
+    public class RefreshTokenResponse
     {
         public string AccessToken { get; set; } = string.Empty;
         public Guid? RefreshToken { get; set; }
