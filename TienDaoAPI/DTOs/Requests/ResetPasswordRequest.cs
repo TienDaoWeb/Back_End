@@ -2,7 +2,7 @@
 
 namespace TienDaoAPI.DTOs.Requests
 {
-    public class ResetPasswordRequestDTO
+    public class ResetPasswordRequest
     {
         [Required]
         [DataType(DataType.EmailAddress)]

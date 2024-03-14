@@ -1,8 +1,10 @@
-﻿using Google.Cloud.Storage.V1;
+﻿using AutoMapper;
+using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using TienDaoAPI.DTOs.Requests;
+using TienDaoAPI.DTOs.Responses;
 using TienDaoAPI.Models;
 using TienDaoAPI.Response;
 using TienDaoAPI.Services.IServices;
@@ -16,11 +18,18 @@ namespace TienDaoAPI.Controllers
     {
         private readonly IFirebaseStorageService _firebaseStorageService;
         private readonly IStoryService _storyService;
+        private readonly IMapper _mapper;
+        private readonly IGenreService _genreService;
+        private readonly IUserService _userService;
 
-        public StoryController(IFirebaseStorageService firebaseStorageService, IStoryService storyService)
+        public StoryController(IFirebaseStorageService firebaseStorageService, IStoryService storyService,
+            IMapper mapper, IGenreService genreService, IUserService userService)
         {
             _firebaseStorageService = firebaseStorageService;
             _storyService = storyService;
+            _mapper = mapper;
+            _genreService = genreService;
+            _userService = userService;
         }
 
         //Create story save DB
@@ -30,17 +39,37 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Create([FromForm] StoryRequestDTO storyRequest)
+        public async Task<IActionResult> Create([FromForm] StoryRequest storyRequest)
         {
             try
             {
                 if (storyRequest.UrlImage == null)
                 {
-                    return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
+                    return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
                     {
-                        StatusCode = HttpStatusCode.NotFound,
+                        StatusCode = HttpStatusCode.BadRequest,
                         IsSuccess = false,
                         Message = "Can not find file image to create story."
+                    });
+                }
+                var genre = await _genreService.GetGenreByIdAsync(storyRequest.GenreId);
+                if (genre == null)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.BadRequest,
+                        IsSuccess = false,
+                        Message = "Genre does not exsits"
+                    });
+                }
+                var user = await _userService.GetUserByIdAsync(storyRequest.UserId);
+                if (genre == null)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.BadRequest,
+                        IsSuccess = false,
+                        Message = "User does not exsits"
                     });
                 }
                 var newStory = await _storyService.CreateStoryAsync(storyRequest);
@@ -61,9 +90,9 @@ namespace TienDaoAPI.Controllers
                 });
             }
         }
-        //Get story
+
         [HttpGet]
-        [Route("getStory/{id}")]
+        [Route("/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -72,20 +101,20 @@ namespace TienDaoAPI.Controllers
             try
             {
                 var story = await _storyService.GetStoryByIdAsync(id);
-                //if (story == null)
-                //{
-                //    return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
-                //    {
-                //        StatusCode = HttpStatusCode.NotFound,
-                //        IsSuccess = false,
-                //        Message = "Can not find Story to DB"
-                //    });
-                //}
+                if (story == null)
+                {
+                    return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.NotFound,
+                        IsSuccess = false,
+                        Message = "Story does not exists"
+                    });
+                }
 
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Result = story
+                    Result = _mapper.Map<StoryResponse>(story)
                 });
             }
             catch (Exception ex)
@@ -100,12 +129,12 @@ namespace TienDaoAPI.Controllers
         }
         // Delete story 
         [HttpDelete]
-        [Route("Delete")]
+        [Route("Delete/{id}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Delete([FromBody] int id)
+        public async Task<IActionResult> Delete(int id)
         {
             try
             {
@@ -115,7 +144,7 @@ namespace TienDaoAPI.Controllers
                     return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.NotFound,
-                        Message = "Story does not exists",
+                        Message = "Story does not exist",
 
                     });
                 }
@@ -146,12 +175,12 @@ namespace TienDaoAPI.Controllers
         }
         //Update Story
         [HttpPut]
-        [Route("StoryUpdate/{id}")]
+        [Route("update/{id}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> StoryUpdate(int id, [FromForm] StoryRequestDTO newStory)
+        public async Task<IActionResult> StoryUpdate(int id, [FromForm] StoryRequest newStory)
         {
             try
             {
@@ -161,7 +190,7 @@ namespace TienDaoAPI.Controllers
                     return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.OK,
-                        Message = "Not found the Story by ID",
+                        Message = "Can't find story",
                     });
                 }
                 else
@@ -200,59 +229,10 @@ namespace TienDaoAPI.Controllers
                 });
             }
         }
-        //Get list story arranged in ascending days
-        //[HttpGet]
-        //[Route("liststory/{sort=}")]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-        //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        //public async Task<IActionResult> liststory(string sort)
-        //{
-        //    try
-        //    {
 
-        //        var story = _data.Stories.ToList();
-        //        if (sort == "asc")
-        //        {
-        //            // Sắp xếp sản phẩm theo ngày
-        //            story.Sort((a, b) => a.CreateDate.CompareTo(b.CreateDate));
-        //        }
-        //        else if (sort == "dec")
-        //        {
-        //            // Sắp xếp sản phẩm theo ngày
-        //            story.Sort((a, b) => b.CreateDate.CompareTo(a.CreateDate));
-        //        }
-        //        else
-        //        {
-        //            return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
-        //            {
-        //                StatusCode = HttpStatusCode.BadGateway,
-        //                Message = "Can not get list story",
-        //            });
-
-        //        }
-        //        // Trả về danh sách sản phẩm đã sắp xếp
-        //        return  StatusCode(StatusCodes.Status200OK, new CustomResponse
-        //        {
-        //            StatusCode = HttpStatusCode.OK,
-        //            Message = "Get list story successfully",
-        //            Result = story
-        //        });
-        //    }
-        //    catch(Exception ex)
-        //    {
-        //        return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
-        //        {
-        //            StatusCode = HttpStatusCode.InternalServerError,
-        //            IsSuccess = false,
-        //            Message = "Internal Server Error: " + ex.Message
-        //        });
-        //    }
-        //}
         [HttpGet]
-        [Route("stories")]
+        [Route("")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<IEnumerable<Story>>> GetAllStories([FromQuery] StoryQueryObject storyQueryObject)
         {
@@ -264,7 +244,7 @@ namespace TienDaoAPI.Controllers
                 {
                     StatusCode = HttpStatusCode.OK,
                     Message = "Result ",
-                    Result = stories
+                    Result = _mapper.Map<IEnumerable<StoryResponse>>(stories)
                 });
             }
             catch (Exception ex)
@@ -277,5 +257,7 @@ namespace TienDaoAPI.Controllers
                 });
             }
         }
+
+
     }
 }

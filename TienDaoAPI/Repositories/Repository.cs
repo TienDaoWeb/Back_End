@@ -26,6 +26,7 @@ namespace TienDaoAPI.Repositories
         public async Task<T?> GetAsync(Expression<Func<T, bool>>? filter = null)
         {
             IQueryable<T> query = dbSet;
+            query.AsNoTracking();
             if (filter != null)
             {
                 query = query.Where(filter);
@@ -33,12 +34,12 @@ namespace TienDaoAPI.Repositories
             return await query.FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             return await dbSet.ToListAsync();
         }
 
-        public async Task<T?> GetByIdAsync(int id)
+        public virtual async Task<T?> GetByIdAsync(int id)
         {
             return await dbSet.FindAsync(id);
         }
@@ -64,6 +65,7 @@ namespace TienDaoAPI.Repositories
         public async Task<T?> UpdateAsync(T entity)
         {
             _dbContext.Entry(entity).State = EntityState.Modified;
+            dbSet.Update(entity);
             await SaveAsync();
             return entity;
         }

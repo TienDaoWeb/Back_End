@@ -3,7 +3,7 @@
 namespace TienDaoAPI.DTOs.Requests
 {
 
-    public class StoryRequestDTO
+    public class StoryRequest
     {
         [Required]
         public string Title { get; set; } = string.Empty;
@@ -12,6 +12,8 @@ namespace TienDaoAPI.DTOs.Requests
         [Required]
         public string Image { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+        public int GenreId { get; set; }
+        public int UserId { get; set; }
         public required IFormFile UrlImage { get; set; }
 
     }

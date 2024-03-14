@@ -23,13 +23,17 @@ namespace TienDaoAPI.Models
 
         public float Rating { get; set; }
 
+        public int Votes { get; set; }
+
         public DateTime CreateDate { get; set; }
 
         public DateTime UpdateDate { get; set; }
 
         public string? Status { get; set; }
 
+
         public int GenreId { get; set; }
+        [ForeignKey(nameof(GenreId))]
         public virtual Genre? Genre { get; set; }
 
         public int? UserId { get; set; }
@@ -38,5 +42,6 @@ namespace TienDaoAPI.Models
         public ICollection<Chapter> Chapters { get; set; } = new HashSet<Chapter>();
         public ICollection<Comment> Comments { get; set; } = new HashSet<Comment>();
         public ICollection<Review> Reviews { get; set; } = new HashSet<Review>();
+        public ICollection<StoryAudit> storyAudits { get; set; } = new HashSet<StoryAudit>();
     }
 }

@@ -2,7 +2,7 @@
 
 namespace TienDaoAPI.DTOs.Requests
 {
-    public class ChangePasswordRequestDTO
+    public class ChangePasswordRequest
     {
         [DataType(DataType.Password)]
         public required string CurrentPassword { get; set; }

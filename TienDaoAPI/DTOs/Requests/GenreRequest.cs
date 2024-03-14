@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TienDaoAPI.DTOs.Requests
 {
-    public class GenreRequestDTO
+    public class GenreRequest
     {
         [Required]
         public string? Name { get; set; } = string.Empty;

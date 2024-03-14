@@ -10,27 +10,29 @@ namespace TienDaoAPI.Services
     {
         private readonly IFirebaseStorageService _firebaseStorageService;
         private readonly IStoryRepository _storyRepository;
+
         public StoryService(IFirebaseStorageService firebaseStorageService, IStoryRepository storyRepository)
         {
             _firebaseStorageService = firebaseStorageService;
             _storyRepository = storyRepository;
         }
 
-        public async Task<Story?> CreateStoryAsync(StoryRequestDTO storyRequestDTO)
+        public async Task<Story?> CreateStoryAsync(StoryRequest dto)
         {
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + storyRequestDTO.Image;
-            await _firebaseStorageService.UploadFile(uniqueFileName, storyRequestDTO.UrlImage);
+            string uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.Image;
+            await _firebaseStorageService.UploadFile(uniqueFileName, dto.UrlImage);
 
             Story newStory = new Story
             {
-                Title = storyRequestDTO.Title,
-                Author = storyRequestDTO.Author,
-                Description = storyRequestDTO.Description,
-                Status = storyRequestDTO.Status,
+                Title = dto.Title,
+                Author = dto.Author,
+                Description = dto.Description,
+                Status = dto.Status,
                 Image = uniqueFileName,
                 Rating = 0,
                 CreateDate = DateTime.Now,
-                UpdateDate = DateTime.Now
+                UpdateDate = DateTime.Now,
+                GenreId = dto.GenreId
             };
 
             return await _storyRepository.CreateAsync(newStory);
@@ -44,7 +46,6 @@ namespace TienDaoAPI.Services
         public async Task<IEnumerable<Story?>> GetAllStoriesAsync(StoryQueryObject queryObj)
         {
             var query = (await _storyRepository.GetAllAsync()).AsQueryable();
-
             if (!string.IsNullOrEmpty(queryObj.Keyword))
             {
                 query = query.Where(s => s.Title.Contains(queryObj.Keyword));
@@ -53,9 +54,13 @@ namespace TienDaoAPI.Services
             {
                 query = query.Where(s => s.GenreId == queryObj.Genre);
             }
+            var today = DateTime.Today;
             var columnsMap = new Dictionary<string, Expression<Func<Story, object>>>
             {
-                ["views"] = s => s.Views,
+                ["view_day"] = s => s.storyAudits.First(sw => sw.ViewDate.Date == today.Date),
+                ["view_month"] = s => s.storyAudits.Sum(sw => sw.ViewCount * (sw.ViewDate.Month == today.Month && sw.ViewDate.Year == today.Year ? 1 : 0)),
+                ["view_week"] = s => s.storyAudits.Sum(sw => sw.ViewCount * (sw.ViewDate >= today.AddDays(-(int)today.DayOfWeek) && sw.ViewDate < today.AddDays(7 - (int)today.DayOfWeek) ? 1 : 0)),
+                ["view_count"] = s => s.Views,
                 ["rate"] = s => s.Rating,
                 ["create_at"] = s => s.CreateDate,
                 ["update_at"] = s => s.UpdateDate,
@@ -76,6 +81,7 @@ namespace TienDaoAPI.Services
                 queryObj.PageSize = 20;
                 query = query.Skip(queryObj.PageSize * (queryObj.Page - 1)).Take(queryObj.PageSize);
             }
+
             return query;
         }
 

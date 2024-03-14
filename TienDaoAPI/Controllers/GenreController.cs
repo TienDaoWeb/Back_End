@@ -1,21 +1,50 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using TienDaoAPI.DTOs.Requests;
+using TienDaoAPI.DTOs.Responses;
 using TienDaoAPI.Response;
 using TienDaoAPI.Services.IServices;
 
 namespace TienDaoAPI.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/v1/[controller]")]
     public class GenreController : ControllerBase
     {
         private readonly IGenreService _genreService;
+        private readonly IMapper _mapper;
 
-        public GenreController(IGenreService genreService)
+        public GenreController(IGenreService genreService, IMapper mapper)
         {
             _genreService = genreService;
+            _mapper = mapper;
+        }
+        [HttpGet]
+        [Route("")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetAllGenresAsync()
+        {
+            try
+            {
+                var genres = await _genreService.GetAllGenresAsync();
+                return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                {
+                    StatusCode = HttpStatusCode.Created,
+                    Result = _mapper.Map<IEnumerable<GenreResponse>>(genres)
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    Message = "Internal Server Error: " + ex.Message
+                });
+            }
         }
 
         [HttpPost]
@@ -24,7 +53,7 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Create([FromBody] GenreRequestDTO genre)
+        public async Task<IActionResult> Create([FromBody] GenreRequest genre)
         {
             try
             {
@@ -43,8 +72,6 @@ namespace TienDaoAPI.Controllers
                     StatusCode = HttpStatusCode.Created,
                     Message = "Create genre successfully",
                 });
-
-
             }
             catch (Exception ex)
             {
@@ -56,6 +83,7 @@ namespace TienDaoAPI.Controllers
                 });
             }
         }
+
         [HttpDelete]
         [Route("Delete/{Id}")]
         [Authorize]
@@ -66,7 +94,7 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-                var genre = _genreService.GetGenreByIdAsync(id);
+                var genre = await _genreService.GetGenreByIdAsync(id);
                 if (genre == null)
                 {
                     return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
@@ -94,30 +122,35 @@ namespace TienDaoAPI.Controllers
                 });
             }
         }
-        [HttpPost]
+
+        [HttpPut]
         [Route("update/{id}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Update([FromBody] GenreRequestDTO genre, int id)
+        public async Task<IActionResult> Update([FromBody] GenreRequest updatedGenre, int id)
         {
             try
             {
-                var oldGenre = _genreService.GetGenreByIdAsync(id);
-                if (oldGenre == null)
+                var genre = await _genreService.GetGenreByIdAsync(id);
+                if (genre == null)
                 {
                     return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.NotFound,
-                        Message = "Model state is null"
+                        Message = "Genre does not exist"
                     });
                 }
-                await _genreService.UpdateGenreAsync(genre, id);
+
+                genre.Name = updatedGenre.Name;
+                genre.Description = genre.Description;
+
+                await _genreService.UpdateGenreAsync(genre);
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Message = "Create genre successfully",
+                    Message = "Update genre successfully",
                 });
             }
             catch (Exception ex)

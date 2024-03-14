@@ -42,7 +42,7 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Register([FromBody] RegisterRequestDTO registerRequestDTO)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest registerRequestDTO)
         {
             try
             {
@@ -106,7 +106,7 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Login([FromBody] LoginRequestDTO loginRequestDTO)
+        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequestDTO)
         {
             try
             {
@@ -125,7 +125,7 @@ namespace TienDaoAPI.Controllers
                             {
                                 StatusCode = HttpStatusCode.OK,
                                 Message = "Login successfully",
-                                Result = new LoginResponseDTO { AccessToken = jwtToken, RefreshToken = refreshToken.Token }
+                                Result = new LoginResponse { AccessToken = jwtToken, RefreshToken = refreshToken.Token }
                             }); ;
                         }
                     }
@@ -155,6 +155,10 @@ namespace TienDaoAPI.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [Route("confirm-email")]
         public async Task<IActionResult> ConfirmEmail(int userId, string code)
         {
@@ -199,6 +203,9 @@ namespace TienDaoAPI.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [Route("forget-password")]
         public async Task<IActionResult> ForgetPassword(string email)
         {
@@ -242,8 +249,12 @@ namespace TienDaoAPI.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [Route("reset-password")]
-        public async Task<IActionResult> ResetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO)
+        public async Task<IActionResult> ResetPassword(ResetPasswordRequest resetPasswordRequestDTO)
         {
             try
             {
@@ -287,6 +298,10 @@ namespace TienDaoAPI.Controllers
 
         [HttpPost]
         [Route("refresh-token")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> RefreshToken(RefreshTokenRequest refreshTokenRequest)
         {
             try
@@ -338,11 +353,16 @@ namespace TienDaoAPI.Controllers
         [HttpPost]
         [Authorize]
         [Route("change-password")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDTO changePasswordRequest)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest changePasswordRequest)
         {
             try
             {
-                var token = await HttpContext.GetTokenAsync("access_token");
+                string? token = await HttpContext.GetTokenAsync("access_token");
                 if (token == null)
                 {
                     return StatusCode(StatusCodes.Status401Unauthorized, new CustomResponse
@@ -372,8 +392,7 @@ namespace TienDaoAPI.Controllers
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Message = "Reset password successfully",
-                    Result = user
+                    Message = "Reset password successfully"
                 });
             }
             catch (Exception ex)

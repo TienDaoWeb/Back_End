@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using TienDaoAPI.DTOs.Requests;
 using TienDaoAPI.Models;
 using TienDaoAPI.Services.IServices;
 
@@ -18,11 +17,7 @@ namespace TienDaoAPI.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<IdentityResult> SignInAsync(RegisterRequestDTO registerRequestDTO)
-        {
 
-            throw new NotImplementedException();
-        }
 
         public Task<IdentityResult> SignInAsync(string username, string password)
         {

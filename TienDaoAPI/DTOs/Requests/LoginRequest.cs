@@ -2,19 +2,15 @@
 
 namespace TienDaoAPI.DTOs.Requests
 {
-    public class RegisterRequestDTO
+    public class LoginRequest
     {
         [Required]
         [DataType(DataType.EmailAddress)]
         public string Email { get; set; } = string.Empty;
-        [Required, MinLength(6)]
+
+        [Required]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
-        [Required, Compare("Password")]
-        [DataType(DataType.Password)]
-        public string ConfirmPassword { get; set; } = string.Empty;
-        [Required]
-        public string Role { get; set; } = string.Empty;
 
     }
 }

@@ -12,7 +12,7 @@ namespace TienDaoAPI.Services
         {
             _genreRepository = genreRepository;
         }
-        public async Task<Genre?> CreateGenreAsync(GenreRequestDTO genreRequestDTO)
+        public async Task<Genre?> CreateGenreAsync(GenreRequest genreRequestDTO)
         {
             var newGenre = new Genre
             {
@@ -31,19 +31,17 @@ namespace TienDaoAPI.Services
 
         public async Task<Genre?> GetGenreByIdAsync(int genreId)
         {
-            Genre? genre = await _genreRepository.GetByIdAsync(genreId);
-            return genre;
+            return await _genreRepository.GetAsync(g => g.Id == genreId);
         }
 
-        public async Task<Genre?> UpdateGenreAsync(GenreRequestDTO genreRequestDTO, int genreId)
+        public async Task<IEnumerable<Genre>> GetAllGenresAsync()
         {
-            Genre genre = new Genre
-            {
-                Name = genreRequestDTO.Name,
-                Description = genreRequestDTO.Description
-            };
-            Genre? result = await _genreRepository.UpdateAsync(genre);
-            return result;
+            return await _genreRepository.GetAllAsync();
+        }
+
+        public async Task<Genre?> UpdateGenreAsync(Genre genre)
+        {
+            return await _genreRepository.UpdateAsync(genre);
         }
     }
 }
