@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TienDaoAPI.Data;
 
@@ -11,9 +12,11 @@ using TienDaoAPI.Data;
 namespace TienDaoAPI.Migrations
 {
     [DbContext(typeof(TienDaoDbContext))]
-    partial class TienDaoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240314075117_create-model-emoji")]
+    partial class createmodelemoji
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

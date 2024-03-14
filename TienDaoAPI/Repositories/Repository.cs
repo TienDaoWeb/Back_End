@@ -32,7 +32,17 @@ namespace TienDaoAPI.Repositories
             }
             return await query.FirstOrDefaultAsync();
         }
+        public async Task<IEnumerable<T>> GetAllbyQueryrAsync(Expression<Func<T, bool>>? filter = null)
+        {
+            IQueryable<T> query = dbSet;
 
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+            
+            return await query.ToListAsync();
+        }
         public async Task<IEnumerable<T>> GetAllAsync()
         {
             return await dbSet.ToListAsync();

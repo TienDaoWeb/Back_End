@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MimeKit.Encodings;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TienDaoAPI.Models
@@ -16,10 +17,8 @@ namespace TienDaoAPI.Models
         public string? Content { get; set; }
 
         public int? Order { get; set; }
-
-        [Range(1, 6)]
-        public int Emoji { get; set; }
-
+        public int EmojiId { get; set; }
+        public Emoji Emoji { get; set; }
         public DateTime PublishedDate { get; set; }
 
         public int StoryId { get; set; }

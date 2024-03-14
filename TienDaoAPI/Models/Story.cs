@@ -23,7 +23,6 @@ namespace TienDaoAPI.Models
         public int Views { get; set; }
 
         public float Rating { get; set; }
-
         public DateTime CreateDate { get; set; }
 
         public DateTime UpdateDate { get; set; }
@@ -35,11 +34,6 @@ namespace TienDaoAPI.Models
 
         public int? UserId { get; set; }
         public virtual User? User { get; set; }
-
-        //[Column("user_id")]
-        //public int UserId { get; set; }
-        //[ForeignKey("UserId")]
-        //public virtual User? User { get; set; }
         public ICollection<Chapter>? Chapters { get; set; } = new HashSet<Chapter>();
         public ICollection<Comment>? Comments { get; set; } = new HashSet<Comment>();
         public ICollection<Review>? Reviews { get; set; } = new HashSet<Review>();

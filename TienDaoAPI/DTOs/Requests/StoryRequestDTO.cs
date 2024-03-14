@@ -12,6 +12,8 @@ namespace TienDaoAPI.DTOs.Requests
         [Required]
         public string Image { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+        public int UserId { get; set; }
+        public int GenreId { get; set; }
         public required IFormFile UrlImage { get; set; }
 
     }

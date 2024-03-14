@@ -30,7 +30,9 @@ namespace TienDaoAPI.Services
                 Image = uniqueFileName,
                 Rating = 0,
                 CreateDate = DateTime.Now,
-                UpdateDate = DateTime.Now
+                UpdateDate = DateTime.Now,
+                UserId = storyRequestDTO.UserId,
+                GenreId = storyRequestDTO.GenreId
             };
 
             return await _storyRepository.CreateAsync(newStory);
@@ -39,6 +41,7 @@ namespace TienDaoAPI.Services
         public async Task DeleteStoryAsync(Story story)
         {
             await _storyRepository.DeleteAsync(story);
+
         }
 
         public async Task<IEnumerable<Story?>> GetAllStoriesAsync(string keyword, string orderBy, int genre, int page = 1, int size = 10)

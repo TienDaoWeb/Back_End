@@ -16,17 +16,18 @@ namespace TienDaoAPI.Controllers
     {
         private readonly IFirebaseStorageService _firebaseStorageService;
         private readonly IStoryService _storyService;
+        private readonly IChapterService _chapterService;
 
-        public StoryController(IFirebaseStorageService firebaseStorageService, IStoryService storyService)
+        public StoryController(IFirebaseStorageService firebaseStorageService, IStoryService storyService , IChapterService chapterService)
         {
             _firebaseStorageService = firebaseStorageService;
             _storyService = storyService;
+            _chapterService = chapterService;
         }
 
         //Create story save DB
         [HttpPost]
         [Route("Create")]
-        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -72,15 +73,6 @@ namespace TienDaoAPI.Controllers
             try
             {
                 var story = await _storyService.GetStoryByIdAsync(id);
-                //if (story == null)
-                //{
-                //    return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
-                //    {
-                //        StatusCode = HttpStatusCode.NotFound,
-                //        IsSuccess = false,
-                //        Message = "Can not find Story to DB"
-                //    });
-                //}
 
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
@@ -100,12 +92,11 @@ namespace TienDaoAPI.Controllers
         }
         // Delete story 
         [HttpDelete]
-        [Route("Delete")]
-        [Authorize]
+        [Route("Delete/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Delete([FromBody] int id)
+        public async Task<IActionResult> Delete(int id)
         {
             try
             {
@@ -125,6 +116,14 @@ namespace TienDaoAPI.Controllers
                     // Xóa file ảnh
                     await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{story.Image}");
                 }
+                //Xóa tất cả các chapter của story
+                var listChapter = await _chapterService.GetAllChapteofStoryrAsync(chapter => chapter.StoryId == story.Id);
+                foreach (var chapter in listChapter)
+                {
+                    await _chapterService.DeleteChapterAsync(chapter);
+                }
+
+                // Xóa Story 
                 await _storyService.DeleteStoryAsync(story);
 
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
@@ -175,7 +174,7 @@ namespace TienDaoAPI.Controllers
                         // Xóa file ảnh
                         var storage = StorageClient.Create();
                         await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{story.Image}");
-
+                        //Tạo file ảnh mới
                         string uniqueFileName = Guid.NewGuid().ToString() + "_" + newStory.Image;
                         await _firebaseStorageService.UploadFile(uniqueFileName, newStory.UrlImage);
                         story.Image = uniqueFileName;
