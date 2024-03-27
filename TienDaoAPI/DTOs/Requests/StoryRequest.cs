@@ -12,8 +12,13 @@ namespace TienDaoAPI.DTOs.Requests
         [Required]
         public string Image { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+<<<<<<< HEAD:TienDaoAPI/DTOs/Requests/StoryRequest.cs
         public int GenreId { get; set; }
         public int UserId { get; set; }
+=======
+        public int UserId { get; set; }
+        public int GenreId { get; set; }
+>>>>>>> origin/Quan_be:TienDaoAPI/DTOs/Requests/StoryRequestDTO.cs
         public required IFormFile UrlImage { get; set; }
 
     }

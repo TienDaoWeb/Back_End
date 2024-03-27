@@ -32,7 +32,8 @@ namespace TienDaoAPI.Services
                 Rating = 0,
                 CreateDate = DateTime.Now,
                 UpdateDate = DateTime.Now,
-                GenreId = dto.GenreId
+                UserId = storyRequestDTO.UserId,
+                GenreId = storyRequestDTO.GenreId
             };
 
             return await _storyRepository.CreateAsync(newStory);
@@ -41,6 +42,7 @@ namespace TienDaoAPI.Services
         public async Task DeleteStoryAsync(Story story)
         {
             await _storyRepository.DeleteAsync(story);
+
         }
 
         public async Task<IEnumerable<Story?>> GetAllStoriesAsync(StoryQueryObject queryObj)

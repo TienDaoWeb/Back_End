@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TienDaoAPI.Data;
 
@@ -11,9 +12,11 @@ using TienDaoAPI.Data;
 namespace TienDaoAPI.Migrations
 {
     [DbContext(typeof(TienDaoDbContext))]
-    partial class TienDaoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240314075117_create-model-emoji")]
+    partial class createmodelemoji
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -158,7 +161,7 @@ namespace TienDaoAPI.Migrations
 
                     b.HasIndex("StoryId");
 
-                    b.ToTable("Chapters", (string)null);
+                    b.ToTable("Chapters");
                 });
 
             modelBuilder.Entity("TienDaoAPI.Models.Comment", b =>
@@ -191,7 +194,7 @@ namespace TienDaoAPI.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Comments", (string)null);
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("TienDaoAPI.Models.Emoji", b =>
@@ -243,7 +246,7 @@ namespace TienDaoAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Genres", (string)null);
+                    b.ToTable("Genres");
                 });
 
             modelBuilder.Entity("TienDaoAPI.Models.ReadChapter", b =>
@@ -269,7 +272,7 @@ namespace TienDaoAPI.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ReadChapters", (string)null);
+                    b.ToTable("ReadChapters");
                 });
 
             modelBuilder.Entity("TienDaoAPI.Models.RefreshToken", b =>
@@ -293,7 +296,7 @@ namespace TienDaoAPI.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("TienDaoAPI.Models.Review", b =>
@@ -338,7 +341,7 @@ namespace TienDaoAPI.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Reviews", (string)null);
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("TienDaoAPI.Models.Role", b =>
@@ -436,43 +439,13 @@ namespace TienDaoAPI.Migrations
                     b.Property<int>("Views")
                         .HasColumnType("int");
 
-                    b.Property<int>("Votes")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("GenreId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Stories", (string)null);
-                });
-
-            modelBuilder.Entity("TienDaoAPI.Models.StoryAudit", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("StoryId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ViewCount")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("ViewDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("VoteCount")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StoryId");
-
-                    b.ToTable("StoryAudit", (string)null);
+                    b.ToTable("Stories");
                 });
 
             modelBuilder.Entity("TienDaoAPI.Models.User", b =>
@@ -694,17 +667,6 @@ namespace TienDaoAPI.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TienDaoAPI.Models.StoryAudit", b =>
-                {
-                    b.HasOne("TienDaoAPI.Models.Story", "Story")
-                        .WithMany("storyAudits")
-                        .HasForeignKey("StoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Story");
-                });
-
             modelBuilder.Entity("TienDaoAPI.Models.Story", b =>
                 {
                     b.Navigation("Chapters");
@@ -712,8 +674,6 @@ namespace TienDaoAPI.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("Reviews");
-
-                    b.Navigation("storyAudits");
                 });
 #pragma warning restore 612, 618
         }

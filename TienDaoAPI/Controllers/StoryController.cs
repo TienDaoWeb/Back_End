@@ -18,15 +18,18 @@ namespace TienDaoAPI.Controllers
     {
         private readonly IFirebaseStorageService _firebaseStorageService;
         private readonly IStoryService _storyService;
+        private readonly IChapterService _chapterService;
         private readonly IMapper _mapper;
         private readonly IGenreService _genreService;
         private readonly IUserService _userService;
 
+        public StoryController(IFirebaseStorageService firebaseStorageService, IStoryService storyService , IChapterService chapterService)
         public StoryController(IFirebaseStorageService firebaseStorageService, IStoryService storyService,
             IMapper mapper, IGenreService genreService, IUserService userService)
         {
             _firebaseStorageService = firebaseStorageService;
             _storyService = storyService;
+            _chapterService = chapterService;
             _mapper = mapper;
             _genreService = genreService;
             _userService = userService;
@@ -35,7 +38,6 @@ namespace TienDaoAPI.Controllers
         //Create story save DB
         [HttpPost]
         [Route("Create")]
-        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -154,6 +156,14 @@ namespace TienDaoAPI.Controllers
                     // Xóa file ảnh
                     await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{story.Image}");
                 }
+                //Xóa tất cả các chapter của story
+                var listChapter = await _chapterService.GetAllChapteofStoryrAsync(chapter => chapter.StoryId == story.Id);
+                foreach (var chapter in listChapter)
+                {
+                    await _chapterService.DeleteChapterAsync(chapter);
+                }
+
+                // Xóa Story 
                 await _storyService.DeleteStoryAsync(story);
 
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
@@ -204,7 +214,7 @@ namespace TienDaoAPI.Controllers
                         // Xóa file ảnh
                         var storage = StorageClient.Create();
                         await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{story.Image}");
-
+                        //Tạo file ảnh mới
                         string uniqueFileName = Guid.NewGuid().ToString() + "_" + newStory.Image;
                         await _firebaseStorageService.UploadFile(uniqueFileName, newStory.UrlImage);
                         story.Image = uniqueFileName;

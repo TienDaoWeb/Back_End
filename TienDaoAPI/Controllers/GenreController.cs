@@ -49,7 +49,6 @@ namespace TienDaoAPI.Controllers
 
         [HttpPost]
         [Route("Create")]
-        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]

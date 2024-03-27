@@ -53,6 +53,7 @@ namespace TienDaoAPI.Data
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<Emoji> Emojis { get; set; }
     }
 
 }
