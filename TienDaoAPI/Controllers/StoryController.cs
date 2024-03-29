@@ -17,12 +17,14 @@ namespace TienDaoAPI.Controllers
         private readonly IFirebaseStorageService _firebaseStorageService;
         private readonly IStoryService _storyService;
         private readonly IChapterService _chapterService;
+        private readonly IEmojiService _emojiService;
 
-        public StoryController(IFirebaseStorageService firebaseStorageService, IStoryService storyService , IChapterService chapterService)
+        public StoryController(IFirebaseStorageService firebaseStorageService, IStoryService storyService , IChapterService chapterService , IEmojiService emojiService)
         {
             _firebaseStorageService = firebaseStorageService;
             _storyService = storyService;
             _chapterService = chapterService;
+            _emojiService = emojiService;
         }
 
         //Create story save DB
@@ -121,6 +123,8 @@ namespace TienDaoAPI.Controllers
                 foreach (var chapter in listChapter)
                 {
                     await _chapterService.DeleteChapterAsync(chapter);
+                    // Xóa emoji trong chapter
+                    await _emojiService.DeleteAllEmojibyChapterId(chapter.Id);
                 }
 
                 // Xóa Story 

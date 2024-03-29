@@ -129,5 +129,31 @@ namespace TienDaoAPI.Controllers
                 });
             }
         }
+        [HttpGet]
+        [Route("GetAll")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetAll()
+        {
+            try
+            {
+                return StatusCode(StatusCodes.Status201Created, new CustomResponse
+                {
+                    StatusCode = HttpStatusCode.Created,
+                    Result = await _genreService.GetAllGenre()
+                }
+                );
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    Message = "Internal Server Error: " + ex.Message
+                });
+            }
+        }
     }
 }

@@ -45,5 +45,9 @@ namespace TienDaoAPI.Services
             Genre? result = await _genreRepository.UpdateAsync(genre);
             return result;
         }
+        public async Task<IEnumerable<Genre?>> GetAllGenre()
+        {
+            return await _genreRepository.GetAllAsync();
+        }
     }
 }

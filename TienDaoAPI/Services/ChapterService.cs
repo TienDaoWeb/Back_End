@@ -38,9 +38,7 @@ namespace TienDaoAPI.Services
             {
                 orderNewChapter = (int)(finalChapter.Order + 1);
             }
-            //DB saver Emoji 
-            var Emoji = new Emoji();
-            await _emojiRepository.CreateAsync(Emoji);
+
             //Create the new Chapter
             Chapter newChapter = new Chapter
             {
@@ -49,7 +47,6 @@ namespace TienDaoAPI.Services
                 Order = orderNewChapter,
                 StoryId = chapterRequestDTO.StoryId,
                 PublishedDate = DateTime.Now,
-                EmojiId = Emoji.Id
             };
 
             return await _chapterRepository.CreateAsync(newChapter);
@@ -62,9 +59,9 @@ namespace TienDaoAPI.Services
         }
         public async Task DeleteChapterAsync(Chapter chapter)
         {
-            await _chapterRepository.DeleteAsync(chapter);
-            var EmojiOfChapter = await _emojiRepository.GetByIdAsync(chapter.EmojiId);
-            await _emojiRepository.DeleteAsync(EmojiOfChapter);
+       
+           await _chapterRepository.DeleteAsync(chapter);
+            
         }
 
         public async Task<IEnumerable<Chapter?>> GetAllChapteofStoryrAsync(Expression<Func<Chapter, bool>> filter)

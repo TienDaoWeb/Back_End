@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace TienDaoAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class InititalDatabase : Migration
+    public partial class updatedatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -238,7 +238,6 @@ namespace TienDaoAPI.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Order = table.Column<int>(type: "int", nullable: true),
-                    Emoji = table.Column<int>(type: "int", nullable: false),
                     PublishedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     StoryId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -314,6 +313,33 @@ namespace TienDaoAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Emojis",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    ChapterId = table.Column<int>(type: "int", nullable: false),
+                    TypeEmoji = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Emojis", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Emojis_Chapters_ChapterId",
+                        column: x => x.ChapterId,
+                        principalTable: "Chapters",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Emojis_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ReadChapters",
                 columns: table => new
                 {
@@ -363,6 +389,16 @@ namespace TienDaoAPI.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Comments_UserId",
                 table: "Comments",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Emojis_ChapterId",
+                table: "Emojis",
+                column: "ChapterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Emojis_UserId",
+                table: "Emojis",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -445,6 +481,9 @@ namespace TienDaoAPI.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Comments");
+
+            migrationBuilder.DropTable(
+                name: "Emojis");
 
             migrationBuilder.DropTable(
                 name: "ReadChapters");

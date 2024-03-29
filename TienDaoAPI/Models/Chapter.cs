@@ -17,8 +17,6 @@ namespace TienDaoAPI.Models
         public string? Content { get; set; }
 
         public int? Order { get; set; }
-        public int EmojiId { get; set; }
-        public Emoji Emoji { get; set; }
         public DateTime PublishedDate { get; set; }
 
         public int StoryId { get; set; }

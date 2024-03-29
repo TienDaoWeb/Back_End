@@ -1,4 +1,5 @@
-﻿using TienDaoAPI.DTOs.Requests;
+﻿using System.Linq.Expressions;
+using TienDaoAPI.DTOs.Requests;
 using TienDaoAPI.Models;
 
 namespace TienDaoAPI.Services.IServices
@@ -9,5 +10,6 @@ namespace TienDaoAPI.Services.IServices
         public Task<Genre?> GetGenreByIdAsync(int genreId);
         public Task DeleteGenreAsync(int genreId);
         public Task<Genre?> UpdateGenreAsync(GenreRequestDTO genreRequestDTO, int genreId);
+        public Task<IEnumerable<Genre?>> GetAllGenre();
     }
 }

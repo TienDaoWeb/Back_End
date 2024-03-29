@@ -124,6 +124,7 @@ builder.Services.AddScoped<IChapterRepository, ChapterRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
 builder.Services.AddScoped<IGenreService, GenreService>();
+builder.Services.AddScoped<IEmojiService, EmojiService>();
 builder.Services.AddScoped<IChapterService, ChapterService>();
 builder.Services.AddScoped<IStoryService, StoryService>();
 builder.Services.AddScoped<IJwtService, JwtService>();

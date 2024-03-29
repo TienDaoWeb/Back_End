@@ -136,9 +136,6 @@ namespace TienDaoAPI.Migrations
                     b.Property<string>("Content")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("EmojiId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -153,8 +150,6 @@ namespace TienDaoAPI.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EmojiId");
 
                     b.HasIndex("StoryId");
 
@@ -202,25 +197,20 @@ namespace TienDaoAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Angry")
+                    b.Property<int>("ChapterId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Attack")
+                    b.Property<int>("TypeEmoji")
                         .HasColumnType("int");
 
-                    b.Property<int>("Fun")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Heart")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Like")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Sad")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ChapterId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Emojis");
                 });
@@ -566,19 +556,11 @@ namespace TienDaoAPI.Migrations
 
             modelBuilder.Entity("TienDaoAPI.Models.Chapter", b =>
                 {
-                    b.HasOne("TienDaoAPI.Models.Emoji", "Emoji")
-                        .WithMany()
-                        .HasForeignKey("EmojiId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("TienDaoAPI.Models.Story", "Story")
                         .WithMany("Chapters")
                         .HasForeignKey("StoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Emoji");
 
                     b.Navigation("Story");
                 });
@@ -596,6 +578,25 @@ namespace TienDaoAPI.Migrations
                         .HasForeignKey("UserId");
 
                     b.Navigation("Story");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TienDaoAPI.Models.Emoji", b =>
+                {
+                    b.HasOne("TienDaoAPI.Models.Chapter", "Chapter")
+                        .WithMany()
+                        .HasForeignKey("ChapterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TienDaoAPI.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Chapter");
 
                     b.Navigation("User");
                 });
