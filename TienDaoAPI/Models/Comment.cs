@@ -13,11 +13,15 @@ namespace TienDaoAPI.Models
         [Required]
         public required string Content { get; set; }
 
-        public DateTime Time { get; set; }
+        public int LikeCount { get; set; } = 0;
+
+        public DateTime CreatedAt { get; set; }
+
+        public DateTime UpdatedAt { get; set; }
 
         [Required]
-        public int StoryId { get; set; }
-        public virtual required Story Story { get; set; }
+        public int BookId { get; set; }
+        public virtual required Book Book { get; set; }
 
         public int ChapterNumber { get; set; } = 0;
 

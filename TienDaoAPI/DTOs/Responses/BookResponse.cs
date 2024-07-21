@@ -1,6 +1,6 @@
 ﻿namespace TienDaoAPI.DTOs.Responses
 {
-    public class StoryResponse
+    public class BookResponse
     {
         public int Id { get; set; }
 

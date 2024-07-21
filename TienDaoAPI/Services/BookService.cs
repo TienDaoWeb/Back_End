@@ -6,48 +6,46 @@ using TienDaoAPI.Services.IServices;
 
 namespace TienDaoAPI.Services
 {
-    public class StoryService : IStoryService
+    public class BookService : IBookService
     {
         private readonly IFirebaseStorageService _firebaseStorageService;
-        private readonly IStoryRepository _storyRepository;
+        private readonly IBookRepository _bookRepository;
 
-        public StoryService(IFirebaseStorageService firebaseStorageService, IStoryRepository storyRepository)
+        public BookService(IFirebaseStorageService firebaseStorageService, IBookRepository bookRepository)
         {
             _firebaseStorageService = firebaseStorageService;
-            _storyRepository = storyRepository;
+            _bookRepository = bookRepository;
         }
 
-        public async Task<Story?> CreateStoryAsync(StoryRequest dto)
+        public async Task<Book?> CreateBookAsync(CreateBookDto dto)
         {
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.Image;
+            string uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.PosterUrl;
             await _firebaseStorageService.UploadFile(uniqueFileName, dto.UrlImage);
 
-            Story newStory = new Story
+            Book newBook = new Book
             {
                 Title = dto.Title,
                 Author = dto.Author,
                 Description = dto.Description,
-                Status = dto.Status,
-                Image = uniqueFileName,
-                Rating = 0,
+                PosterUrl = uniqueFileName,
                 CreateDate = DateTime.Now,
                 UpdateDate = DateTime.Now,
-                UserId = storyRequestDTO.UserId,
-                GenreId = storyRequestDTO.GenreId
+                OwnedId = dto.OwnerId,
+                GenreId = dto.GenreId
             };
 
-            return await _storyRepository.CreateAsync(newStory);
+            return await _bookRepository.CreateAsync(newBook);
         }
 
-        public async Task DeleteStoryAsync(Story story)
+        public async Task DeleteBookAsync(Book book)
         {
-            await _storyRepository.DeleteAsync(story);
+            await _bookRepository.DeleteAsync(book);
 
         }
 
-        public async Task<IEnumerable<Story?>> GetAllStoriesAsync(StoryQueryObject queryObj)
+        public async Task<IEnumerable<Book?>> GetAllBooksAsync(BookQueryObject queryObj)
         {
-            var query = (await _storyRepository.GetAllAsync()).AsQueryable();
+            var query = (await _bookRepository.GetAllAsync()).AsQueryable();
             if (!string.IsNullOrEmpty(queryObj.Keyword))
             {
                 query = query.Where(s => s.Title.Contains(queryObj.Keyword));
@@ -57,13 +55,12 @@ namespace TienDaoAPI.Services
                 query = query.Where(s => s.GenreId == queryObj.Genre);
             }
             var today = DateTime.Today;
-            var columnsMap = new Dictionary<string, Expression<Func<Story, object>>>
+            var columnsMap = new Dictionary<string, Expression<Func<Book, object>>>
             {
-                ["view_day"] = s => s.storyAudits.First(sw => sw.ViewDate.Date == today.Date),
-                ["view_month"] = s => s.storyAudits.Sum(sw => sw.ViewCount * (sw.ViewDate.Month == today.Month && sw.ViewDate.Year == today.Year ? 1 : 0)),
-                ["view_week"] = s => s.storyAudits.Sum(sw => sw.ViewCount * (sw.ViewDate >= today.AddDays(-(int)today.DayOfWeek) && sw.ViewDate < today.AddDays(7 - (int)today.DayOfWeek) ? 1 : 0)),
-                ["view_count"] = s => s.Views,
-                ["rate"] = s => s.Rating,
+                ["view_day"] = s => s.bookAudits.First(sw => sw.ViewDate.Date == today.Date),
+                ["view_month"] = s => s.bookAudits.Sum(sw => sw.ViewCount * (sw.ViewDate.Month == today.Month && sw.ViewDate.Year == today.Year ? 1 : 0)),
+                ["view_week"] = s => s.bookAudits.Sum(sw => sw.ViewCount * (sw.ViewDate >= today.AddDays(-(int)today.DayOfWeek) && sw.ViewDate < today.AddDays(7 - (int)today.DayOfWeek) ? 1 : 0)),
+                ["view_count"] = s => s.ViewCount,
                 ["create_at"] = s => s.CreateDate,
                 ["update_at"] = s => s.UpdateDate,
                 ["chapter_count"] = s => s.Chapters.Count,
@@ -87,14 +84,14 @@ namespace TienDaoAPI.Services
             return query;
         }
 
-        public async Task<Story?> GetStoryByIdAsync(int storyId)
+        public async Task<Book?> GetBookByIdAsync(int bookId)
         {
-            return await _storyRepository.GetByIdAsync(storyId);
+            return await _bookRepository.GetByIdAsync(bookId);
         }
 
-        public async Task<Story?> UpdateStoryAsync(Story story)
+        public async Task<Book?> UpdateBookAsync(Book book)
         {
-            return await _storyRepository.UpdateAsync(story);
+            return await _bookRepository.UpdateAsync(book);
         }
 
 

@@ -16,7 +16,7 @@ namespace TienDaoAPI.Data
             foreach (var entityType in builder.Model.GetEntityTypes())
             {
                 var tableName = entityType.GetTableName();
-                if (tableName.StartsWith("AspNet"))
+                if (tableName != null && tableName.StartsWith("AspNet"))
                 {
                     entityType.SetTableName(tableName.Substring(6));
                 }
@@ -46,14 +46,13 @@ namespace TienDaoAPI.Data
             builder.Entity<Role>().HasData(roles);
         }
 
-        public DbSet<Story> Stories { get; set; }
+        public DbSet<Book> Books { get; set; }
         public DbSet<Chapter> Chapters { get; set; }
         public DbSet<Genre> Genres { get; set; }
         public DbSet<ReadChapter> ReadChapters { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Comment> Comments { get; set; }
-        public DbSet<Emoji> Emojis { get; set; }
     }
 
 }

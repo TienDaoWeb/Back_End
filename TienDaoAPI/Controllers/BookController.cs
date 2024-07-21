@@ -13,48 +13,47 @@ namespace TienDaoAPI.Controllers
 {
 
     [ApiController]
-    [Route("[controller]")]
-    public class StoryController : ControllerBase
+    [Route("api/v1/[controller]")]
+    public class BookController : ControllerBase
     {
         private readonly IFirebaseStorageService _firebaseStorageService;
-        private readonly IStoryService _storyService;
+        private readonly IBookService _bookService;
         private readonly IChapterService _chapterService;
         private readonly IMapper _mapper;
         private readonly IGenreService _genreService;
         private readonly IUserService _userService;
 
-        public StoryController(IFirebaseStorageService firebaseStorageService, IStoryService storyService , IChapterService chapterService)
-        public StoryController(IFirebaseStorageService firebaseStorageService, IStoryService storyService,
-            IMapper mapper, IGenreService genreService, IUserService userService)
+        public BookController(IFirebaseStorageService firebaseStorageService, IBookService bookService,
+            IMapper mapper, IGenreService genreService, IUserService userService, IChapterService chapterService)
         {
             _firebaseStorageService = firebaseStorageService;
-            _storyService = storyService;
+            _bookService = bookService;
             _chapterService = chapterService;
             _mapper = mapper;
             _genreService = genreService;
             _userService = userService;
         }
 
-        //Create story save DB
+        //Create book save DB
         [HttpPost]
-        [Route("Create")]
+        [Route("")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Create([FromForm] StoryRequest storyRequest)
+        public async Task<IActionResult> Create([FromForm] CreateBookDto bookRequest)
         {
             try
             {
-                if (storyRequest.UrlImage == null)
+                if (bookRequest.UrlImage == null)
                 {
                     return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.BadRequest,
                         IsSuccess = false,
-                        Message = "Can not find file image to create story."
+                        Message = "Can not find file image to create book."
                     });
                 }
-                var genre = await _genreService.GetGenreByIdAsync(storyRequest.GenreId);
+                var genre = await _genreService.GetGenreByIdAsync(bookRequest.GenreId);
                 if (genre == null)
                 {
                     return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
@@ -64,7 +63,7 @@ namespace TienDaoAPI.Controllers
                         Message = "Genre does not exsits"
                     });
                 }
-                var user = await _userService.GetUserByIdAsync(storyRequest.UserId);
+                var user = await _userService.GetUserByIdAsync(bookRequest.OwnerId);
                 if (genre == null)
                 {
                     return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
@@ -74,12 +73,12 @@ namespace TienDaoAPI.Controllers
                         Message = "User does not exsits"
                     });
                 }
-                var newStory = await _storyService.CreateStoryAsync(storyRequest);
+                var newBook = await _bookService.CreateBookAsync(bookRequest);
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Message = "Create story successfully",
-                    Result = newStory
+                    Message = "Create book successfully",
+                    Result = newBook
                 });
             }
             catch (Exception ex)
@@ -94,29 +93,29 @@ namespace TienDaoAPI.Controllers
         }
 
         [HttpGet]
-        [Route("/{id}")]
+        [Route("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetStory(int id)
+        public async Task<IActionResult> GetBook(int id)
         {
             try
             {
-                var story = await _storyService.GetStoryByIdAsync(id);
-                if (story == null)
+                var book = await _bookService.GetBookByIdAsync(id);
+                if (book == null)
                 {
                     return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         IsSuccess = false,
-                        Message = "Story does not exists"
+                        Message = "Book does not exists"
                     });
                 }
 
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Result = _mapper.Map<StoryResponse>(story)
+                    Result = _mapper.Map<BookResponse>(book)
                 });
             }
             catch (Exception ex)
@@ -129,9 +128,9 @@ namespace TienDaoAPI.Controllers
                 });
             }
         }
-        // Delete story 
+        // Delete book 
         [HttpDelete]
-        [Route("Delete/{id}")]
+        [Route("{id}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -140,36 +139,37 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-                var story = await _storyService.GetStoryByIdAsync(id);
-                if (story == null)
+                var book = await _bookService.GetBookByIdAsync(id);
+                if (book == null)
                 {
                     return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.NotFound,
-                        Message = "Story does not exist",
+                        Message = "Book does not exist",
 
                     });
                 }
-                if (story.Image != null)
+                if (book.PosterUrl != null)
                 {
                     var storage = StorageClient.Create();
                     // Xóa file ảnh
-                    await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{story.Image}");
+                    await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{book.PosterUrl}");
                 }
-                //Xóa tất cả các chapter của story
-                var listChapter = await _chapterService.GetAllChapteofStoryrAsync(chapter => chapter.StoryId == story.Id);
-                foreach (var chapter in listChapter)
+                //Xóa tất cả các chapter của book
+                var listChapter = await _chapterService.GetAllChapterOfBookAsync(chapter => chapter.BookId == book.Id);
+                if (listChapter != null)
                 {
-                    await _chapterService.DeleteChapterAsync(chapter);
+                    var nonNullChapters = listChapter.Where(chapter => chapter != null).Cast<Chapter>();
+                    await _chapterService.DeleteAllChapterAsync(nonNullChapters);
                 }
 
-                // Xóa Story 
-                await _storyService.DeleteStoryAsync(story);
+                // Xóa Book 
+                await _bookService.DeleteBookAsync(book);
 
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Message = "Delete story successfully",
+                    Message = "Delete book successfully",
                 });
             }
             catch (Exception ex)
@@ -183,49 +183,47 @@ namespace TienDaoAPI.Controllers
             }
 
         }
-        //Update Story
+        //Update Book
         [HttpPut]
-        [Route("update/{id}")]
+        [Route("{id}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> StoryUpdate(int id, [FromForm] StoryRequest newStory)
+        public async Task<IActionResult> BookUpdate(int id, [FromForm] CreateBookDto newBook)
         {
             try
             {
-                var story = await _storyService.GetStoryByIdAsync(id);
-                if (story == null)
+                var book = await _bookService.GetBookByIdAsync(id);
+                if (book == null)
                 {
                     return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.OK,
-                        Message = "Can't find story",
+                        Message = "Can't find book",
                     });
                 }
                 else
                 {
-                    story.Status = newStory.Status;
-                    story.Author = newStory.Author;
-                    story.Description = newStory.Description;
-                    story.Status = newStory.Status;
-                    if (newStory.UrlImage != null)
+                    book.Author = newBook.Author;
+                    book.Description = newBook.Description;
+                    if (newBook.PosterUrl != null)
                     {
                         // Xóa file ảnh
                         var storage = StorageClient.Create();
-                        await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{story.Image}");
+                        await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{book.PosterUrl}");
                         //Tạo file ảnh mới
-                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + newStory.Image;
-                        await _firebaseStorageService.UploadFile(uniqueFileName, newStory.UrlImage);
-                        story.Image = uniqueFileName;
+                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + newBook.PosterUrl;
+                        await _firebaseStorageService.UploadFile(uniqueFileName, newBook.PosterUrl);
+                        book.PosterUrl = uniqueFileName;
                     }
 
-                    await _storyService.UpdateStoryAsync(story);
+                    await _bookService.UpdateBookAsync(book);
 
                     return StatusCode(StatusCodes.Status200OK, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.OK,
-                        Message = "Update story successfully",
+                        Message = "Update book successfully",
                     });
                 }
             }
@@ -244,17 +242,17 @@ namespace TienDaoAPI.Controllers
         [Route("")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<IEnumerable<Story>>> GetAllStories([FromQuery] StoryQueryObject storyQueryObject)
+        public async Task<ActionResult<IEnumerable<Book>>> GetAllBooks([FromQuery] BookQueryObject bookQueryObject)
         {
             try
             {
-                var stories = await _storyService.GetAllStoriesAsync(storyQueryObject);
+                var stories = await _bookService.GetAllBooksAsync(bookQueryObject);
 
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
                     StatusCode = HttpStatusCode.OK,
                     Message = "Result ",
-                    Result = _mapper.Map<IEnumerable<StoryResponse>>(stories)
+                    Result = _mapper.Map<IEnumerable<BookResponse>>(stories)
                 });
             }
             catch (Exception ex)

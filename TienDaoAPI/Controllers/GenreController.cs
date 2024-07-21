@@ -48,7 +48,7 @@ namespace TienDaoAPI.Controllers
         }
 
         [HttpPost]
-        [Route("Create")]
+        [Route("")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -84,7 +84,7 @@ namespace TienDaoAPI.Controllers
         }
 
         [HttpDelete]
-        [Route("Delete/{Id}")]
+        [Route("{id}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -123,7 +123,7 @@ namespace TienDaoAPI.Controllers
         }
 
         [HttpPut]
-        [Route("update/{id}")]
+        [Route("{id}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

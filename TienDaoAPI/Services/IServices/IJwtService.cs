@@ -1,4 +1,5 @@
-﻿using TienDaoAPI.Models;
+﻿using System.Security.Claims;
+using TienDaoAPI.Models;
 
 namespace TienDaoAPI.Services.IServices
 {
@@ -6,5 +7,6 @@ namespace TienDaoAPI.Services.IServices
     {
         string CreateJWTToken(User user, List<string> roles);
         string ExtractEmailFromToken(string token);
+        ClaimsPrincipal? VerifyToken(string token);
     }
 }

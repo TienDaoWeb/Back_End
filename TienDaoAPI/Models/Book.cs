@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TienDaoAPI.Enums;
 
 namespace TienDaoAPI.Models
 {
-    [Table("Stories")]
-    public class Story
+    [Table("Books")]
+    public class Book
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -17,31 +18,32 @@ namespace TienDaoAPI.Models
 
         public string? Description { get; set; }
 
-        public string? Image { get; set; }
+        public string? PosterUrl { get; set; }
 
-        public int Views { get; set; }
+        public int ReviewCount { get; set; } = 0;
 
-        public float Rating { get; set; }
+        public int ViewCount { get; set; } = 0;
 
-        public int Votes { get; set; }
+        public int VoteCount { get; set; } = 0;
 
         public DateTime CreateDate { get; set; }
 
         public DateTime UpdateDate { get; set; }
 
-        public string? Status { get; set; }
-
+        [Required]
+        [EnumDataType(typeof(BookStatusEnum))]
+        public BookStatusEnum Status { get; set; }
 
         public int GenreId { get; set; }
         [ForeignKey(nameof(GenreId))]
         public virtual Genre? Genre { get; set; }
 
-        public int? UserId { get; set; }
+        public int? OwnedId { get; set; }
         public virtual User? User { get; set; }
 
         public ICollection<Chapter> Chapters { get; set; } = new HashSet<Chapter>();
         public ICollection<Comment> Comments { get; set; } = new HashSet<Comment>();
         public ICollection<Review> Reviews { get; set; } = new HashSet<Review>();
-        public ICollection<StoryAudit> storyAudits { get; set; } = new HashSet<StoryAudit>();
+        public ICollection<BookAudit> bookAudits { get; set; } = new HashSet<BookAudit>();
     }
 }

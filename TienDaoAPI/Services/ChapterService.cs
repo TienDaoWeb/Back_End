@@ -1,78 +1,60 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using Org.BouncyCastle.Utilities.Collections;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using TienDaoAPI.DTOs.Requests;
 using TienDaoAPI.Models;
-using TienDaoAPI.Repositories;
 using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services.IServices;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace TienDaoAPI.Services
 {
     public class ChapterService : IChapterService
     {
         private readonly IChapterRepository _chapterRepository;
-        private readonly IStoryRepository _storyRepository;
-        private readonly IEmojiRepository _emojiRepository;
-        public ChapterService(IEmojiRepository emojiRepository ,IChapterRepository chapterRepository ,IStoryRepository storyRepository)
+        private readonly IBookRepository _bookRepository;
+        public ChapterService(IChapterRepository chapterRepository, IBookRepository bookRepository)
         {
             _chapterRepository = chapterRepository;
-            _storyRepository = storyRepository;
-            _emojiRepository = emojiRepository;
+            _bookRepository = bookRepository;
         }
 
-        public async Task<Chapter?> CreateChapterAsync(ChapterPostRequestDTO chapterRequestDTO)
+        public async Task<Chapter?> CreateChapterAsync(CreateChapterDTO chapterRequestDTO)
         {
             // Set order new Chapter
-            var finalChapter = await GetFinalChapterByIdStoryAsync(chapterRequestDTO.StoryId);
-            var orderNewChapter = 0;
-            if (finalChapter == null)
-            {
-                orderNewChapter = 1;
-            }
-            else
-            {
-                orderNewChapter = (int)(finalChapter.Order + 1);
-            }
-            //DB saver Emoji 
-            var Emoji = new Emoji();
-            await _emojiRepository.CreateAsync(Emoji);
+            var finalChapter = await GetFinalChapterByIdBookAsync(chapterRequestDTO.BookId);
+            var orderNewChapter = (finalChapter?.Index ?? 0) + 1;
             //Create the new Chapter
             Chapter newChapter = new Chapter
             {
                 Name = chapterRequestDTO.Name,
                 Content = chapterRequestDTO.Content,
-                Order = orderNewChapter,
-                StoryId = chapterRequestDTO.StoryId,
-                PublishedDate = DateTime.Now,
-                EmojiId = Emoji.Id
+                Index = orderNewChapter,
+                BookId = chapterRequestDTO.BookId,
+                PublishedAt = DateTime.Now,
             };
 
             return await _chapterRepository.CreateAsync(newChapter);
         }
-        public async Task<Chapter?> GetFinalChapterByIdStoryAsync(int storyId)
+        public async Task<Chapter?> GetFinalChapterByIdBookAsync(int bookId)
         {
-            var allChapterbyStoryId = await _chapterRepository.GetAllbyQueryrAsync(chapter => chapter.StoryId == storyId);
-            var finnalChapter = allChapterbyStoryId.Max(chapter => chapter.Order);
-            return await _chapterRepository.GetAsync(chapter=>chapter.Order == finnalChapter);
+            var chapters = await _chapterRepository.GetAllByQueryAsync(chapter => chapter.BookId == bookId);
+            var finalChapter = chapters.Max(chapter => chapter.Index);
+            return await _chapterRepository.GetAsync(chapter => chapter.Index == finalChapter);
         }
         public async Task DeleteChapterAsync(Chapter chapter)
         {
             await _chapterRepository.DeleteAsync(chapter);
-            var EmojiOfChapter = await _emojiRepository.GetByIdAsync(chapter.EmojiId);
-            await _emojiRepository.DeleteAsync(EmojiOfChapter);
         }
 
-        public async Task<IEnumerable<Chapter?>> GetAllChapteofStoryrAsync(Expression<Func<Chapter, bool>> filter)
+        public async Task DeleteAllChapterAsync(IEnumerable<Chapter> chapters)
         {
-            var chapters = _chapterRepository.GetAllbyQueryrAsync(filter);
+            await _chapterRepository.RemoveRangeAsync(chapters);
+        }
+
+        public async Task<IEnumerable<Chapter?>> GetAllChapterOfBookAsync(Expression<Func<Chapter, bool>> filter)
+        {
+            var chapters = _chapterRepository.GetAllByQueryAsync(filter);
             return await chapters;
         }
-        
+
         public async Task<Chapter?> GetChapterByIdAsync(int chapterId)
         {
             return await _chapterRepository.GetByIdAsync(chapterId);

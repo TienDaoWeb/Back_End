@@ -3,17 +3,18 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using TienDaoAPI.Models;
-using TienDaoAPI.Services.IServices;
 
-namespace TienDaoAPI.Services
+namespace TienDaoAPI.Helpers
 {
-    public class JwtService : IJwtService
+    public class JwtHandler
     {
         private readonly IConfiguration _configuration;
-        public JwtService(IConfiguration configuration)
+
+        public JwtHandler(IConfiguration configuration)
         {
-            this._configuration = configuration;
+            _configuration = configuration;
         }
+
         public string CreateJWTToken(User user, List<string> roles)
         {
             // Create claim
@@ -31,13 +32,9 @@ namespace TienDaoAPI.Services
                 claim.Add(new Claim(ClaimTypes.Role, role));
             }
 
-            // create key
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? ""));
 
-            // create credentials 
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            // create token
 
             var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
                 _configuration["Jwt:Audience"],
@@ -46,13 +43,6 @@ namespace TienDaoAPI.Services
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        public string ExtractEmailFromToken(string token)
-        {
-            var jwtSecurityToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
-            string email = jwtSecurityToken.Claims.First(c => c.Type == ClaimTypes.Email).Value;
-            return email;
         }
 
         public ClaimsPrincipal? VerifyToken(string token)

@@ -34,6 +34,18 @@ namespace TienDaoAPI.Repositories
             return await query.FirstOrDefaultAsync();
         }
 
+        public async Task<IEnumerable<T>> GetAllByQueryAsync(Expression<Func<T, bool>>? filter = null)
+        {
+            IQueryable<T> query = dbSet;
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync();
+        }
+
         public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             return await dbSet.ToListAsync();
@@ -47,6 +59,10 @@ namespace TienDaoAPI.Repositories
         public async Task DeleteByIdAsync(int id)
         {
             T? entity = await dbSet.FindAsync(id);
+            if (entity == null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
             dbSet.Remove(entity);
             await SaveAsync();
         }
@@ -54,6 +70,12 @@ namespace TienDaoAPI.Repositories
         public async Task DeleteAsync(T entity)
         {
             dbSet.Remove(entity);
+            await SaveAsync();
+        }
+
+        public async Task RemoveRangeAsync(IEnumerable<T> entities)
+        {
+            dbSet.RemoveRange(entities);
             await SaveAsync();
         }
 

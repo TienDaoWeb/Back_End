@@ -2,7 +2,7 @@
 
 namespace TienDaoAPI.Repositories.IRepositories
 {
-    public interface IStoryRepository : IRepository<Story>
+    public interface IBookRepository : IRepository<Book>
     {
 
     }

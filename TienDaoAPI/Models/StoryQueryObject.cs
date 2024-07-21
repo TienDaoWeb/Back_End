@@ -1,6 +1,6 @@
 ﻿namespace TienDaoAPI.Models
 {
-    public class StoryQueryObject : BaseQueryObject
+    public class BookQueryObject : BaseQueryObject
     {
         public int Genre { get; set; } = 0;
     }

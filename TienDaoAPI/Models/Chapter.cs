@@ -1,5 +1,4 @@
-﻿using MimeKit.Encodings;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TienDaoAPI.Models
@@ -16,13 +15,12 @@ namespace TienDaoAPI.Models
 
         public string? Content { get; set; }
 
-        public int? Order { get; set; }
-        public int EmojiId { get; set; }
-        public Emoji Emoji { get; set; }
-        public DateTime PublishedDate { get; set; }
+        public int? Index { get; set; }
 
-        public int StoryId { get; set; }
-        public virtual Story? Story { get; set; }
+        public DateTime PublishedAt { get; set; }
+
+        public int BookId { get; set; }
+        public virtual Book? Book { get; set; }
 
     }
 }

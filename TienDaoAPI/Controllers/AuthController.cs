@@ -1,15 +1,17 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Text;
+using TienDaoAPI.DTOs;
 using TienDaoAPI.DTOs.Requests;
 using TienDaoAPI.DTOs.Response;
 using TienDaoAPI.DTOs.Responses;
+using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
 using TienDaoAPI.Response;
 using TienDaoAPI.Services.IServices;
@@ -23,18 +25,23 @@ namespace TienDaoAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly IJwtService _jwtService;
+        private readonly JwtHandler _jwtHandler;
         private readonly IRefreshTokenService _refreshTokenService;
         private readonly IEmailSender _emailSender;
         private readonly UserManager<User> _userManager;
+        private readonly IMapper _mapper;
 
         public AuthController(IJwtService jwtService, IUserService userService,
-            IEmailSender emailSender, UserManager<User> userManager, IRefreshTokenService refreshTokenService)
+            IEmailSender emailSender, UserManager<User> userManager, IRefreshTokenService refreshTokenService,
+            IMapper mapper, JwtHandler jwtHandler)
         {
             _jwtService = jwtService;
             _userService = userService;
             _refreshTokenService = refreshTokenService;
             _emailSender = emailSender;
             _userManager = userManager;
+            _mapper = mapper;
+            _jwtHandler = jwtHandler;
         }
 
         [HttpPost]
@@ -42,35 +49,34 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest registerRequestDTO)
+        public async Task<IActionResult> Register([FromBody] RegisterDTO registerDTO)
         {
             try
             {
-                var user = new User
-                {
-                    Email = registerRequestDTO.Email,
-                    UserName = registerRequestDTO.Email
-                };
+                var user = _mapper.Map<User>(registerDTO);
+                //var user = new User
+                //{
+                //    Email = registerDTO.Email,
+                //    UserName = registerDTO.Email,
+                //    PhoneNumber = registerDTO.PhoneNumber,
+                //    FullName = registerDTO.FullName,
+                //    Birthday = registerDTO.Birthday,
+                //};
 
-                var identityResult = await _userManager.CreateAsync(user, registerRequestDTO.Password);
+                var identityResult = await _userManager.CreateAsync(user, registerDTO.Password);
 
                 if (identityResult.Succeeded)
                 {
                     // Add roles to this User
-                    if (registerRequestDTO.Role != null && registerRequestDTO.Role.Any())
+                    if (registerDTO.Role != null && registerDTO.Role.Any())
                     {
-                        identityResult = await _userManager.AddToRoleAsync(user, registerRequestDTO.Role);
+                        identityResult = await _userManager.AddToRoleAsync(user, registerDTO.Role);
                         if (identityResult.Succeeded)
                         {
                             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-
-                            // https: //localhost:8080/ConfirmEmail/userId=???&code=???
-                            string callbackUrl = Request.Scheme + "://" + Request.Host +
-                                Url.Action("ConfirmEmail", "Auth", new { userId = user.Id, code = code });
 
                             await _emailSender.SendEmailAsync(user.Email, "Xác nhận địa chỉ email",
-                            $"Hãy xác nhận địa chỉ email bằng cách <a href='{callbackUrl}'>Bấm vào đây</a>.");
+                            $"Hãy xác nhận địa chỉ email bằng cách nhập code: {code}.");
 
                             return StatusCode(StatusCodes.Status200OK, new CustomResponse
                             {
@@ -111,15 +117,28 @@ namespace TienDaoAPI.Controllers
             try
             {
                 var user = await _userManager.FindByEmailAsync(loginRequestDTO.Email);
+
                 if (user != null)
                 {
+                    if (!user.EmailConfirmed)
+                    {
+                        var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                        await _emailSender.SendEmailAsync(user.Email, "Xác nhận địa chỉ email",
+                            $"Hãy xác nhận địa chỉ email bằng cách nhập code: {code}.");
+                        return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                        {
+                            StatusCode = HttpStatusCode.BadRequest,
+                            IsSuccess = false,
+                            Message = "Unverified Email"
+                        });
+                    }
                     var checkPassword = await _userManager.CheckPasswordAsync(user, loginRequestDTO.Password);
                     if (checkPassword)
                     {
                         var roles = await _userManager.GetRolesAsync(user);
                         if (roles != null)
                         {
-                            var jwtToken = _jwtService.CreateJWTToken(user, roles.ToList());
+                            var jwtToken = _jwtHandler.CreateJWTToken(user, roles.ToList());
                             RefreshToken refreshToken = await _refreshTokenService.createRefreshTokenAsync(user);
                             return StatusCode(StatusCodes.Status200OK, new CustomResponse
                             {
@@ -160,11 +179,11 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [Route("confirm-email")]
-        public async Task<IActionResult> ConfirmEmail(int userId, string code)
+        public async Task<IActionResult> ConfirmEmail(string email, string code)
         {
             try
             {
-                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                var user = await _userManager.FindByEmailAsync(email);
                 if (user == null)
                 {
                     return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
@@ -334,7 +353,7 @@ namespace TienDaoAPI.Controllers
                     Message = "Reset password successfully",
                     Result = new RefreshTokenResponse
                     {
-                        AccessToken = _jwtService.CreateJWTToken(user, roles.ToList()),
+                        AccessToken = _jwtHandler.CreateJWTToken(user, roles.ToList()),
                         RefreshToken = refreshTokenRequest.RefreshToken
                     }
                 });

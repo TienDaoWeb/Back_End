@@ -11,25 +11,18 @@ namespace TienDaoAPI.Models
         public int Id { get; set; }
 
         [Range(0, 5)]
-        public float RatingCharacter { get; set; }
-
-        [Range(0, 5)]
-        public float RatingPlot { get; set; }
-
-        [Range(0, 5)]
-        public float RatingWorld { get; set; }
-
-        [Range(0, 5)]
-        public float RatingTranslation { get; set; }
+        public float Score { get; set; }
 
         [Required]
-        public required string ReviewContent { get; set; }
+        public required string Content { get; set; }
 
         public DateTime CreatedAt { get; set; }
 
+        public DateTime UpdatedAt { get; set; }
+
         [Required]
-        public int StoryId { get; set; }
-        public virtual required Story Story { get; set; }
+        public int BookId { get; set; }
+        public virtual required Book Book { get; set; }
 
         public int ChapterNumber { get; set; } = 0;
 

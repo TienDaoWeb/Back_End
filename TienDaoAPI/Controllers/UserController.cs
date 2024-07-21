@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Security.Claims;
 using TienDaoAPI.Models;
 using TienDaoAPI.Response;
 using TienDaoAPI.Services.IServices;
@@ -10,7 +11,7 @@ using TienDaoAPI.Services.IServices;
 namespace TienDaoAPI.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/v1/[controller]")]
     public class UserController : ControllerBase
     {
         private readonly IJwtService _jwtService;
@@ -25,15 +26,15 @@ namespace TienDaoAPI.Controllers
         }
 
         [HttpGet]
-        [Route("user")]
+        [Route("")]
         [Authorize]
         public async Task<IActionResult> GetCurrentUser()
         {
             try
             {
                 var token = await HttpContext.GetTokenAsync("access_token");
-                var email = _jwtService.ExtractEmailFromToken(token);
-                var user = await _userManager.FindByEmailAsync(email);
+                var user = await _userManager.FindByIdAsync(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
                     StatusCode = HttpStatusCode.OK,

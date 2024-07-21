@@ -13,7 +13,5 @@ namespace TienDaoAPI.Models
         public string? Name { get; set; }
         [Required]
         public string? Description { get; set; }
-
-        public virtual ICollection<Story> Stories { get; set; } = new HashSet<Story>();
     }
 }

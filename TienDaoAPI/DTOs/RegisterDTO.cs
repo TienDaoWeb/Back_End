@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TienDaoAPI.DTOs.Requests
+namespace TienDaoAPI.DTOs
 {
-    public class RegisterRequest
+    public class RegisterDTO
     {
         [Required]
         [DataType(DataType.EmailAddress)]
@@ -10,11 +10,15 @@ namespace TienDaoAPI.DTOs.Requests
         [Required, MinLength(6)]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
-        [Required, Compare("Password")]
-        [DataType(DataType.Password)]
-        public string ConfirmPassword { get; set; } = string.Empty;
+
+        [Required]
+        public required string FullName { get; set; }
+
+        public string? PhoneNumber { get; set; }
+
+        public DateTime? Birthday { get; set; }
+
         [Required]
         public string Role { get; set; } = string.Empty;
-
     }
 }
