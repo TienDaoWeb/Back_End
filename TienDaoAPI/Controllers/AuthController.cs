@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using Newtonsoft.Json;
 using System.Net;
-using System.Security.Claims;
 using System.Text;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.DTOs.Requests;
@@ -127,8 +127,11 @@ namespace TienDaoAPI.Controllers
                         _redisCacheService.DeleteKeysByPattern($"refresh_token:{user.Id}:*");
 
                         var jwtToken = _jwtHandler.CreateJWTToken(user);
-                        var refreshToken = _jwtHandler.GenerateRefreshToken();
-                        _redisCacheService.Cache($"refresh_token:{user.Id}:{refreshToken}", "", TimeSpan.FromDays(50));
+                        var refreshToken = _jwtHandler.CreateRefreshToken(user);
+                        var userDto = _mapper.Map<UserDto>(user);
+                        var userDtoJson = JsonConvert.SerializeObject(userDto);
+                        HttpContext.Session.SetString("UserDto", userDtoJson);
+                        _redisCacheService.Cache($"refresh_token:{user.Id}:{refreshToken}", userDtoJson, TimeSpan.FromDays(50));
                         return StatusCode(StatusCodes.Status200OK, new CustomResponse
                         {
                             StatusCode = HttpStatusCode.OK,
@@ -146,8 +149,6 @@ namespace TienDaoAPI.Controllers
                         });
                     }
                 }
-
-
                 else
                 {
                     return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
@@ -324,10 +325,10 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-                var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-                var reuslt = _redisCacheService.Get($"refresh_token:{userId}:{refreshToken}");
+                var userId = _jwtHandler.GetUserIdFromToken(refreshToken);
+                var result = _redisCacheService.Get($"refresh_token:{userId}:{refreshToken}");
 
-                if (reuslt == null)
+                if (result == null)
                 {
                     return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
                     {
@@ -338,13 +339,17 @@ namespace TienDaoAPI.Controllers
                 }
 
 
-                var user = await _userManager.FindByIdAsync(userId.ToString());
+                var user = await _userManager.FindByIdAsync(userId.ToString()!);
+                _redisCacheService.DeleteKeysByPattern($"refresh_token:{userId}:*");
+                var newRefreshToken = _jwtHandler.CreateRefreshToken(user!);
+                _redisCacheService.Cache($"refresh_token:{user?.Id}:{newRefreshToken}", result, TimeSpan.FromDays(50));
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
                     StatusCode = HttpStatusCode.OK,
                     Result = new
                     {
-                        AccessToken = _jwtHandler.CreateJWTToken(user!)
+                        AccessToken = _jwtHandler.CreateJWTToken(user!),
+                        RefreshToken = newRefreshToken
                     }
                 });
             }

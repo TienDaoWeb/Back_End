@@ -6,9 +6,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
 using System.Text;
-using TienDaoAPI.Attributes;
 using TienDaoAPI.Data;
 using TienDaoAPI.Helpers;
+using TienDaoAPI.Middlewares;
 using TienDaoAPI.Models;
 using TienDaoAPI.Repositories;
 using TienDaoAPI.Repositories.IRepositories;
@@ -77,9 +77,18 @@ builder.Services.Configure<CustomTwoFactorTokenProviderOptions>(options =>
     options.TokenLifespan = TimeSpan.FromMinutes(15);
 });
 
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+builder.Services.AddDistributedMemoryCache();
+
 builder.Services.AddOptions();
-var mailsettings = builder.Configuration.GetSection("MailSettings");  // đọc config
-builder.Services.Configure<MailSettings>(mailsettings);               // đăng ký để Inject
+var mailsettings = builder.Configuration.GetSection("MailSettings");
+builder.Services.Configure<MailSettings>(mailsettings);
 
 builder.Services.AddTransient<EmailProvider>();
 
@@ -152,10 +161,10 @@ builder.Services.Configure<RouteOptions>(options =>
     options.LowercaseUrls = true;
 });
 
-builder.Services.AddControllersWithViews(options =>
-{
-    options.Filters.Add<CustomAuthorizeAttribute>();
-});
+//builder.Services.AddControllersWithViews(options =>
+//{
+//    options.Filters.Add<CustomAuthorizeAttribute>();
+//});
 
 var app = builder.Build();
 
@@ -166,8 +175,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-//app.UseMiddleware<JwtMiddleware>();
+app.UseMiddleware<JwtMiddleware>();
 app.UseHttpsRedirection();
+
+app.UseSession();
 
 app.UseAuthentication();
 
