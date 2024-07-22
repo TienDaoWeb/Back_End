@@ -1,6 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using TienDaoAPI.Models;
 
@@ -15,7 +16,7 @@ namespace TienDaoAPI.Helpers
             _configuration = configuration;
         }
 
-        public string CreateJWTToken(User user, List<string> roles)
+        public string CreateJWTToken(User user)
         {
             // Create claim
             if (user.Email == null)
@@ -25,12 +26,9 @@ namespace TienDaoAPI.Helpers
             var claim = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role)
             };
-            foreach (var role in roles)
-            {
-                claim.Add(new Claim(ClaimTypes.Role, role));
-            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? ""));
 
@@ -73,6 +71,16 @@ namespace TienDaoAPI.Helpers
             catch (SecurityTokenExpiredException)
             {
                 throw new ApplicationException("Token has expired.");
+            }
+        }
+
+        public string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomNumber);
+                return Convert.ToBase64String(randomNumber);
             }
         }
     }

@@ -4,7 +4,7 @@ using TienDaoAPI.Models;
 
 namespace TienDaoAPI.Data
 {
-    public class TienDaoDbContext : IdentityDbContext<User, Role, int>
+    public class TienDaoDbContext : IdentityUserContext<User, int>
     {
         public TienDaoDbContext(DbContextOptions<TienDaoDbContext> options) : base(options)
         {
@@ -21,29 +21,6 @@ namespace TienDaoAPI.Data
                     entityType.SetTableName(tableName.Substring(6));
                 }
             }
-            var roles = new List<Role>()
-                {
-                    new Role(){
-                            Id = 1,
-                            ConcurrencyStamp = "AdminRole",
-                            Name = "Admin",
-                            NormalizedName = "Admin".ToUpper()
-                    },
-                    new Role(){
-                            Id = 2,
-                            ConcurrencyStamp = "ConverterRole",
-                            Name = "Converter",
-                            NormalizedName = "Converter".ToUpper()
-                    },
-                    new Role(){
-                            Id = 3,
-                            ConcurrencyStamp = "ReaderRole",
-                            Name = "Reader",
-                            NormalizedName = "Reader".ToUpper()
-                    }
-                };
-
-            builder.Entity<Role>().HasData(roles);
         }
 
         public DbSet<Book> Books { get; set; }

@@ -20,7 +20,7 @@ namespace TienDaoAPI.Services
         public async Task<Book?> CreateBookAsync(CreateBookDto dto)
         {
             string uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.PosterUrl;
-            await _firebaseStorageService.UploadFile(uniqueFileName, dto.UrlImage);
+            await _firebaseStorageService.UploadFile(uniqueFileName, dto.PosterUrl!);
 
             Book newBook = new Book
             {

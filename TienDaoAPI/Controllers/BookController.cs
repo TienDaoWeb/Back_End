@@ -37,6 +37,7 @@ namespace TienDaoAPI.Controllers
         //Create book save DB
         [HttpPost]
         [Route("")]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -44,7 +45,7 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-                if (bookRequest.UrlImage == null)
+                if (bookRequest.PosterUrl == null)
                 {
                     return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
                     {

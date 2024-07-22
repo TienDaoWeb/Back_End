@@ -18,7 +18,6 @@ namespace TienDaoAPI.DTOs.Requests
         public int OwnerId { get; set; }
         [Required]
         public int GenreId { get; set; }
-        public required IFormFile UrlImage { get; set; }
 
     }
 }

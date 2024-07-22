@@ -31,8 +31,8 @@ namespace TienDaoAPI.Models
         public DateTime UpdateDate { get; set; }
 
         [Required]
-        [EnumDataType(typeof(BookStatusEnum))]
-        public BookStatusEnum Status { get; set; }
+        //[EnumDataType(typeof(BookStatusEnum))]
+        public string Status { get; set; } = BookStatusEnum.Ongoing;
 
         public int GenreId { get; set; }
         [ForeignKey(nameof(GenreId))]

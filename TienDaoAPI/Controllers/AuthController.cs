@@ -2,15 +2,14 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Net;
+using System.Security.Claims;
 using System.Text;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.DTOs.Requests;
-using TienDaoAPI.DTOs.Response;
-using TienDaoAPI.DTOs.Responses;
+using TienDaoAPI.Enums;
 using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
 using TienDaoAPI.Response;
@@ -27,21 +26,25 @@ namespace TienDaoAPI.Controllers
         private readonly IJwtService _jwtService;
         private readonly JwtHandler _jwtHandler;
         private readonly IRefreshTokenService _refreshTokenService;
-        private readonly IEmailSender _emailSender;
+        private readonly EmailProvider _emailProvider;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
+        private readonly IAccountService _accountService;
+        private readonly IRedisCacheService _redisCacheService;
 
         public AuthController(IJwtService jwtService, IUserService userService,
-            IEmailSender emailSender, UserManager<User> userManager, IRefreshTokenService refreshTokenService,
-            IMapper mapper, JwtHandler jwtHandler)
+            EmailProvider emailProvider, UserManager<User> userManager, IRefreshTokenService refreshTokenService,
+            IMapper mapper, JwtHandler jwtHandler, IAccountService accountService, IRedisCacheService redisCacheService)
         {
             _jwtService = jwtService;
             _userService = userService;
             _refreshTokenService = refreshTokenService;
-            _emailSender = emailSender;
+            _emailProvider = emailProvider;
             _userManager = userManager;
             _mapper = mapper;
             _jwtHandler = jwtHandler;
+            _accountService = accountService;
+            _redisCacheService = redisCacheService;
         }
 
         [HttpPost]
@@ -51,48 +54,33 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Register([FromBody] RegisterDTO registerDTO)
         {
+
             try
             {
                 var user = _mapper.Map<User>(registerDTO);
-                //var user = new User
-                //{
-                //    Email = registerDTO.Email,
-                //    UserName = registerDTO.Email,
-                //    PhoneNumber = registerDTO.PhoneNumber,
-                //    FullName = registerDTO.FullName,
-                //    Birthday = registerDTO.Birthday,
-                //};
+                var result = await _accountService.CreateNewAccountAsync(user, registerDTO.Password);
 
-                var identityResult = await _userManager.CreateAsync(user, registerDTO.Password);
-
-                if (identityResult.Succeeded)
+                return result switch
                 {
-                    // Add roles to this User
-                    if (registerDTO.Role != null && registerDTO.Role.Any())
+                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new CustomResponse
                     {
-                        identityResult = await _userManager.AddToRoleAsync(user, registerDTO.Role);
-                        if (identityResult.Succeeded)
-                        {
-                            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                        StatusCode = HttpStatusCode.OK,
+                        Message = "Chúc mừng! Bạn vừa tạo ra một hồn ma mới trong hệ thống!",
 
-                            await _emailSender.SendEmailAsync(user.Email, "Xác nhận địa chỉ email",
-                            $"Hãy xác nhận địa chỉ email bằng cách nhập code: {code}.");
-
-                            return StatusCode(StatusCodes.Status200OK, new CustomResponse
-                            {
-                                StatusCode = HttpStatusCode.OK,
-                                Message = "User was registered",
-
-                            });
-                        }
-                    }
-                }
-                return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
-                {
-                    StatusCode = HttpStatusCode.BadRequest,
-                    IsSuccess = false,
-                    Message = "Some thing wrong!"
-                });
+                    }),
+                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.BadRequest,
+                        IsSuccess = false,
+                        Message = "Role không tồn tại!"
+                    }),
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.InternalServerError,
+                        IsSuccess = false,
+                        Message = "Internal Server Error: Không xác định lỗi."
+                    })
+                };
             }
             catch (Exception ex)
             {
@@ -120,47 +108,55 @@ namespace TienDaoAPI.Controllers
 
                 if (user != null)
                 {
-                    if (!user.EmailConfirmed)
+                    var checkPassword = await _userManager.CheckPasswordAsync(user, loginRequestDTO.Password);
+                    if (checkPassword)
                     {
-                        var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                        await _emailSender.SendEmailAsync(user.Email, "Xác nhận địa chỉ email",
-                            $"Hãy xác nhận địa chỉ email bằng cách nhập code: {code}.");
+                        if (!user.EmailConfirmed)
+                        {
+                            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                            var templatePath = "./Templates/register.html";
+                            await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "Email Verification", templatePath, new { code });
+
+                            return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                            {
+                                StatusCode = HttpStatusCode.BadRequest,
+                                IsSuccess = false,
+                                Message = "Unverified Email"
+                            });
+                        }
+                        _redisCacheService.DeleteKeysByPattern($"refresh_token:{user.Id}:*");
+
+                        var jwtToken = _jwtHandler.CreateJWTToken(user);
+                        var refreshToken = _jwtHandler.GenerateRefreshToken();
+                        _redisCacheService.Cache($"refresh_token:{user.Id}:{refreshToken}", "", TimeSpan.FromDays(50));
+                        return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                        {
+                            StatusCode = HttpStatusCode.OK,
+                            Message = "Login successfully",
+                            Result = new { AccessToken = jwtToken, RefreshToken = refreshToken }
+                        });
+                    }
+                    else
+                    {
                         return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
                         {
                             StatusCode = HttpStatusCode.BadRequest,
                             IsSuccess = false,
-                            Message = "Unverified Email"
+                            Message = "Password is incorrect"
                         });
                     }
-                    var checkPassword = await _userManager.CheckPasswordAsync(user, loginRequestDTO.Password);
-                    if (checkPassword)
+                }
+
+
+                else
+                {
+                    return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
                     {
-                        var roles = await _userManager.GetRolesAsync(user);
-                        if (roles != null)
-                        {
-                            var jwtToken = _jwtHandler.CreateJWTToken(user, roles.ToList());
-                            RefreshToken refreshToken = await _refreshTokenService.createRefreshTokenAsync(user);
-                            return StatusCode(StatusCodes.Status200OK, new CustomResponse
-                            {
-                                StatusCode = HttpStatusCode.OK,
-                                Message = "Login successfully",
-                                Result = new LoginResponse { AccessToken = jwtToken, RefreshToken = refreshToken.Token }
-                            }); ;
-                        }
-                    }
-                    return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
+                        StatusCode = HttpStatusCode.NotFound,
                         IsSuccess = false,
-                        Message = "Password is incorrect"
+                        Message = "User does not exsit"
                     });
                 }
-                return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
-                {
-                    StatusCode = HttpStatusCode.NotFound,
-                    IsSuccess = false,
-                    Message = "User does not exsit"
-                });
             }
             catch (Exception ex)
             {
@@ -183,32 +179,35 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-                var user = await _userManager.FindByEmailAsync(email);
-                if (user == null)
+                var result = await _accountService.VerifyEmailAsync(email, code);
+
+                return result switch
                 {
-                    return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
+                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.OK,
+                        Message = "Xác thực email thành công!",
+
+                    }),
+                    AccountErrorEnum.InvalidOTP => StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.BadRequest,
+                        Message = "OTP không hợp lệ hoặc đã hết hạn!",
+
+                    }),
+                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         IsSuccess = false,
-                        Message = "User does not exsit"
-                    });
-                }
-                code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
-                var identityResult = await _userManager.ConfirmEmailAsync(user, code);
-                if (identityResult.Succeeded)
-                {
-                    return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                        Message = "Tài khoản không tồn tại!"
+                    }),
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
                     {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = "Confirm email successfully"
-                    });
-                }
-                return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
-                {
-                    StatusCode = HttpStatusCode.BadRequest,
-                    IsSuccess = false,
-                    Message = "Confirm email failed"
-                });
+                        StatusCode = HttpStatusCode.InternalServerError,
+                        IsSuccess = false,
+                        Message = "Internal Server Error: Không xác định lỗi."
+                    })
+                };
             }
             catch (Exception ex)
             {
@@ -247,8 +246,8 @@ namespace TienDaoAPI.Controllers
                 string callbackUrl = Request.Scheme + "://" + Request.Host +
                     Url.Action("ResetPassword", "Auth", new { email = user.Email, token = encodedToken });
 
-                await _emailSender.SendEmailAsync(user.Email, "Đặt lại mật khẩu",
-                $"Đặt lại mật khẩu bằng cách <a href='{callbackUrl}'>Bấm vào đây</a>.");
+                //await _emailSender.SendEmailAsync(user.Email, "Đặt lại mật khẩu",
+                //$"Đặt lại mật khẩu bằng cách <a href='{callbackUrl}'>Bấm vào đây</a>.");
 
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
@@ -321,40 +320,31 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> RefreshToken(RefreshTokenRequest refreshTokenRequest)
+        public async Task<IActionResult> RefreshToken(string refreshToken)
         {
             try
             {
-                var refreshToken = await _refreshTokenService.getRefreshTokenByTokenAsync(refreshTokenRequest.RefreshToken);
-                if (refreshToken == null)
+                var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+                var reuslt = _redisCacheService.Get($"refresh_token:{userId}:{refreshToken}");
+
+                if (reuslt == null)
                 {
                     return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.BadRequest,
                         IsSuccess = false,
-                        Message = "Refresh token is incorrect"
+                        Message = "Refresh token không chính xác hoặc hết hạn!"
                     });
                 }
-                var isTokenExpried = await _refreshTokenService.CheckTokenExpiredAsync(refreshToken);
-                if (isTokenExpried)
-                {
-                    return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        IsSuccess = false,
-                        Message = "Refresh token is expired"
-                    });
-                }
-                var user = await _userService.GetUserByIdAsync(refreshToken.UserId);
-                var roles = await _userManager.GetRolesAsync(user);
+
+
+                var user = await _userManager.FindByIdAsync(userId.ToString());
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Message = "Reset password successfully",
-                    Result = new RefreshTokenResponse
+                    Result = new
                     {
-                        AccessToken = _jwtHandler.CreateJWTToken(user, roles.ToList()),
-                        RefreshToken = refreshTokenRequest.RefreshToken
+                        AccessToken = _jwtHandler.CreateJWTToken(user!)
                     }
                 });
             }

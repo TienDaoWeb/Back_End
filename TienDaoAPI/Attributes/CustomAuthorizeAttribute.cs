@@ -21,7 +21,7 @@ namespace TienDaoAPI.Attributes
             .Any(em => em is AuthorizeAttribute);
             if (hasAuthorizeAttribute)
             {
-                var bearerToken = context.HttpContext.Request.Headers["Authorization"].FirstOrDefault();
+                var bearerToken = context.HttpContext.Request.Headers.Authorization.FirstOrDefault();
 
                 if (string.IsNullOrEmpty(bearerToken))
                 {
@@ -71,9 +71,6 @@ namespace TienDaoAPI.Attributes
                     return;
                 }
             }
-
-
-
         }
     }
 }

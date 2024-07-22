@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TienDaoAPI.Services.Validation
+namespace TienDaoAPI.Validation
 {
     public class FileExtensionAttribute : ValidationAttribute
     {

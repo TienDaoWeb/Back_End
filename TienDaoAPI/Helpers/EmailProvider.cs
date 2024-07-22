@@ -4,17 +4,17 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using TienDaoAPI.Models;
 
-namespace TienDaoAPI.Services
+namespace TienDaoAPI.Helpers
 {
-    public class MailService : IEmailSender
+    public class EmailProvider : IEmailSender
     {
         private readonly MailSettings _mailSettings;
 
-        private readonly ILogger<MailService> _logger;
+        private readonly ILogger<EmailProvider> _logger;
 
         // mailSetting được Inject qua dịch vụ hệ thống
         // Có inject Logger để xuất log
-        public MailService(IOptions<MailSettings> mailSettings, ILogger<MailService> logger)
+        public EmailProvider(IOptions<MailSettings> mailSettings, ILogger<EmailProvider> logger)
         {
             _mailSettings = mailSettings.Value;
             _logger = logger;
@@ -45,7 +45,7 @@ namespace TienDaoAPI.Services
             catch (Exception ex)
             {
                 // Gửi mail thất bại, nội dung email sẽ lưu vào thư mục mailssave
-                System.IO.Directory.CreateDirectory("mailssave");
+                Directory.CreateDirectory("mailssave");
                 var emailsavefile = string.Format(@"mailssave/{0}.eml", Guid.NewGuid());
                 await message.WriteToAsync(emailsavefile);
 
@@ -57,6 +57,18 @@ namespace TienDaoAPI.Services
 
             _logger.LogInformation("send mail to: " + email);
 
+        }
+
+        public async Task SendEmailWithTemplateAsync(string email, string subject, string templatePath, object data)
+        {
+            var template = File.ReadAllText(templatePath);
+
+            foreach (var prop in data.GetType().GetProperties())
+            {
+                template = template.Replace($"{{{prop.Name}}}", prop.GetValue(data)?.ToString());
+            }
+
+            await SendEmailAsync(email, subject, template);
         }
     }
 }

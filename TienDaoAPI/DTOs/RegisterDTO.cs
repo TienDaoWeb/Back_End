@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using TienDaoAPI.Attributes;
 
 namespace TienDaoAPI.DTOs
 {
@@ -19,6 +20,7 @@ namespace TienDaoAPI.DTOs
         public DateTime? Birthday { get; set; }
 
         [Required]
-        public string Role { get; set; } = string.Empty;
+        [RoleEnumValidation]
+        public required string Role { get; set; }
     }
 }

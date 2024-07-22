@@ -1,10 +1,10 @@
 ﻿using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using StackExchange.Redis;
 using System.Text;
 using TienDaoAPI.Attributes;
 using TienDaoAPI.Data;
@@ -25,9 +25,12 @@ builder.Services.AddDbContext<TienDaoDbContext>(option =>
     option.UseNpgsql(builder.Configuration.GetConnectionString("PostpreConnection"));
 });
 
-builder.Services.AddIdentityCore<User>().AddRoles<Role>()
-    .AddTokenProvider<DataProtectorTokenProvider<User>>("TienDao")
-    .AddEntityFrameworkStores<TienDaoDbContext>().AddDefaultTokenProviders();
+builder.Services.AddIdentityCore<User>()
+    .AddTokenProvider<CustomTwoFactorTokenProvider>("CustomTwoFactorTokenProvider")
+    .AddEntityFrameworkStores<TienDaoDbContext>();
+
+var redis = ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("RedisConnection")!);
+builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -65,17 +68,20 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.SignIn.RequireConfirmedEmail = true;
     options.SignIn.RequireConfirmedPhoneNumber = false;
 
+    options.Tokens.EmailConfirmationTokenProvider = "CustomTwoFactorTokenProvider";
+
 });
-builder.Services.Configure<DataProtectionTokenProviderOptions>(o =>
+
+builder.Services.Configure<CustomTwoFactorTokenProviderOptions>(options =>
 {
-    o.TokenLifespan = TimeSpan.FromMinutes(15);
+    options.TokenLifespan = TimeSpan.FromMinutes(15);
 });
 
 builder.Services.AddOptions();
 var mailsettings = builder.Configuration.GetSection("MailSettings");  // đọc config
 builder.Services.Configure<MailSettings>(mailsettings);               // đăng ký để Inject
 
-builder.Services.AddTransient<IEmailSender, MailService>();
+builder.Services.AddTransient<EmailProvider>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -118,6 +124,12 @@ builder.Services.AddSwaggerGen(c =>
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", @"Services/FileState/certificate-tiendaoapi.json");
 builder.Services.AddSingleton<IFirebaseStorageService>(s => new FirebaseStorageService(StorageClient.Create()));
 
+builder.Services.AddScoped<IRedisCacheService>(provider =>
+{
+    return new RedisCacheService(provider.GetRequiredService<IConnectionMultiplexer>());
+});
+//builder.Services.AddSingleton<ITokenStoreService, RedisCacheService>();
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddSingleton<JwtHandler>();
@@ -127,6 +139,7 @@ builder.Services.AddScoped<IGenreRepository, GenreRepository>();
 builder.Services.AddScoped<IChapterRepository, ChapterRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
+builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IChapterService, ChapterService>();
 builder.Services.AddScoped<IBookService, BookService>();
@@ -141,7 +154,7 @@ builder.Services.Configure<RouteOptions>(options =>
 
 builder.Services.AddControllersWithViews(options =>
 {
-    options.Filters.Add(typeof(CustomAuthorizeAttribute));
+    options.Filters.Add<CustomAuthorizeAttribute>();
 });
 
 var app = builder.Build();

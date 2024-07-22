@@ -1,9 +1,9 @@
 ﻿namespace TienDaoAPI.Enums
 {
-    public enum BookStatusEnum
+    public static class BookStatusEnum
     {
-        Completed,
-        Ongoing,
-        Paused
+        public const string Completed = "Hoàn thành";
+        public const string Ongoing = "Đang ra";
+        public const string Paused = "Tạm dừng";
     }
 }
