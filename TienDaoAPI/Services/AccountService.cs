@@ -26,16 +26,47 @@ namespace TienDaoAPI.Services
 
             if (identityResult.Succeeded)
             {
-                var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                var templatePath = "./Templates/register.html";
-                await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "Email Verification", templatePath, new { code });
+                var otp = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var templatePath = "./Templates/otp_register_mail.html";
+                await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "OTP Verification", templatePath, new { otp });
                 return AccountErrorEnum.AllOk;
             }
             return AccountErrorEnum.Existed;
 
         }
 
-        public async Task<AccountErrorEnum> VerifyEmailAsync(string email, string code)
+        public async Task<AccountErrorEnum> RequestResetPasswordAsync(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user != null)
+            {
+                var otp = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var templatePath = "./Templates/otp_reset_password.html";
+                await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "OTP Verification", templatePath, new { otp });
+                return AccountErrorEnum.AllOk;
+            }
+            return AccountErrorEnum.NotExists;
+        }
+
+        public async Task<AccountErrorEnum> ResetPasswordAsync(string email, string otp)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return AccountErrorEnum.NotExists;
+            }
+            var newPassword = PasswordProvider.GenerateStrongPassword();
+            var identityResult = await _userManager.ResetPasswordAsync(user, otp, newPassword);
+            if (!identityResult.Succeeded)
+            {
+                return AccountErrorEnum.InvalidOTP;
+            }
+            var templatePath = "./Templates/reset_password_mail.html";
+            await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "New your password", templatePath, new { newPassword });
+            return AccountErrorEnum.AllOk;
+        }
+
+        public async Task<AccountErrorEnum> VerifyEmailAsync(string email, string otp)
         {
 
             var user = await _userManager.FindByEmailAsync(email);
@@ -43,12 +74,12 @@ namespace TienDaoAPI.Services
             {
                 return AccountErrorEnum.NotExists;
             }
-            var identityResult = await _userManager.ConfirmEmailAsync(user, code);
-            if (identityResult.Succeeded)
+            var identityResult = await _userManager.ConfirmEmailAsync(user, otp);
+            if (!identityResult.Succeeded)
             {
-                return AccountErrorEnum.AllOk;
+                return AccountErrorEnum.InvalidOTP;
             }
-            return AccountErrorEnum.InvalidOTP;
+            return AccountErrorEnum.AllOk;
         }
     }
 }

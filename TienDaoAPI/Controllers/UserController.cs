@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
+using TienDaoAPI.Enums;
 using TienDaoAPI.Models;
 using TienDaoAPI.Response;
 using TienDaoAPI.Services.IServices;
@@ -27,7 +28,7 @@ namespace TienDaoAPI.Controllers
 
         [HttpGet]
         [Route("")]
-        [Authorize]
+        [Authorize(Roles = RoleEnum.ADMIN)]
         public async Task<IActionResult> GetCurrentUser()
         {
             try

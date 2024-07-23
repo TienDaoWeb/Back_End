@@ -11,7 +11,7 @@ namespace TienDaoAPI.Config
         {
             CreateMap<GenreResponse, Genre>().ReverseMap();
             CreateMap<RegisterDTO, User>().ForMember(d => d.UserName, s => s.MapFrom(x => x.Email));
-            CreateMap<UserDto, User>().ReverseMap();
+            CreateMap<UserDTO, User>().ReverseMap();
             CreateMap<Book, BookResponse>()
                 .ForMember(d => d.NumberOfChapters, s => s.MapFrom(x => x.Chapters.Count))
                 .ForPath(d => d.GenreResponse, s => s.MapFrom(x => x.Genre))

@@ -1,12 +1,9 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
-using Newtonsoft.Json;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
-using System.Text;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.DTOs.Requests;
 using TienDaoAPI.Enums;
@@ -22,29 +19,24 @@ namespace TienDaoAPI.Controllers
     [Route("api/v1/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IUserService _userService;
-        private readonly IJwtService _jwtService;
         private readonly JwtHandler _jwtHandler;
-        private readonly IRefreshTokenService _refreshTokenService;
+        private readonly SessionProvider _sessionProvider;
         private readonly EmailProvider _emailProvider;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
         private readonly IAccountService _accountService;
         private readonly IRedisCacheService _redisCacheService;
 
-        public AuthController(IJwtService jwtService, IUserService userService,
-            EmailProvider emailProvider, UserManager<User> userManager, IRefreshTokenService refreshTokenService,
-            IMapper mapper, JwtHandler jwtHandler, IAccountService accountService, IRedisCacheService redisCacheService)
+        public AuthController(EmailProvider emailProvider, UserManager<User> userManager, SessionProvider sessionProvider,
+        IMapper mapper, JwtHandler jwtHandler, IAccountService accountService, IRedisCacheService redisCacheService)
         {
-            _jwtService = jwtService;
-            _userService = userService;
-            _refreshTokenService = refreshTokenService;
             _emailProvider = emailProvider;
             _userManager = userManager;
             _mapper = mapper;
             _jwtHandler = jwtHandler;
             _accountService = accountService;
             _redisCacheService = redisCacheService;
+            _sessionProvider = sessionProvider;
         }
 
         [HttpPost]
@@ -114,7 +106,7 @@ namespace TienDaoAPI.Controllers
                         if (!user.EmailConfirmed)
                         {
                             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                            var templatePath = "./Templates/register.html";
+                            var templatePath = "./Templates/otp_register_mail.html";
                             await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "Email Verification", templatePath, new { code });
 
                             return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
@@ -124,14 +116,16 @@ namespace TienDaoAPI.Controllers
                                 Message = "Unverified Email"
                             });
                         }
-                        _redisCacheService.DeleteKeysByPattern($"refresh_token:{user.Id}:*");
 
                         var jwtToken = _jwtHandler.CreateJWTToken(user);
                         var refreshToken = _jwtHandler.CreateRefreshToken(user);
-                        var userDto = _mapper.Map<UserDto>(user);
-                        var userDtoJson = JsonConvert.SerializeObject(userDto);
-                        HttpContext.Session.SetString("UserDto", userDtoJson);
-                        _redisCacheService.Cache($"refresh_token:{user.Id}:{refreshToken}", userDtoJson, TimeSpan.FromDays(50));
+
+                        var userDto = _mapper.Map<UserDTO>(user);
+
+                        var accessJti = new JwtSecurityTokenHandler().ReadJwtToken(jwtToken).Payload["jti"].ToString();
+                        var refreshJti = new JwtSecurityTokenHandler().ReadJwtToken(refreshToken).Payload["jti"].ToString();
+
+                        _sessionProvider.SaveSession(user.Id.ToString(), _mapper.Map<UserDTO>(user), accessJti!, refreshJti!);
                         return StatusCode(StatusCodes.Status200OK, new CustomResponse
                         {
                             StatusCode = HttpStatusCode.OK,
@@ -176,11 +170,11 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [Route("confirm-email")]
-        public async Task<IActionResult> ConfirmEmail(string email, string code)
+        public async Task<IActionResult> ConfirmEmail([FromBody] string email, string otp)
         {
             try
             {
-                var result = await _accountService.VerifyEmailAsync(email, code);
+                var result = await _accountService.VerifyEmailAsync(email, otp);
 
                 return result switch
                 {
@@ -200,7 +194,7 @@ namespace TienDaoAPI.Controllers
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         IsSuccess = false,
-                        Message = "Tài khoản không tồn tại!"
+                        Message = "Email không tồn tại!"
                     }),
                     _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
                     {
@@ -226,35 +220,32 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [Route("forget-password")]
-        public async Task<IActionResult> ForgetPassword(string email)
+        public async Task<IActionResult> ForgetPassword([FromBody] EmailDTO dto)
         {
             try
             {
-                var user = await _userManager.FindByEmailAsync(email);
-                if (user == null)
+                var result = await _accountService.RequestResetPasswordAsync(dto.Email);
+
+                return result switch
                 {
-                    return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
+                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new CustomResponse
                     {
-                        StatusCode = HttpStatusCode.NotFound,
+                        StatusCode = HttpStatusCode.OK,
+                        Message = $"Vui lòng sử dụng OTP đã được gửi tới địa chỉ {dto.Email} để khôi phục mật khẩu!"
+                    }),
+                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.BadRequest,
                         IsSuccess = false,
-                        Message = "User does not exsit"
-                    });
-                }
-                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-
-                // https: //localhost:8080/ConfirmEmail/email=???&encodedToken=???
-                string callbackUrl = Request.Scheme + "://" + Request.Host +
-                    Url.Action("ResetPassword", "Auth", new { email = user.Email, token = encodedToken });
-
-                //await _emailSender.SendEmailAsync(user.Email, "Đặt lại mật khẩu",
-                //$"Đặt lại mật khẩu bằng cách <a href='{callbackUrl}'>Bấm vào đây</a>.");
-
-                return StatusCode(StatusCodes.Status200OK, new CustomResponse
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Message = "Send email to reset password successfully"
-                });
+                        Message = "Email không tồn tại!"
+                    }),
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.InternalServerError,
+                        IsSuccess = false,
+                        Message = "Internal Server Error: Không xác định lỗi."
+                    })
+                };
             }
             catch (Exception ex)
             {
@@ -262,7 +253,8 @@ namespace TienDaoAPI.Controllers
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message
+                    Message = "Internal Server Error: " + ex.Message,
+
                 });
             }
         }
@@ -273,36 +265,39 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [Route("reset-password")]
-        public async Task<IActionResult> ResetPassword(ResetPasswordRequest resetPasswordRequestDTO)
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO dto)
         {
             try
             {
-                var user = await _userManager.FindByEmailAsync(resetPasswordRequestDTO.Email);
-                if (user == null)
+                var result = await _accountService.ResetPasswordAsync(dto.Email, dto.OTP);
+
+                return result switch
                 {
-                    return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
+                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.OK,
+                        Message = $"Vui lòng sử dụng mật khẩu đã được gửi tới địa chỉ {dto.Email} để đăng nhập tài khoản!",
+
+                    }),
+                    AccountErrorEnum.InvalidOTP => StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.BadRequest,
+                        Message = "OTP không hợp lệ hoặc đã hết hạn!",
+
+                    }),
+                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         IsSuccess = false,
-                        Message = "User does not exsit"
-                    });
-                }
-                var token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(resetPasswordRequestDTO.Token));
-                var identityResult = await _userManager.ResetPasswordAsync(user, token, resetPasswordRequestDTO.NewPassword);
-                if (identityResult.Succeeded)
-                {
-                    return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                        Message = "Email không tồn tại!"
+                    }),
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
                     {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = "Reset password successfully"
-                    });
-                }
-                return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
-                {
-                    StatusCode = HttpStatusCode.BadRequest,
-                    IsSuccess = false,
-                    Message = "Reset password failed"
-                });
+                        StatusCode = HttpStatusCode.InternalServerError,
+                        IsSuccess = false,
+                        Message = "Internal Server Error: Không xác định lỗi."
+                    })
+                };
             }
             catch (Exception ex)
             {
@@ -325,10 +320,7 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-                var userId = _jwtHandler.GetUserIdFromToken(refreshToken);
-                var result = _redisCacheService.Get($"refresh_token:{userId}:{refreshToken}");
-
-                if (result == null)
+                if (!_sessionProvider.VerifyRefreshToken(refreshToken))
                 {
                     return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
                     {
@@ -337,12 +329,16 @@ namespace TienDaoAPI.Controllers
                         Message = "Refresh token không chính xác hoặc hết hạn!"
                     });
                 }
-
-
-                var user = await _userManager.FindByIdAsync(userId.ToString()!);
-                _redisCacheService.DeleteKeysByPattern($"refresh_token:{userId}:*");
+                var userId = new JwtSecurityTokenHandler().ReadJwtToken(refreshToken).Payload["sub"].ToString();
+                var user = await _userManager.FindByIdAsync(userId!);
+                var jwtToken = _jwtHandler.CreateJWTToken(user!);
                 var newRefreshToken = _jwtHandler.CreateRefreshToken(user!);
-                _redisCacheService.Cache($"refresh_token:{user?.Id}:{newRefreshToken}", result, TimeSpan.FromDays(50));
+
+
+                var accessJti = new JwtSecurityTokenHandler().ReadJwtToken(jwtToken).Payload["jti"].ToString();
+                var refreshJti = new JwtSecurityTokenHandler().ReadJwtToken(newRefreshToken).Payload["jti"].ToString();
+                _sessionProvider.SaveSession(userId!, _mapper.Map<UserDTO>(user), accessJti!, refreshJti!);
+
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
                     StatusCode = HttpStatusCode.OK,
@@ -372,37 +368,38 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest changePasswordRequest)
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO changePasswordRequest)
         {
             try
             {
-                string? token = await HttpContext.GetTokenAsync("access_token");
-                if (token == null)
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized, new CustomResponse
-                    {
-                        StatusCode = HttpStatusCode.Unauthorized,
-                        IsSuccess = false,
-                        Message = "Please login!"
-                    });
-                }
-                var email = _jwtService.ExtractEmailFromToken(token);
-                var user = await _userManager.FindByEmailAsync(email);
-                if (user == null)
-                {
-                    return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
-                    {
-                        StatusCode = HttpStatusCode.NotFound,
-                        IsSuccess = false,
-                        Message = "User does not exist"
-                    });
-                }
-                var result = await _userManager.ChangePasswordAsync(user, changePasswordRequest.CurrentPassword,
-                    changePasswordRequest.NewPassword);
-                if (!result.Succeeded)
-                {
-                    throw new Exception("Can't change password");
-                }
+                var userJSON = HttpContext.Items["UserDto"] as UserDTO;
+                //var user = JsonConvert.DeserializeObject<User>(userJSON);
+                //if (token == null)
+                //{
+                //    return StatusCode(StatusCodes.Status401Unauthorized, new CustomResponse
+                //    {
+                //        StatusCode = HttpStatusCode.Unauthorized,
+                //        IsSuccess = false,
+                //        Message = "Please login!"
+                //    });
+                //}
+                //var email = _jwtService.ExtractEmailFromToken(token);
+                //var user = await _userManager.FindByEmailAsync(email);
+                //if (user == null)
+                //{
+                //    return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
+                //    {
+                //        StatusCode = HttpStatusCode.NotFound,
+                //        IsSuccess = false,
+                //        Message = "User does not exist"
+                //    });
+                //}
+                //var result = await _userManager.ChangePasswordAsync(user, changePasswordRequest.CurrentPassword,
+                //    changePasswordRequest.NewPassword);
+                //if (!result.Succeeded)
+                //{
+                //    throw new Exception("Can't change password");
+                //}
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
                     StatusCode = HttpStatusCode.OK,

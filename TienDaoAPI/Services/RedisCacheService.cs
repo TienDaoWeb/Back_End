@@ -18,9 +18,9 @@ namespace TienDaoAPI.Services
             return _database.KeyDelete(key);
         }
 
-        public bool Cache(string key, string token, TimeSpan tokenExpiry)
+        public bool Cache(string key, string value, TimeSpan expiry)
         {
-            return _database.StringSet(key, token, tokenExpiry);
+            return _database.StringSet(key, value, expiry);
         }
 
         public string? Get(string key)

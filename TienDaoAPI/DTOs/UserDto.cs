@@ -2,7 +2,7 @@
 
 namespace TienDaoAPI.DTOs
 {
-    public class UserDto
+    public class UserDTO
     {
         public int Id { get; set; }
 
@@ -17,6 +17,6 @@ namespace TienDaoAPI.DTOs
 
         public string? AvatarUrl { get; set; }
 
-
+        public required string Role { get; set; }
     }
 }

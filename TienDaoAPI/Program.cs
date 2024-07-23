@@ -1,5 +1,7 @@
 ﻿using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -8,7 +10,6 @@ using StackExchange.Redis;
 using System.Text;
 using TienDaoAPI.Data;
 using TienDaoAPI.Helpers;
-using TienDaoAPI.Middlewares;
 using TienDaoAPI.Models;
 using TienDaoAPI.Repositories;
 using TienDaoAPI.Repositories.IRepositories;
@@ -69,22 +70,13 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.SignIn.RequireConfirmedPhoneNumber = false;
 
     options.Tokens.EmailConfirmationTokenProvider = "CustomTwoFactorTokenProvider";
-
+    options.Tokens.PasswordResetTokenProvider = "CustomTwoFactorTokenProvider";
 });
 
 builder.Services.Configure<CustomTwoFactorTokenProviderOptions>(options =>
 {
     options.TokenLifespan = TimeSpan.FromMinutes(15);
 });
-
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
-
-builder.Services.AddDistributedMemoryCache();
 
 builder.Services.AddOptions();
 var mailsettings = builder.Configuration.GetSection("MailSettings");
@@ -133,14 +125,15 @@ builder.Services.AddSwaggerGen(c =>
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", @"Services/FileState/certificate-tiendaoapi.json");
 builder.Services.AddSingleton<IFirebaseStorageService>(s => new FirebaseStorageService(StorageClient.Create()));
 
-builder.Services.AddScoped<IRedisCacheService>(provider =>
+builder.Services.AddSingleton<IRedisCacheService>(provider =>
 {
     return new RedisCacheService(provider.GetRequiredService<IConnectionMultiplexer>());
 });
 //builder.Services.AddSingleton<ITokenStoreService, RedisCacheService>();
-
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, SampleAuthorizationMiddlewareResultHandler>();
+builder.Services.AddSingleton<IPolicyEvaluator, CustomPolicyEvaluator>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
+builder.Services.AddSingleton<SessionProvider>();
 builder.Services.AddSingleton<JwtHandler>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBookRepository, BookRepository>();
@@ -161,6 +154,7 @@ builder.Services.Configure<RouteOptions>(options =>
     options.LowercaseUrls = true;
 });
 
+
 //builder.Services.AddControllersWithViews(options =>
 //{
 //    options.Filters.Add<CustomAuthorizeAttribute>();
@@ -175,13 +169,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseMiddleware<JwtMiddleware>();
+
+//app.UseMiddleware<JwtMiddleware>();
+//app.UseMiddleware<RoleCheckingMiddleware>();
+
 app.UseHttpsRedirection();
 
-app.UseSession();
 
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 app.MapControllers();
