@@ -10,5 +10,6 @@ namespace TienDaoAPI.Services.IServices
         public Task<AccountErrorEnum> VerifyEmailAsync(string email, string otp);
         public Task<AccountErrorEnum> RequestResetPasswordAsync(string email);
         public Task<AccountErrorEnum> ResetPasswordAsync(string email, string otp);
+        public Task<AccountErrorEnum> ChangePasswordAsync(int userId, string oldPassword, string newPassword);
     }
 }

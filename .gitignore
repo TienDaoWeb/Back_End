@@ -364,4 +364,6 @@ FodyWeavers.xsd
 
 /TienDaoAPI/Controllers/ChapterController.cs
 **/Migrations/**
-!**/Migrations
+**/Migrations/*
+/TienDaoAPI/Migrations
+

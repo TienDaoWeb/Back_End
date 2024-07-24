@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -16,14 +15,14 @@ namespace TienDaoAPI.Controllers
     [Route("api/v1/[controller]")]
     public class BookController : ControllerBase
     {
-        private readonly IFirebaseStorageService _firebaseStorageService;
+        private readonly IImageStorageService _firebaseStorageService;
         private readonly IBookService _bookService;
         private readonly IChapterService _chapterService;
         private readonly IMapper _mapper;
         private readonly IGenreService _genreService;
         private readonly IUserService _userService;
 
-        public BookController(IFirebaseStorageService firebaseStorageService, IBookService bookService,
+        public BookController(IImageStorageService firebaseStorageService, IBookService bookService,
             IMapper mapper, IGenreService genreService, IUserService userService, IChapterService chapterService)
         {
             _firebaseStorageService = firebaseStorageService;
@@ -34,7 +33,6 @@ namespace TienDaoAPI.Controllers
             _userService = userService;
         }
 
-        //Create book save DB
         [HttpPost]
         [Route("")]
         [Authorize]
@@ -152,9 +150,9 @@ namespace TienDaoAPI.Controllers
                 }
                 if (book.PosterUrl != null)
                 {
-                    var storage = StorageClient.Create();
-                    // Xóa file ảnh
-                    await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{book.PosterUrl}");
+                    //var storage = StorageClient.Create();
+                    //// Xóa file ảnh
+                    //await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{book.PosterUrl}");
                 }
                 //Xóa tất cả các chapter của book
                 var listChapter = await _chapterService.GetAllChapterOfBookAsync(chapter => chapter.BookId == book.Id);
@@ -211,12 +209,12 @@ namespace TienDaoAPI.Controllers
                     if (newBook.PosterUrl != null)
                     {
                         // Xóa file ảnh
-                        var storage = StorageClient.Create();
-                        await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{book.PosterUrl}");
-                        //Tạo file ảnh mới
-                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + newBook.PosterUrl;
-                        await _firebaseStorageService.UploadFile(uniqueFileName, newBook.PosterUrl);
-                        book.PosterUrl = uniqueFileName;
+                        //var storage = StorageClient.Create();
+                        //await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{book.PosterUrl}");
+                        ////Tạo file ảnh mới
+                        //string uniqueFileName = Guid.NewGuid().ToString() + "_" + newBook.PosterUrl;
+                        //await _firebaseStorageService.UploadImageAsync(uniqueFileName, newBook.PosterUrl);
+                        //book.PosterUrl = uniqueFileName;
                     }
 
                     await _bookService.UpdateBookAsync(book);

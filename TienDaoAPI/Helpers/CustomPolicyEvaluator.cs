@@ -51,30 +51,30 @@ namespace TienDaoAPI.Helpers
             {
                 return PolicyAuthorizationResult.Challenge();
             }
-
+            List<string> requiredRoles = new List<string>();
+            var endpoint = context.GetEndpoint();
+            if (endpoint != null)
+            {
+                var authorizeAttributes = endpoint.Metadata.OfType<AuthorizeAttribute>().ToList();
+                foreach (var authorizeAttribute in authorizeAttributes)
+                {
+                    if (authorizeAttribute.Roles != null)
+                    {
+                        requiredRoles.AddRange(authorizeAttribute.Roles.Split(',').Select(role => role.Trim()));
+                    }
+                }
+            }
+            if (requiredRoles.Count == 0)
+            {
+                return PolicyAuthorizationResult.Success();
+            }
             if (context.Items.TryGetValue("UserDTO", out var userObj) && userObj is UserDTO user)
             {
                 var userRoles = user.Role;
 
-                var endpoint = context.GetEndpoint();
-                if (endpoint != null)
+                if (!requiredRoles.Any(role => userRoles.Contains(role)))
                 {
-                    var authorizeAttributes = endpoint.Metadata
-                        .OfType<AuthorizeAttribute>()
-                        .ToList();
-
-                    foreach (var authorizeAttribute in authorizeAttributes)
-                    {
-                        if (authorizeAttribute.Roles != null)
-                        {
-                            var requiredRoles = authorizeAttribute.Roles.Split(',').Select(role => role.Trim()).ToList()!;
-
-                            if (!requiredRoles.Any(role => userRoles.Contains(role)))
-                            {
-                                return PolicyAuthorizationResult.Forbid();
-                            }
-                        }
-                    }
+                    return PolicyAuthorizationResult.Forbid();
                 }
             }
             return PolicyAuthorizationResult.Success();

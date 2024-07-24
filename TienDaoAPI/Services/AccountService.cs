@@ -81,5 +81,25 @@ namespace TienDaoAPI.Services
             }
             return AccountErrorEnum.AllOk;
         }
+
+        public async Task<AccountErrorEnum> ChangePasswordAsync(int userId, string oldPassword, string newPassword)
+        {
+
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+            {
+                return AccountErrorEnum.NotExists;
+            }
+            var identityResult = await _userManager.ChangePasswordAsync(user, oldPassword, newPassword);
+            if (!identityResult.Succeeded)
+            {
+                return AccountErrorEnum.IncorrectPassword;
+            }
+            if (!PasswordProvider.CheckPasswordStrength(newPassword))
+            {
+                return AccountErrorEnum.WeakPassword;
+            }
+            return AccountErrorEnum.AllOk;
+        }
     }
 }

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using System.Security.Claims;
 using TienDaoAPI.Enums;
 using TienDaoAPI.Models;
 using TienDaoAPI.Response;
@@ -34,7 +33,7 @@ namespace TienDaoAPI.Controllers
             try
             {
                 var token = await HttpContext.GetTokenAsync("access_token");
-                var user = await _userManager.FindByIdAsync(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                var user = HttpContext.Items["UserDTO"];
 
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {

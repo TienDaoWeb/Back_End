@@ -7,6 +7,7 @@
         Existed = 1,
         InvalidOTP = 2,
         Unverify = 3,
-        IncorrectPassword = 4
+        IncorrectPassword = 4,
+        WeakPassword = 5
     }
 }

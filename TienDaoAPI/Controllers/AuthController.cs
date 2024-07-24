@@ -25,17 +25,15 @@ namespace TienDaoAPI.Controllers
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
         private readonly IAccountService _accountService;
-        private readonly IRedisCacheService _redisCacheService;
 
         public AuthController(EmailProvider emailProvider, UserManager<User> userManager, SessionProvider sessionProvider,
-        IMapper mapper, JwtHandler jwtHandler, IAccountService accountService, IRedisCacheService redisCacheService)
+        IMapper mapper, JwtHandler jwtHandler, IAccountService accountService)
         {
             _emailProvider = emailProvider;
             _userManager = userManager;
             _mapper = mapper;
             _jwtHandler = jwtHandler;
             _accountService = accountService;
-            _redisCacheService = redisCacheService;
             _sessionProvider = sessionProvider;
         }
 
@@ -46,7 +44,6 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Register([FromBody] RegisterDTO registerDTO)
         {
-
             try
             {
                 var user = _mapper.Map<User>(registerDTO);
@@ -60,11 +57,11 @@ namespace TienDaoAPI.Controllers
                         Message = "Chúc mừng! Bạn vừa tạo ra một hồn ma mới trong hệ thống!",
 
                     }),
-                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                    AccountErrorEnum.Existed => StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
                     {
                         StatusCode = HttpStatusCode.BadRequest,
                         IsSuccess = false,
-                        Message = "Role không tồn tại!"
+                        Message = "Email đã tồn tại trong hệ thống của chúng tôi"
                     }),
                     _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
                     {
@@ -130,7 +127,7 @@ namespace TienDaoAPI.Controllers
                         {
                             StatusCode = HttpStatusCode.OK,
                             Message = "Login successfully",
-                            Result = new { AccessToken = jwtToken, RefreshToken = refreshToken }
+                            Result = new { AccessToken = jwtToken, RefreshToken = refreshToken, Profile = _mapper.Map<UserDTO>(user) }
                         });
                     }
                     else
@@ -194,7 +191,7 @@ namespace TienDaoAPI.Controllers
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         IsSuccess = false,
-                        Message = "Email không tồn tại!"
+                        Message = "Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi"
                     }),
                     _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
                     {
@@ -237,7 +234,7 @@ namespace TienDaoAPI.Controllers
                     {
                         StatusCode = HttpStatusCode.BadRequest,
                         IsSuccess = false,
-                        Message = "Email không tồn tại!"
+                        Message = "Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi"
                     }),
                     _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
                     {
@@ -289,7 +286,7 @@ namespace TienDaoAPI.Controllers
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         IsSuccess = false,
-                        Message = "Email không tồn tại!"
+                        Message = "Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi"
                     }),
                     _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
                     {
@@ -316,11 +313,11 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> RefreshToken(string refreshToken)
+        public async Task<IActionResult> RefreshToken(RefreshTokenRequestDTO dto)
         {
             try
             {
-                if (!_sessionProvider.VerifyRefreshToken(refreshToken))
+                if (!_sessionProvider.VerifyRefreshToken(dto.RefreshToken))
                 {
                     return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
                     {
@@ -329,7 +326,7 @@ namespace TienDaoAPI.Controllers
                         Message = "Refresh token không chính xác hoặc hết hạn!"
                     });
                 }
-                var userId = new JwtSecurityTokenHandler().ReadJwtToken(refreshToken).Payload["sub"].ToString();
+                var userId = new JwtSecurityTokenHandler().ReadJwtToken(dto.RefreshToken).Payload["sub"].ToString();
                 var user = await _userManager.FindByIdAsync(userId!);
                 var jwtToken = _jwtHandler.CreateJWTToken(user!);
                 var newRefreshToken = _jwtHandler.CreateRefreshToken(user!);
@@ -344,7 +341,7 @@ namespace TienDaoAPI.Controllers
                     StatusCode = HttpStatusCode.OK,
                     Result = new
                     {
-                        AccessToken = _jwtHandler.CreateJWTToken(user!),
+                        AccessToken = jwtToken,
                         RefreshToken = newRefreshToken
                     }
                 });
@@ -368,43 +365,45 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO changePasswordRequest)
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO dto)
         {
             try
             {
-                var userJSON = HttpContext.Items["UserDto"] as UserDTO;
-                //var user = JsonConvert.DeserializeObject<User>(userJSON);
-                //if (token == null)
-                //{
-                //    return StatusCode(StatusCodes.Status401Unauthorized, new CustomResponse
-                //    {
-                //        StatusCode = HttpStatusCode.Unauthorized,
-                //        IsSuccess = false,
-                //        Message = "Please login!"
-                //    });
-                //}
-                //var email = _jwtService.ExtractEmailFromToken(token);
-                //var user = await _userManager.FindByEmailAsync(email);
-                //if (user == null)
-                //{
-                //    return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
-                //    {
-                //        StatusCode = HttpStatusCode.NotFound,
-                //        IsSuccess = false,
-                //        Message = "User does not exist"
-                //    });
-                //}
-                //var result = await _userManager.ChangePasswordAsync(user, changePasswordRequest.CurrentPassword,
-                //    changePasswordRequest.NewPassword);
-                //if (!result.Succeeded)
-                //{
-                //    throw new Exception("Can't change password");
-                //}
-                return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                var userId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
+                var result = await _accountService.ChangePasswordAsync(userId, dto.OldPassword, dto.NewPassword);
+
+                return result switch
                 {
-                    StatusCode = HttpStatusCode.OK,
-                    Message = "Reset password successfully"
-                });
+                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.OK,
+                        Message = "Thay đổi mật khẩu thành công",
+                    }),
+                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status404NotFound, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.NotFound,
+                        IsSuccess = false,
+                        Message = "Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi"
+                    }),
+                    AccountErrorEnum.WeakPassword => StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.BadRequest,
+                        IsSuccess = false,
+                        Message = "Mật khẩu phải dài tối thiểu 8 ký tực và tối đa 30 ký tự, bao gồm ít nhất một chữ thường, một chữ hoa, một chữ số và một ký tự đặc biệt!"
+                    }),
+                    AccountErrorEnum.IncorrectPassword => StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.BadRequest,
+                        IsSuccess = false,
+                        Message = "Mật khẩu hiện tại chưa chính xác!"
+                    }),
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                    {
+                        StatusCode = HttpStatusCode.InternalServerError,
+                        IsSuccess = false,
+                        Message = "Internal Server Error: ex.Message"
+                    })
+                };
             }
             catch (Exception ex)
             {

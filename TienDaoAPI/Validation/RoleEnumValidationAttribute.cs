@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using TienDaoAPI.Enums;
 
-namespace TienDaoAPI.Attributes
+namespace TienDaoAPI.Validation
 {
     public class RoleEnumValidationAttribute : ValidationAttribute
     {

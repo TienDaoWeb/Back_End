@@ -8,19 +8,17 @@ namespace TienDaoAPI.Services
 {
     public class BookService : IBookService
     {
-        private readonly IFirebaseStorageService _firebaseStorageService;
         private readonly IBookRepository _bookRepository;
 
-        public BookService(IFirebaseStorageService firebaseStorageService, IBookRepository bookRepository)
+        public BookService(IBookRepository bookRepository)
         {
-            _firebaseStorageService = firebaseStorageService;
             _bookRepository = bookRepository;
         }
 
         public async Task<Book?> CreateBookAsync(CreateBookDto dto)
         {
             string uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.PosterUrl;
-            await _firebaseStorageService.UploadFile(uniqueFileName, dto.PosterUrl!);
+            //await _firebaseStorageService.UploadImageAsync(uniqueFileName, dto.PosterUrl!);
 
             Book newBook = new Book
             {

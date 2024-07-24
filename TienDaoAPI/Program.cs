@@ -1,4 +1,5 @@
-﻿using Google.Cloud.Storage.V1;
+﻿
+using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
@@ -121,15 +122,15 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-//Service firebase storage
-Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", @"Services/FileState/certificate-tiendaoapi.json");
-builder.Services.AddSingleton<IFirebaseStorageService>(s => new FirebaseStorageService(StorageClient.Create()));
+Cloudinary cloudinary = new Cloudinary(builder.Configuration["Cloudinary:Url"]);
+cloudinary.Api.Secure = true;
 
+builder.Services.AddSingleton<IImageStorageService>(s => new ImageStorageService(cloudinary));
 builder.Services.AddSingleton<IRedisCacheService>(provider =>
 {
     return new RedisCacheService(provider.GetRequiredService<IConnectionMultiplexer>());
 });
-//builder.Services.AddSingleton<ITokenStoreService, RedisCacheService>();
+
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, SampleAuthorizationMiddlewareResultHandler>();
 builder.Services.AddSingleton<IPolicyEvaluator, CustomPolicyEvaluator>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -139,14 +140,12 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IGenreRepository, GenreRepository>();
 builder.Services.AddScoped<IChapterRepository, ChapterRepository>();
-builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IChapterService, ChapterService>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.Configure<RouteOptions>(options =>
@@ -155,10 +154,6 @@ builder.Services.Configure<RouteOptions>(options =>
 });
 
 
-//builder.Services.AddControllersWithViews(options =>
-//{
-//    options.Filters.Add<CustomAuthorizeAttribute>();
-//});
 
 var app = builder.Build();
 
@@ -169,9 +164,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
-//app.UseMiddleware<JwtMiddleware>();
-//app.UseMiddleware<RoleCheckingMiddleware>();
 
 app.UseHttpsRedirection();
 

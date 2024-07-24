@@ -27,7 +27,6 @@ namespace TienDaoAPI.Data
         public DbSet<Chapter> Chapters { get; set; }
         public DbSet<Genre> Genres { get; set; }
         public DbSet<ReadChapter> ReadChapters { get; set; }
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Comment> Comments { get; set; }
     }

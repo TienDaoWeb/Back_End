@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using TienDaoAPI.Attributes;
+using TienDaoAPI.Validation;
 
 namespace TienDaoAPI.DTOs
 {
@@ -14,6 +14,7 @@ namespace TienDaoAPI.DTOs
 
         [Required]
         public required string FullName { get; set; }
+
 
         public string? PhoneNumber { get; set; }
 
