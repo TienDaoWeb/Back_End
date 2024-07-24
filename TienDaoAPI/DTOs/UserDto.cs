@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using TienDaoAPI.Enums;
 
 namespace TienDaoAPI.DTOs
 {
@@ -16,6 +17,8 @@ namespace TienDaoAPI.DTOs
         public DateTime? Birthday { get; set; }
 
         public string? AvatarUrl { get; set; }
+
+        public GenderEnum Gender { get; set; }
 
         public required string Role { get; set; }
     }

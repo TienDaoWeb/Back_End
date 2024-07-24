@@ -13,16 +13,13 @@ namespace TienDaoAPI.Services
 
         public async Task<string> UploadImageAsync(IFormFile file)
         {
-
-            var uniqueFileName = $"{Guid.NewGuid()}_{file.FileName}";
-
             using var stream = new MemoryStream();
             await file.CopyToAsync(stream);
             stream.Position = 0;
 
             var uploadparams = new ImageUploadParams
             {
-                File = new FileDescription(uniqueFileName, stream),
+                File = new FileDescription(file.FileName, stream),
             };
 
             var result = _cloudinary.Upload(uploadparams);
