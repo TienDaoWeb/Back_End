@@ -17,7 +17,15 @@ namespace TienDaoAPI.Models
 
         public int? Index { get; set; }
 
+        public int ViewCount { get; set; } = 0;
+
+        public int WordCount { get; set; } = 0;
+
         public DateTime PublishedAt { get; set; }
+
+        [ForeignKey("User")]
+        public int OwnerId { get; set; }
+        public virtual User? User { get; set; }
 
         public int BookId { get; set; }
         public virtual Book? Book { get; set; }

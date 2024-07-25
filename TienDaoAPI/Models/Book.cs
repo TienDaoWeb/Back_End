@@ -40,12 +40,12 @@ namespace TienDaoAPI.Models
         [ForeignKey(nameof(GenreId))]
         public virtual Genre? Genre { get; set; }
 
-        public int? OwnedId { get; set; }
+        [ForeignKey("User")]
+        public int OwnerId { get; set; }
         public virtual User? User { get; set; }
 
         public ICollection<Chapter> Chapters { get; set; } = new HashSet<Chapter>();
         public ICollection<Comment> Comments { get; set; } = new HashSet<Comment>();
         public ICollection<Review> Reviews { get; set; } = new HashSet<Review>();
-        public ICollection<BookAudit> bookAudits { get; set; } = new HashSet<BookAudit>();
     }
 }

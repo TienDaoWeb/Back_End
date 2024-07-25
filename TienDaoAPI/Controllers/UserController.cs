@@ -47,7 +47,7 @@ namespace TienDaoAPI.Controllers
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message
+                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
                 });
             }
         }

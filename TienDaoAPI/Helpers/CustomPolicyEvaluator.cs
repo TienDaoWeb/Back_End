@@ -15,12 +15,12 @@ namespace TienDaoAPI.Helpers
             _sessionProvider = sessionProvider;
         }
 
-        public async Task<AuthenticateResult> AuthenticateAsync(AuthorizationPolicy policy, HttpContext context)
+        public Task<AuthenticateResult> AuthenticateAsync(AuthorizationPolicy policy, HttpContext context)
         {
             var bearerToken = context.Request.Headers["Authorization"].FirstOrDefault();
             if (string.IsNullOrEmpty(bearerToken))
             {
-                return AuthenticateResult.Fail("Missing token!");
+                return Task.FromResult(AuthenticateResult.Fail("Missing token!"));
             }
 
             var token = bearerToken.Replace("Bearer ", "");
@@ -28,28 +28,28 @@ namespace TienDaoAPI.Helpers
             {
                 if (!_sessionProvider.VerifyToken(token))
                 {
-                    return AuthenticateResult.Fail("Verify token failed!");
+                    return Task.FromResult(AuthenticateResult.Fail("Verify token failed!"));
                 }
 
                 var userDTO = _sessionProvider.GetContext(token);
                 context.Items["UserDTO"] = userDTO;
-                var claims = new[] { new Claim(ClaimTypes.Name, userDTO.Email) };
+                var claims = new[] { new Claim(ClaimTypes.Name, userDTO!.Email!) };
                 var identity = new ClaimsIdentity(claims, "Bearer");
                 var principal = new ClaimsPrincipal(identity);
 
-                return AuthenticateResult.Success(new AuthenticationTicket(principal, "Bearer"));
+                return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(principal, "Bearer")));
             }
             catch
             {
-                return AuthenticateResult.Fail("Invalid token!");
+                return Task.FromResult(AuthenticateResult.Fail("Invalid token!"));
             }
         }
 
-        public async Task<PolicyAuthorizationResult> AuthorizeAsync(AuthorizationPolicy policy, AuthenticateResult authenticateResult, HttpContext context, object resource)
+        public Task<PolicyAuthorizationResult> AuthorizeAsync(AuthorizationPolicy policy, AuthenticateResult authenticateResult, HttpContext context, object? resource)
         {
             if (authenticateResult == null || !authenticateResult.Succeeded)
             {
-                return PolicyAuthorizationResult.Challenge();
+                return Task.FromResult(PolicyAuthorizationResult.Challenge());
             }
             List<string> requiredRoles = new List<string>();
             var endpoint = context.GetEndpoint();
@@ -66,7 +66,7 @@ namespace TienDaoAPI.Helpers
             }
             if (requiredRoles.Count == 0)
             {
-                return PolicyAuthorizationResult.Success();
+                return Task.FromResult(PolicyAuthorizationResult.Success());
             }
             if (context.Items.TryGetValue("UserDTO", out var userObj) && userObj is UserDTO user)
             {
@@ -74,10 +74,10 @@ namespace TienDaoAPI.Helpers
 
                 if (!requiredRoles.Any(role => userRoles.Contains(role)))
                 {
-                    return PolicyAuthorizationResult.Forbid();
+                    return Task.FromResult(PolicyAuthorizationResult.Forbid());
                 }
             }
-            return PolicyAuthorizationResult.Success();
+            return Task.FromResult(PolicyAuthorizationResult.Success());
         }
     }
 }

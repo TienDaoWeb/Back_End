@@ -28,7 +28,7 @@ namespace TienDaoAPI.Services
                 PosterUrl = uniqueFileName,
                 CreateDate = DateTime.Now,
                 UpdateDate = DateTime.Now,
-                OwnedId = dto.OwnerId,
+                OwnerId = dto.OwnerId,
                 GenreId = dto.GenreId
             };
 
@@ -55,9 +55,9 @@ namespace TienDaoAPI.Services
             var today = DateTime.Today;
             var columnsMap = new Dictionary<string, Expression<Func<Book, object>>>
             {
-                ["view_day"] = s => s.bookAudits.First(sw => sw.ViewDate.Date == today.Date),
-                ["view_month"] = s => s.bookAudits.Sum(sw => sw.ViewCount * (sw.ViewDate.Month == today.Month && sw.ViewDate.Year == today.Year ? 1 : 0)),
-                ["view_week"] = s => s.bookAudits.Sum(sw => sw.ViewCount * (sw.ViewDate >= today.AddDays(-(int)today.DayOfWeek) && sw.ViewDate < today.AddDays(7 - (int)today.DayOfWeek) ? 1 : 0)),
+                //["view_day"] = s => s.bookAudits.First(sw => sw.ViewDate.Date == today.Date),
+                //["view_month"] = s => s.bookAudits.Sum(sw => sw.ViewCount * (sw.ViewDate.Month == today.Month && sw.ViewDate.Year == today.Year ? 1 : 0)),
+                //["view_week"] = s => s.bookAudits.Sum(sw => sw.ViewCount * (sw.ViewDate >= today.AddDays(-(int)today.DayOfWeek) && sw.ViewDate < today.AddDays(7 - (int)today.DayOfWeek) ? 1 : 0)),
                 ["view_count"] = s => s.ViewCount,
                 ["create_at"] = s => s.CreateDate,
                 ["update_at"] = s => s.UpdateDate,
