@@ -4,7 +4,7 @@ namespace TienDaoAPI.Validation
 {
     public class FileExtensionAttribute : ValidationAttribute
     {
-        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
         {
             if (value is IFormFile file)
             {
@@ -19,7 +19,7 @@ namespace TienDaoAPI.Validation
                 }
 
             }
-            return ValidationResult.Success;
+            return ValidationResult.Success!;
         }
     }
 }

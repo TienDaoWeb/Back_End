@@ -9,6 +9,7 @@ namespace TienDaoAPI.Config
     {
         public MappingConfig()
         {
+            CreateMap<CreateGenreDTO, Genre>().ReverseMap();
             CreateMap<GenreResponse, Genre>().ReverseMap();
             CreateMap<RegisterDTO, User>().ForMember(d => d.UserName, s => s.MapFrom(x => x.Email));
             CreateMap<UserDTO, User>().ReverseMap();

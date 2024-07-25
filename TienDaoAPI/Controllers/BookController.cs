@@ -50,26 +50,8 @@ namespace TienDaoAPI.Controllers
                         Message = "Can not find file image to create book."
                     });
                 }
-                var genre = await _genreService.GetGenreByIdAsync(bookRequest.GenreId);
-                if (genre == null)
-                {
-                    return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        IsSuccess = false,
-                        Message = "Genre does not exsits"
-                    });
-                }
                 var user = await _userService.GetUserByIdAsync(bookRequest.OwnerId);
-                if (genre == null)
-                {
-                    return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        IsSuccess = false,
-                        Message = "User does not exsits"
-                    });
-                }
+
                 var newBook = await _bookService.CreateBookAsync(bookRequest);
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
@@ -84,7 +66,7 @@ namespace TienDaoAPI.Controllers
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message
+                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
                 });
             }
         }
@@ -121,7 +103,7 @@ namespace TienDaoAPI.Controllers
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message
+                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
                 });
             }
         }
@@ -175,7 +157,7 @@ namespace TienDaoAPI.Controllers
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message
+                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
                 });
             }
 
@@ -230,7 +212,7 @@ namespace TienDaoAPI.Controllers
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message
+                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
                 });
             }
         }
@@ -258,7 +240,7 @@ namespace TienDaoAPI.Controllers
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message
+                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
                 });
             }
         }
