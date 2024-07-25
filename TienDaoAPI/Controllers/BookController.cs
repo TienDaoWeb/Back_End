@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using TienDaoAPI.DTOs;
 using TienDaoAPI.DTOs.Requests;
 using TienDaoAPI.DTOs.Responses;
+using TienDaoAPI.Enums;
 using TienDaoAPI.Models;
 using TienDaoAPI.Response;
 using TienDaoAPI.Services.IServices;
@@ -20,9 +22,10 @@ namespace TienDaoAPI.Controllers
         private readonly IMapper _mapper;
         private readonly IGenreService _genreService;
         private readonly IUserService _userService;
+        private readonly IAuthorService _authorService;
 
         public BookController(IImageStorageService firebaseStorageService, IBookService bookService,
-            IMapper mapper, IGenreService genreService, IUserService userService, IChapterService chapterService)
+            IMapper mapper, IGenreService genreService, IUserService userService, IChapterService chapterService, IAuthorService authorService)
         {
             _firebaseStorageService = firebaseStorageService;
             _bookService = bookService;
@@ -30,33 +33,31 @@ namespace TienDaoAPI.Controllers
             _mapper = mapper;
             _genreService = genreService;
             _userService = userService;
+            _authorService = authorService;
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = RoleEnum.CONVERTER)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Create([FromForm] CreateBookDto bookRequest)
+        public async Task<IActionResult> Create([FromBody] CreateBookDTO dto)
         {
             try
             {
-                if (bookRequest.PosterUrl == null)
+                dto.OwnerId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
+                var author = await _authorService.GetAuthorAsync(dto.Author.Name);
+                if (author == null)
                 {
-                    return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        IsSuccess = false,
-                        Message = "Can not find file image to create book."
-                    });
+                    author = await _authorService.CreateAuthorAsync(dto.Author);
                 }
-                var user = await _userService.GetUserByIdAsync(bookRequest.OwnerId);
-
-                var newBook = await _bookService.CreateBookAsync(bookRequest);
+                var book = _mapper.Map<Book>(dto);
+                book.AuthorId = author.Id;
+                var newBook = await _bookService.CreateBookAsync(book);
                 return StatusCode(StatusCodes.Status200OK, new CustomResponse
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Message = "Create book successfully",
+                    Message = "Thêm truyện thành công!",
                     Result = newBook
                 });
             }
@@ -169,7 +170,7 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> BookUpdate(int id, [FromForm] CreateBookDto newBook)
+        public async Task<IActionResult> BookUpdate(int id, [FromForm] CreateBookDTO newBook)
         {
             try
             {
@@ -184,18 +185,9 @@ namespace TienDaoAPI.Controllers
                 }
                 else
                 {
-                    book.Author = newBook.Author;
-                    book.Description = newBook.Description;
-                    if (newBook.PosterUrl != null)
-                    {
-                        // Xóa file ảnh
-                        //var storage = StorageClient.Create();
-                        //await storage.DeleteObjectAsync("tiendaoapi.appspot.com", $"images/{book.PosterUrl}");
-                        ////Tạo file ảnh mới
-                        //string uniqueFileName = Guid.NewGuid().ToString() + "_" + newBook.PosterUrl;
-                        //await _firebaseStorageService.UploadImageAsync(uniqueFileName, newBook.PosterUrl);
-                        //book.PosterUrl = uniqueFileName;
-                    }
+                    //book.Author = newBook.Author;
+                    book.Synopsis = newBook.Synopsis;
+
 
                     await _bookService.UpdateBookAsync(book);
 

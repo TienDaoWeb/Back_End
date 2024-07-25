@@ -1,5 +1,5 @@
-﻿using System.Linq.Expressions;
-using TienDaoAPI.DTOs.Requests;
+﻿using AutoMapper;
+using System.Linq.Expressions;
 using TienDaoAPI.Models;
 using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services.IServices;
@@ -9,30 +9,16 @@ namespace TienDaoAPI.Services
     public class BookService : IBookService
     {
         private readonly IBookRepository _bookRepository;
-
-        public BookService(IBookRepository bookRepository)
+        private readonly IMapper _mapper;
+        public BookService(IBookRepository bookRepository, IMapper mapper)
         {
             _bookRepository = bookRepository;
+            _mapper = mapper;
         }
 
-        public async Task<Book?> CreateBookAsync(CreateBookDto dto)
+        public async Task<Book?> CreateBookAsync(Book book)
         {
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.PosterUrl;
-            //await _firebaseStorageService.UploadImageAsync(uniqueFileName, dto.PosterUrl!);
-
-            Book newBook = new Book
-            {
-                Title = dto.Title,
-                Author = dto.Author,
-                Description = dto.Description,
-                PosterUrl = uniqueFileName,
-                CreateDate = DateTime.Now,
-                UpdateDate = DateTime.Now,
-                OwnerId = dto.OwnerId,
-                GenreId = dto.GenreId
-            };
-
-            return await _bookRepository.CreateAsync(newBook);
+            return await _bookRepository.CreateAsync(book);
         }
 
         public async Task DeleteBookAsync(Book book)
@@ -59,8 +45,8 @@ namespace TienDaoAPI.Services
                 //["view_month"] = s => s.bookAudits.Sum(sw => sw.ViewCount * (sw.ViewDate.Month == today.Month && sw.ViewDate.Year == today.Year ? 1 : 0)),
                 //["view_week"] = s => s.bookAudits.Sum(sw => sw.ViewCount * (sw.ViewDate >= today.AddDays(-(int)today.DayOfWeek) && sw.ViewDate < today.AddDays(7 - (int)today.DayOfWeek) ? 1 : 0)),
                 ["view_count"] = s => s.ViewCount,
-                ["create_at"] = s => s.CreateDate,
-                ["update_at"] = s => s.UpdateDate,
+                //["create_at"] = s => s.CreateDate,
+                //["update_at"] = s => s.UpdateDate,
                 ["chapter_count"] = s => s.Chapters.Count,
                 ["review_count"] = s => s.Reviews.Count,
                 ["comment_count"] = s => s.Comments.Count

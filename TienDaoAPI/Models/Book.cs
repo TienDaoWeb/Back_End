@@ -14,13 +14,13 @@ namespace TienDaoAPI.Models
         [Required]
         public required string Title { get; set; }
 
-        public string? Author { get; set; }
-
-        public string? Description { get; set; }
+        public string? Synopsis { get; set; }
 
         public string? PosterUrl { get; set; }
 
         public int ReviewCount { get; set; } = 0;
+
+        public int BookmarkCount { get; set; } = 0;
 
         public int ViewCount { get; set; } = 0;
 
@@ -28,13 +28,19 @@ namespace TienDaoAPI.Models
 
         public int WordCount { get; set; } = 0;
 
-        public DateTime CreateDate { get; set; }
+        public int LastestIndex { get; set; } = 0;
 
-        public DateTime UpdateDate { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         [Required]
         [EnumDataType(typeof(BookStatusEnum))]
         public BookStatusEnum Status { get; set; } = BookStatusEnum.Ongoing;
+
+        [ForeignKey("Author")]
+        public int AuthorId { get; set; }
+        public virtual Author? Author { get; set; }
 
         public int GenreId { get; set; }
         [ForeignKey(nameof(GenreId))]
