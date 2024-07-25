@@ -20,6 +20,7 @@ env:
   DOTNET_CORE_VERSION: 8.0.x
   WORKING_DIRECTORY: TienDaoAPI
   REDIS_CONNECTION_STRING: redis-18750.c294.ap-northeast-1-2.ec2.redns.redis-cloud.com:18750,password=YH5Z45Yjd5xd5HJhLkukG5JNOR7o9kct,abortConnect=false
+  CLOUDINARY_URL: cloudinary://587216382242896:kfe7knGqQbICI6G0vIV9GI2eD3Q@djkgwo9kc
 jobs:
   build:
     runs-on: windows-latest

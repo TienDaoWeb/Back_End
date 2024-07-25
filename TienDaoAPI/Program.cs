@@ -123,8 +123,8 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-
-Cloudinary cloudinary = new Cloudinary(builder.Configuration["Cloudinary:Url"]);
+var cloudinaryUrl = Environment.GetEnvironmentVariable("CLOUDINARY_URL") ?? builder.Configuration["Cloudinary:Url"];
+Cloudinary cloudinary = new Cloudinary(cloudinaryUrl);
 cloudinary.Api.Secure = true;
 
 builder.Services.AddSingleton<IImageStorageService>(s => new ImageStorageService(cloudinary));
