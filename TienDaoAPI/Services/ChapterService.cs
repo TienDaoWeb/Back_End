@@ -35,7 +35,7 @@ namespace TienDaoAPI.Services
         }
         public async Task<Chapter?> GetFinalChapterByIdBookAsync(int bookId)
         {
-            var chapters = await _chapterRepository.GetAllByQueryAsync(chapter => chapter.BookId == bookId);
+            var chapters = await _chapterRepository.FilterAsync(chapter => chapter.BookId == bookId);
             var finalChapter = chapters.Max(chapter => chapter.Index);
             return await _chapterRepository.GetAsync(chapter => chapter.Index == finalChapter);
         }
@@ -51,7 +51,7 @@ namespace TienDaoAPI.Services
 
         public async Task<IEnumerable<Chapter?>> GetAllChapterOfBookAsync(Expression<Func<Chapter, bool>> filter)
         {
-            var chapters = _chapterRepository.GetAllByQueryAsync(filter);
+            var chapters = _chapterRepository.FilterAsync(filter);
             return await chapters;
         }
 

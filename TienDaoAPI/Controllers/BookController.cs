@@ -10,7 +10,6 @@ using TienDaoAPI.Services.IServices;
 
 namespace TienDaoAPI.Controllers
 {
-
     [ApiController]
     [Route("api/v1/[controller]")]
     public class BookController : ControllerBase
@@ -34,7 +33,6 @@ namespace TienDaoAPI.Controllers
         }
 
         [HttpPost]
-        [Route("")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

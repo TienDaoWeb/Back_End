@@ -34,7 +34,8 @@ namespace TienDaoAPI.Repositories
             return await query.FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<T>> GetAllByQueryAsync(Expression<Func<T, bool>>? filter = null)
+        public virtual async Task<IEnumerable<T>> FilterAsync(Expression<Func<T, bool>>? filter = null, string includeProperties = "",
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
         {
             IQueryable<T> query = dbSet;
 
@@ -43,7 +44,20 @@ namespace TienDaoAPI.Repositories
                 query = query.Where(filter);
             }
 
-            return await query.ToListAsync();
+            foreach (var includeProperty in includeProperties.Split
+                (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty);
+            }
+
+            if (orderBy != null)
+            {
+                return await orderBy(query).ToListAsync();
+            }
+            else
+            {
+                return await query.ToListAsync();
+            }
         }
 
         public virtual async Task<IEnumerable<T>> GetAllAsync()

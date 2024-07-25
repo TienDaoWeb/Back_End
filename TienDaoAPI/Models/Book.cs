@@ -26,6 +26,8 @@ namespace TienDaoAPI.Models
 
         public int VoteCount { get; set; } = 0;
 
+        public int WordCount { get; set; } = 0;
+
         public DateTime CreateDate { get; set; }
 
         public DateTime UpdateDate { get; set; }
