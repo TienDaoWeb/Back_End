@@ -48,7 +48,12 @@ namespace TienDaoAPI.Attributes
                         var isOwner = await CheckOwnershipAsync(entity, userId);
                         if (!isOwner)
                         {
-                            context.Result = new ForbidResult("Bạn không có quyền thực hiện hành đông này!");
+                            await context.HttpContext.Response.WriteAsJsonAsync(new Response
+                            {
+                                StatusCode = HttpStatusCode.Forbidden,
+                                IsSuccess = false,
+                                Message = "Bạn không có đủ quyền để thực hiện hành động này"
+                            });
                             return;
                         }
                     }
