@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using System.Net;
-using TienDaoAPI.Response;
+using TienDaoAPI.Utils;
 
 namespace TienDaoAPI.Helpers
 {
@@ -37,7 +37,7 @@ namespace TienDaoAPI.Helpers
         private async Task RespondWithForbidden(HttpContext context, string message)
         {
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            await context.Response.WriteAsJsonAsync(new CustomResponse
+            await context.Response.WriteAsJsonAsync(new Response
             {
                 StatusCode = HttpStatusCode.Forbidden,
                 IsSuccess = false,
@@ -48,7 +48,7 @@ namespace TienDaoAPI.Helpers
         private async Task RespondWithUnathorized(HttpContext context, string message)
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsJsonAsync(new CustomResponse
+            await context.Response.WriteAsJsonAsync(new Response
             {
                 StatusCode = HttpStatusCode.Unauthorized,
                 IsSuccess = false,

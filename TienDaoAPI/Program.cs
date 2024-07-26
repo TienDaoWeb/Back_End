@@ -94,8 +94,13 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "jwtToken_Auth_API",
-        Version = "v1"
+        Title = "Tiên Đạo API",
+        Version = "v1",
+        Description = "Tiên Đạo API",
+        Contact = new OpenApiContact
+        {
+            Email = "huynhquocthai2k2@gmail.com"
+        }
     });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -138,10 +143,13 @@ builder.Services.AddSingleton<IPolicyEvaluator, CustomPolicyEvaluator>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddSingleton<SessionProvider>();
 builder.Services.AddSingleton<JwtHandler>();
+
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IGenreRepository, GenreRepository>();
 builder.Services.AddScoped<IChapterRepository, ChapterRepository>();
+builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
 
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
@@ -150,6 +158,7 @@ builder.Services.AddScoped<IChapterService, ChapterService>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthorService, AuthorService>();
 
 builder.Services.Configure<RouteOptions>(options =>
 {
@@ -159,10 +168,12 @@ builder.Services.Configure<RouteOptions>(options =>
 
 
 var app = builder.Build();
-
 // Configure the HTTP request pipeline.
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+});
 
 
 app.UseHttpsRedirection();

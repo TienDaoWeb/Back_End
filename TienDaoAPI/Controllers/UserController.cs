@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using TienDaoAPI.Enums;
 using TienDaoAPI.Models;
-using TienDaoAPI.Response;
+using TienDaoAPI.Utils;
 using TienDaoAPI.Services.IServices;
 
 namespace TienDaoAPI.Controllers
@@ -35,15 +35,15 @@ namespace TienDaoAPI.Controllers
                 var token = await HttpContext.GetTokenAsync("access_token");
                 var user = HttpContext.Items["UserDTO"];
 
-                return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                return StatusCode(StatusCodes.Status200OK, new Response
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Result = user
+                    Data = user
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,

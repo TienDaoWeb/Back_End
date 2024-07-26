@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.Models;
-using TienDaoAPI.Response;
+using TienDaoAPI.Utils;
 using TienDaoAPI.Services.IServices;
 
 namespace TienDaoAPI.Controllers
@@ -30,15 +30,15 @@ namespace TienDaoAPI.Controllers
             try
             {
                 var genres = await _genreService.GetAllGenresAsync();
-                return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                return StatusCode(StatusCodes.Status200OK, new Response
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Result = genres
+                    Data = genres
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
@@ -60,13 +60,13 @@ namespace TienDaoAPI.Controllers
                 var result = await _genreService.CreateGenreAsync(newGenre);
                 if (result)
                 {
-                    return StatusCode(StatusCodes.Status201Created, new CustomResponse
+                    return StatusCode(StatusCodes.Status201Created, new Response
                     {
                         StatusCode = HttpStatusCode.Created,
                         Message = "Thêm thể loại thành công!",
                     });
                 }
-                return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                return StatusCode(StatusCodes.Status400BadRequest, new Response
                 {
                     StatusCode = HttpStatusCode.BadRequest,
                     IsSuccess = false,
@@ -75,7 +75,7 @@ namespace TienDaoAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
@@ -97,13 +97,13 @@ namespace TienDaoAPI.Controllers
                 var result = await _genreService.DeleteGenreAsync(id);
                 if (result)
                 {
-                    return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    return StatusCode(StatusCodes.Status200OK, new Response
                     {
                         StatusCode = HttpStatusCode.OK,
                         Message = "Xóa thể loại thành công!",
                     });
                 }
-                return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                return StatusCode(StatusCodes.Status400BadRequest, new Response
                 {
                     StatusCode = HttpStatusCode.BadRequest,
                     IsSuccess = false,
@@ -112,7 +112,7 @@ namespace TienDaoAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,

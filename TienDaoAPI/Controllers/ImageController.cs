@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using TienDaoAPI.DTOs;
-using TienDaoAPI.Response;
+using TienDaoAPI.Utils;
 
 namespace TienDaoAPI.Controllers
 {
@@ -16,21 +16,21 @@ namespace TienDaoAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UploadImageAsync([FromForm] UploadImageDTO dto)
+        public async Task<IActionResult> UploadImageAsync([FromForm] ImageDTO dto)
         {
             try
             {
                 var url = await _firebaseStorageService.UploadImageAsync(dto.Image);
 
-                return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                return StatusCode(StatusCodes.Status200OK, new Response
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Result = new { Url = url }
+                    Data = new { Url = url }
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,

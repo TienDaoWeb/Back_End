@@ -1,20 +1,18 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
-namespace TienDaoAPI.DTOs.Requests
+namespace TienDaoAPI.DTOs
 {
 
-    public class CreateBookDto
+    public class CreateBookDTO
     {
         [Required]
         public string Title { get; set; } = string.Empty;
         [Required]
-        public string Author { get; set; } = string.Empty;
+        public required AuthorDTO Author { get; set; }
         [Required]
-        public string Description { get; set; } = string.Empty;
-
-        public IFormFile? PosterUrl { get; set; }
-
-        [Required]
+        public string Synopsis { get; set; } = string.Empty;
+        [JsonIgnore]
         public int OwnerId { get; set; }
         [Required]
         public int GenreId { get; set; }

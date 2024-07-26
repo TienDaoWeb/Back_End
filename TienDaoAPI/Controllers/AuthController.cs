@@ -9,8 +9,8 @@ using TienDaoAPI.DTOs.Requests;
 using TienDaoAPI.Enums;
 using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
-using TienDaoAPI.Response;
 using TienDaoAPI.Services.IServices;
+using TienDaoAPI.Utils;
 
 namespace TienDaoAPI.Controllers
 {
@@ -51,19 +51,19 @@ namespace TienDaoAPI.Controllers
 
                 return result switch
                 {
-                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new Response
                     {
                         StatusCode = HttpStatusCode.OK,
                         Message = "Chúc mừng! Bạn vừa tạo ra một hồn ma mới trong hệ thống!",
 
                     }),
-                    AccountErrorEnum.Existed => StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                    AccountErrorEnum.Existed => StatusCode(StatusCodes.Status400BadRequest, new Response
                     {
                         StatusCode = HttpStatusCode.BadRequest,
                         IsSuccess = false,
                         Message = "Email đã tồn tại trong hệ thống của chúng tôi"
                     }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response
                     {
                         StatusCode = HttpStatusCode.InternalServerError,
                         IsSuccess = false,
@@ -73,7 +73,7 @@ namespace TienDaoAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
@@ -89,15 +89,15 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequestDTO)
+        public async Task<IActionResult> Login([FromBody] LoginDTO dto)
         {
             try
             {
-                var user = await _userManager.FindByEmailAsync(loginRequestDTO.Email);
+                var user = await _userManager.FindByEmailAsync(dto.Email);
 
                 if (user != null)
                 {
-                    var checkPassword = await _userManager.CheckPasswordAsync(user, loginRequestDTO.Password);
+                    var checkPassword = await _userManager.CheckPasswordAsync(user, dto.Password);
                     if (checkPassword)
                     {
                         if (!user.EmailConfirmed)
@@ -106,7 +106,7 @@ namespace TienDaoAPI.Controllers
                             var templatePath = "./Templates/otp_register_mail.html";
                             await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "Email Verification", templatePath, new { code });
 
-                            return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                            return StatusCode(StatusCodes.Status400BadRequest, new Response
                             {
                                 StatusCode = HttpStatusCode.BadRequest,
                                 IsSuccess = false,
@@ -123,16 +123,16 @@ namespace TienDaoAPI.Controllers
                         var refreshJti = new JwtSecurityTokenHandler().ReadJwtToken(refreshToken).Payload["jti"].ToString();
 
                         _sessionProvider.SaveSession(user.Id.ToString(), _mapper.Map<UserDTO>(user), accessJti!, refreshJti!);
-                        return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                        return StatusCode(StatusCodes.Status200OK, new Response
                         {
                             StatusCode = HttpStatusCode.OK,
                             Message = "Login successfully",
-                            Result = new { AccessToken = jwtToken, RefreshToken = refreshToken, Profile = _mapper.Map<UserDTO>(user) }
+                            Data = new { AccessToken = jwtToken, RefreshToken = refreshToken, Profile = _mapper.Map<UserDTO>(user) }
                         });
                     }
                     else
                     {
-                        return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                        return StatusCode(StatusCodes.Status400BadRequest, new Response
                         {
                             StatusCode = HttpStatusCode.BadRequest,
                             IsSuccess = false,
@@ -142,7 +142,7 @@ namespace TienDaoAPI.Controllers
                 }
                 else
                 {
-                    return StatusCode(StatusCodes.Status404NotFound, new CustomResponse
+                    return StatusCode(StatusCodes.Status404NotFound, new Response
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         IsSuccess = false,
@@ -152,7 +152,7 @@ namespace TienDaoAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
@@ -167,33 +167,33 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [Route("confirm-email")]
-        public async Task<IActionResult> ConfirmEmail([FromBody] string email, string otp)
+        public async Task<IActionResult> ConfirmEmail([FromBody] OTPEmailDTO dto)
         {
             try
             {
-                var result = await _accountService.VerifyEmailAsync(email, otp);
+                var result = await _accountService.VerifyEmailAsync(dto.Email, dto.OTP);
 
                 return result switch
                 {
-                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new Response
                     {
                         StatusCode = HttpStatusCode.OK,
                         Message = "Xác thực email thành công!",
 
                     }),
-                    AccountErrorEnum.InvalidOTP => StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    AccountErrorEnum.InvalidOTP => StatusCode(StatusCodes.Status200OK, new Response
                     {
                         StatusCode = HttpStatusCode.BadRequest,
                         Message = "OTP không hợp lệ hoặc đã hết hạn!",
 
                     }),
-                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status400BadRequest, new Response
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         IsSuccess = false,
                         Message = "Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi"
                     }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response
                     {
                         StatusCode = HttpStatusCode.InternalServerError,
                         IsSuccess = false,
@@ -203,7 +203,7 @@ namespace TienDaoAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
@@ -225,18 +225,18 @@ namespace TienDaoAPI.Controllers
 
                 return result switch
                 {
-                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new Response
                     {
                         StatusCode = HttpStatusCode.OK,
                         Message = $"Vui lòng sử dụng OTP đã được gửi tới địa chỉ {dto.Email} để khôi phục mật khẩu!"
                     }),
-                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status400BadRequest, new Response
                     {
                         StatusCode = HttpStatusCode.BadRequest,
                         IsSuccess = false,
                         Message = "Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi"
                     }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response
                     {
                         StatusCode = HttpStatusCode.InternalServerError,
                         IsSuccess = false,
@@ -246,7 +246,7 @@ namespace TienDaoAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
@@ -262,7 +262,7 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [Route("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO dto)
+        public async Task<IActionResult> ResetPassword([FromBody] OTPEmailDTO dto)
         {
             try
             {
@@ -270,25 +270,25 @@ namespace TienDaoAPI.Controllers
 
                 return result switch
                 {
-                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new Response
                     {
                         StatusCode = HttpStatusCode.OK,
                         Message = $"Vui lòng sử dụng mật khẩu đã được gửi tới địa chỉ {dto.Email} để đăng nhập tài khoản!",
 
                     }),
-                    AccountErrorEnum.InvalidOTP => StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    AccountErrorEnum.InvalidOTP => StatusCode(StatusCodes.Status200OK, new Response
                     {
                         StatusCode = HttpStatusCode.BadRequest,
                         Message = "OTP không hợp lệ hoặc đã hết hạn!",
 
                     }),
-                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status400BadRequest, new Response
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         IsSuccess = false,
                         Message = "Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi"
                     }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response
                     {
                         StatusCode = HttpStatusCode.InternalServerError,
                         IsSuccess = false,
@@ -298,7 +298,7 @@ namespace TienDaoAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
@@ -319,7 +319,7 @@ namespace TienDaoAPI.Controllers
             {
                 if (!_sessionProvider.VerifyRefreshToken(dto.RefreshToken))
                 {
-                    return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                    return StatusCode(StatusCodes.Status400BadRequest, new Response
                     {
                         StatusCode = HttpStatusCode.BadRequest,
                         IsSuccess = false,
@@ -336,10 +336,10 @@ namespace TienDaoAPI.Controllers
                 var refreshJti = new JwtSecurityTokenHandler().ReadJwtToken(newRefreshToken).Payload["jti"].ToString();
                 _sessionProvider.SaveSession(userId!, _mapper.Map<UserDTO>(user), accessJti!, refreshJti!);
 
-                return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                return StatusCode(StatusCodes.Status200OK, new Response
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Result = new
+                    Data = new
                     {
                         AccessToken = jwtToken,
                         RefreshToken = newRefreshToken
@@ -348,7 +348,7 @@ namespace TienDaoAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
@@ -374,30 +374,30 @@ namespace TienDaoAPI.Controllers
 
                 return result switch
                 {
-                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new Response
                     {
                         StatusCode = HttpStatusCode.OK,
                         Message = "Thay đổi mật khẩu thành công",
                     }),
-                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status404NotFound, new CustomResponse
+                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status404NotFound, new Response
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         IsSuccess = false,
                         Message = "Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi"
                     }),
-                    AccountErrorEnum.WeakPassword => StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                    AccountErrorEnum.WeakPassword => StatusCode(StatusCodes.Status400BadRequest, new Response
                     {
                         StatusCode = HttpStatusCode.BadRequest,
                         IsSuccess = false,
                         Message = "Mật khẩu phải dài tối thiểu 8 ký tực và tối đa 30 ký tự, bao gồm ít nhất một chữ thường, một chữ hoa, một chữ số và một ký tự đặc biệt!"
                     }),
-                    AccountErrorEnum.IncorrectPassword => StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                    AccountErrorEnum.IncorrectPassword => StatusCode(StatusCodes.Status400BadRequest, new Response
                     {
                         StatusCode = HttpStatusCode.BadRequest,
                         IsSuccess = false,
                         Message = "Mật khẩu hiện tại chưa chính xác!"
                     }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response
                     {
                         StatusCode = HttpStatusCode.InternalServerError,
                         IsSuccess = false,
@@ -407,7 +407,7 @@ namespace TienDaoAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,

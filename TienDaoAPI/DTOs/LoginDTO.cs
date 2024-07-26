@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TienDaoAPI.DTOs.Requests
+namespace TienDaoAPI.DTOs
 {
-    public class LoginRequest
+    public class LoginDTO
     {
         [Required]
         [DataType(DataType.EmailAddress)]
