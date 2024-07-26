@@ -94,9 +94,9 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Tiên Đạo API",
+        Title = "TienDaoAPI",
         Version = "v1",
-        Description = "Tiên Đạo API",
+        Description = "TienDaoAPI",
         Contact = new OpenApiContact
         {
             Email = "huynhquocthai2k2@gmail.com"
