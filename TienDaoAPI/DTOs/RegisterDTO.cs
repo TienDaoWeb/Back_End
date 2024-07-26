@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using TienDaoAPI.Enums;
 using TienDaoAPI.Validation;
 
 namespace TienDaoAPI.DTOs
@@ -9,6 +8,7 @@ namespace TienDaoAPI.DTOs
         [Required]
         [DataType(DataType.EmailAddress)]
         public string Email { get; set; } = string.Empty;
+
         [Required, MinLength(6)]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
@@ -16,12 +16,6 @@ namespace TienDaoAPI.DTOs
         [Required]
         public required string FullName { get; set; }
 
-
-        public string? PhoneNumber { get; set; }
-
-        public DateTime? Birthday { get; set; }
-
-        public GenderEnum Gender { get; set; } = GenderEnum.Private;
         [Required]
         [RoleEnumValidation]
         public required string Role { get; set; }

@@ -34,6 +34,8 @@ namespace TienDaoAPI.Models
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        public DateTime? DeletedAt { get; set; }
+
         [Required]
         [EnumDataType(typeof(BookStatusEnum))]
         public BookStatusEnum Status { get; set; } = BookStatusEnum.Ongoing;

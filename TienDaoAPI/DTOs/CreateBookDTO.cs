@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace TienDaoAPI.DTOs.Requests
+namespace TienDaoAPI.DTOs
 {
 
     public class CreateBookDTO

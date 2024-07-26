@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using TienDaoAPI.DTOs;
-using TienDaoAPI.DTOs.Requests;
 using TienDaoAPI.DTOs.Responses;
 using TienDaoAPI.Models;
 
@@ -17,23 +16,23 @@ namespace TienDaoAPI.Config
             CreateMap<UpdateProfileDTO, User>().ReverseMap();
             CreateMap<CreateBookDTO, Book>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-            .ForMember(dest => dest.ReviewCount, opt => opt.Ignore())
-            .ForMember(dest => dest.BookmarkCount, opt => opt.Ignore())
-            .ForMember(dest => dest.ViewCount, opt => opt.Ignore())
-            .ForMember(dest => dest.VoteCount, opt => opt.Ignore())
-            .ForMember(dest => dest.WordCount, opt => opt.Ignore())
-            .ForMember(dest => dest.LastestIndex, opt => opt.Ignore())
-            .ForMember(dest => dest.Chapters, opt => opt.Ignore())
-            .ForMember(dest => dest.Comments, opt => opt.Ignore())
-            .ForMember(dest => dest.Reviews, opt => opt.Ignore())
-            .ForMember(dest => dest.PosterUrl, opt => opt.Ignore())
-            .ForMember(dest => dest.Status, opt => opt.Ignore())
-            .ForMember(dest => dest.Author, opt => opt.Ignore())
-            .ForMember(dest => dest.AuthorId, opt => opt.Ignore());
-            CreateMap<Book, BookResponse>()
-                .ForMember(d => d.NumberOfChapters, s => s.MapFrom(x => x.Chapters.Count))
-                .ForPath(d => d.GenreResponse, s => s.MapFrom(x => x.Genre))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.ReviewCount, opt => opt.Ignore())
+                .ForMember(dest => dest.BookmarkCount, opt => opt.Ignore())
+                .ForMember(dest => dest.ViewCount, opt => opt.Ignore())
+                .ForMember(dest => dest.VoteCount, opt => opt.Ignore())
+                .ForMember(dest => dest.WordCount, opt => opt.Ignore())
+                .ForMember(dest => dest.LastestIndex, opt => opt.Ignore())
+                .ForMember(dest => dest.Chapters, opt => opt.Ignore())
+                .ForMember(dest => dest.Comments, opt => opt.Ignore())
+                .ForMember(dest => dest.Reviews, opt => opt.Ignore())
+                .ForMember(dest => dest.PosterUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.Author, opt => opt.Ignore())
+                .ForMember(dest => dest.AuthorId, opt => opt.Ignore());
+            CreateMap<Book, BookDTO>()
+                .ForMember(d => d.Owner, s => s.MapFrom(x => x.User))
                 .ReverseMap();
             CreateMap<AuthorDTO, Author>().ReverseMap();
         }

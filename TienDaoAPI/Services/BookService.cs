@@ -1,5 +1,8 @@
 ﻿using AutoMapper;
-using System.Linq.Expressions;
+using Microsoft.AspNetCore.Mvc;
+using System.Transactions;
+using TienDaoAPI.DTOs;
+using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
 using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services.IServices;
@@ -10,62 +13,64 @@ namespace TienDaoAPI.Services
     {
         private readonly IBookRepository _bookRepository;
         private readonly IMapper _mapper;
-        public BookService(IBookRepository bookRepository, IMapper mapper)
+        private readonly IAuthorService _authorService;
+        public BookService(IBookRepository bookRepository, IMapper mapper, IAuthorService authorService)
         {
             _bookRepository = bookRepository;
             _mapper = mapper;
+            _authorService = authorService;
         }
 
-        public async Task<Book?> CreateBookAsync(Book book)
+        public async Task<Book?> CreateBookAsync(CreateBookDTO dto)
         {
-            return await _bookRepository.CreateAsync(book);
+            try
+            {
+                using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                {
+                    var author = await _authorService.CreateAuthorAsync(dto.Author);
+                    if (author == null)
+                    {
+                        return null;
+                    }
+
+                    var book = _mapper.Map<Book>(dto);
+                    book.AuthorId = author.Id;
+
+                    var createdBook = await _bookRepository.CreateAsync(book);
+                    if (createdBook != null)
+                    {
+                        scope.Complete();
+                    }
+                    return createdBook;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }
         }
 
-        public async Task DeleteBookAsync(Book book)
+        public async Task<bool> DeleteBookAsync(int id)
         {
-            await _bookRepository.DeleteAsync(book);
+            var book = await _bookRepository.GetByIdAsync(id);
+            if (book != null)
+            {
+                book.DeletedAt = DateTime.UtcNow;
+                await _bookRepository.SaveAsync();
+                return true;
+            }
+            return false;
 
         }
 
-        public async Task<IEnumerable<Book?>> GetAllBooksAsync(BookQueryObject queryObj)
+        public async Task<IEnumerable<Book?>> GetAllBooksAsync([FromQuery] BookFilter filter)
         {
-            var query = (await _bookRepository.GetAllAsync()).AsQueryable();
-            if (!string.IsNullOrEmpty(queryObj.Keyword))
-            {
-                query = query.Where(s => s.Title.Contains(queryObj.Keyword));
-            }
-            if (queryObj.Genre > 0)
-            {
-                query = query.Where(s => s.GenreId == queryObj.Genre);
-            }
-            var today = DateTime.Today;
-            var columnsMap = new Dictionary<string, Expression<Func<Book, object>>>
-            {
-                //["view_day"] = s => s.bookAudits.First(sw => sw.ViewDate.Date == today.Date),
-                //["view_month"] = s => s.bookAudits.Sum(sw => sw.ViewCount * (sw.ViewDate.Month == today.Month && sw.ViewDate.Year == today.Year ? 1 : 0)),
-                //["view_week"] = s => s.bookAudits.Sum(sw => sw.ViewCount * (sw.ViewDate >= today.AddDays(-(int)today.DayOfWeek) && sw.ViewDate < today.AddDays(7 - (int)today.DayOfWeek) ? 1 : 0)),
-                ["view_count"] = s => s.ViewCount,
-                //["create_at"] = s => s.CreateDate,
-                //["update_at"] = s => s.UpdateDate,
-                ["chapter_count"] = s => s.Chapters.Count,
-                ["review_count"] = s => s.Reviews.Count,
-                ["comment_count"] = s => s.Comments.Count
-            };
-            if (!string.IsNullOrEmpty(queryObj.SortBy) && columnsMap.ContainsKey(queryObj.SortBy))
-            {
-                query = queryObj.IsSortAscending ? query.OrderBy(columnsMap[queryObj.SortBy]) : query.OrderByDescending(columnsMap[queryObj.SortBy]);
-            }
-            if (queryObj.Page <= 0)
-            {
-                queryObj.Page = 1;
-            }
-            if (queryObj.PageSize > 20 || queryObj.PageSize <= 0)
-            {
-                queryObj.PageSize = 20;
-                query = query.Skip(queryObj.PageSize * (queryObj.Page - 1)).Take(queryObj.PageSize);
-            }
+            var filterExpression = ExpressionProvider<Book>.BuildBookFilter(filter);
+            var sortExpression = filter.SortBy == null ? null : ExpressionProvider<Book>.GetSortExpression(filter.SortBy);
+            var books = await _bookRepository.FilterAsync(filterExpression, filter.Include, sortExpression);
 
-            return query;
+            return books;
         }
 
         public async Task<Book?> GetBookByIdAsync(int bookId)

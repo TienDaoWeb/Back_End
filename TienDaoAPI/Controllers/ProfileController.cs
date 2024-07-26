@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using TienDaoAPI.DTOs;
-using TienDaoAPI.Response;
+using TienDaoAPI.Utils;
 using TienDaoAPI.Services.IServices;
 
 namespace TienDaoAPI.Controllers
@@ -26,7 +26,7 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> ChangeAvatar([FromForm] UploadImageDTO dto)
+        public async Task<IActionResult> ChangeAvatar([FromForm] ImageDTO dto)
         {
             try
             {
@@ -35,14 +35,14 @@ namespace TienDaoAPI.Controllers
                 var result = await _profileService.ChangeAvatarAsync(userId, url);
                 if (result)
                 {
-                    return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    return StatusCode(StatusCodes.Status200OK, new Response
                     {
                         StatusCode = HttpStatusCode.OK,
                         Message = "Cập nhật ảnh đại diện thành công",
-                        Result = new { Url = url }
+                        Data = new { Url = url }
                     });
                 }
-                return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                return StatusCode(StatusCodes.Status400BadRequest, new Response
                 {
                     StatusCode = HttpStatusCode.BadRequest,
                     IsSuccess = false,
@@ -51,7 +51,7 @@ namespace TienDaoAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,
@@ -75,13 +75,13 @@ namespace TienDaoAPI.Controllers
                 var result = await _profileService.ChangeProfileAsync(userId, dto);
                 if (result)
                 {
-                    return StatusCode(StatusCodes.Status200OK, new CustomResponse
+                    return StatusCode(StatusCodes.Status200OK, new Response
                     {
                         StatusCode = HttpStatusCode.OK,
                         Message = "Cập nhật thông tin cá nhân thành công"
                     });
                 }
-                return StatusCode(StatusCodes.Status400BadRequest, new CustomResponse
+                return StatusCode(StatusCodes.Status400BadRequest, new Response
                 {
                     StatusCode = HttpStatusCode.BadRequest,
                     IsSuccess = false,
@@ -90,7 +90,7 @@ namespace TienDaoAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new CustomResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     IsSuccess = false,

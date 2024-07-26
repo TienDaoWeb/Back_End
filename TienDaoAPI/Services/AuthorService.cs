@@ -17,11 +17,16 @@ namespace TienDaoAPI.Services
             _mapper = mapper;
         }
 
-        public async Task<Author> CreateAuthorAsync(AuthorDTO dto)
+        public async Task<Author?> CreateAuthorAsync(AuthorDTO dto)
         {
-            var author = _mapper.Map<Author>(dto);
-            var result = await _authorRepository.CreateAsync(author);
-            return result!;
+            var author = await GetAuthorAsync(dto.Name);
+            if (author == null)
+            {
+                author = _mapper.Map<Author>(dto);
+                var result = await _authorRepository.CreateAsync(author);
+                return result;
+            }
+            return author;
         }
 
         public async Task<Author?> GetAuthorAsync(string name)

@@ -2,9 +2,9 @@
 
 namespace TienDaoAPI.DTOs
 {
-    public class UploadImageDTO
+    public class OTPEmailDTO : EmailDTO
     {
         [Required]
-        public required IFormFile Image { get; set; }
+        public string OTP { get; set; } = string.Empty;
     }
 }
