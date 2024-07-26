@@ -47,6 +47,10 @@ jobs:
       working-directory: ${{ env.WORKING_DIRECTORY }}
     - name: Generate Open API Specification Document
       run: swagger tofile --output "${{ env.API_IMPORT_SPECIFICATION_PATH }}" "${{ env.API_IMPORT_DLL }}" "${{ env.API_IMPORT_VERSION }}"
+    - name: Convert swagger.json to UTF-8
+      run: |
+        $content = Get-Content ${{ env.API_IMPORT_SPECIFICATION_PATH }} -Encoding Default
+        Set-Content ${{ env.API_IMPORT_SPECIFICATION_PATH }} -Value $content -Encoding UTF8
     - name: Publish Artifacts
       uses: actions/upload-artifact@v3
       with:
