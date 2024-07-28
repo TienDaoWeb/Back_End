@@ -149,40 +149,43 @@ namespace TienDaoAPI.Controllers
             }
 
         }
-        //Update Book
+
         [HttpPut]
         [Route("{id}")]
         [Authorize]
+        [Owner(typeof(Book))]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> BookUpdate(int id, [FromForm] CreateBookDTO newBook)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateBookDTO dto)
         {
             try
             {
+                dto.OwnerId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
                 var book = await _bookService.GetBookByIdAsync(id);
                 if (book == null)
                 {
                     return StatusCode(StatusCodes.Status404NotFound, new Response
                     {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = "Can't find book",
+                        StatusCode = HttpStatusCode.NotFound,
+                        Message = "Truyện không tồn tại",
                     });
                 }
-                else
+                var updatedBook = await _bookService.UpdateBookAsync(book, dto);
+
+                if (updatedBook != null)
                 {
-                    //book.Author = newBook.Author;
-                    book.Synopsis = newBook.Synopsis;
-
-
-                    await _bookService.UpdateBookAsync(book);
-
                     return StatusCode(StatusCodes.Status200OK, new Response
                     {
                         StatusCode = HttpStatusCode.OK,
-                        Message = "Update book successfully",
+                        Message = "Cập nhật thông tin truyện thành công!",
                     });
                 }
+                return StatusCode(StatusCodes.Status400BadRequest, new Response
+                {
+                    StatusCode = HttpStatusCode.BadRequest,
+                    Message = "Cập nhật thông tin truyện không thành công!",
+                });
             }
             catch (Exception ex)
             {
@@ -205,6 +208,7 @@ namespace TienDaoAPI.Controllers
                 var books = await _bookService.GetAllBooksAsync(filter);
                 var count = books.Count();
                 var paginatedBooks = books.Skip(filter.PageSize * (filter.Page - 1)).Take(filter.PageSize);
+
                 return StatusCode(StatusCodes.Status200OK, new PaginatedResponse
                 {
                     PageNumber = filter.Page,

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.DTOs.Responses;
+using TienDaoAPI.Extensions;
 using TienDaoAPI.Models;
 
 namespace TienDaoAPI.Config
@@ -30,9 +31,12 @@ namespace TienDaoAPI.Config
                 .ForMember(dest => dest.PosterUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
                 .ForMember(dest => dest.Author, opt => opt.Ignore())
-                .ForMember(dest => dest.AuthorId, opt => opt.Ignore());
+                .ForMember(dest => dest.AuthorId, opt => opt.Ignore())
+                .ForMember(dest => dest.PublishedAt, opt => opt.Ignore());
+
             CreateMap<Book, BookDTO>()
                 .ForMember(d => d.Owner, s => s.MapFrom(x => x.User))
+                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status.GetStatusName()))
                 .ReverseMap();
             CreateMap<AuthorDTO, Author>().ReverseMap();
         }

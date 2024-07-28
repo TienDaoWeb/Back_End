@@ -29,6 +29,12 @@ namespace TienDaoAPI.DTOs
 
         public BookStatusEnum Status { get; set; }
 
+        public string? StatusName { get; set; }
+
+        public bool IsPublished { get; set; }
+
+        public DateTime PublishedAt { get; set; }
+
         public DateTime CreatedAt { get; set; }
 
         public DateTime UpdatedAt { get; set; }

@@ -27,10 +27,14 @@ namespace TienDaoAPI.Services
             {
                 using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
                 {
-                    var author = await _authorService.CreateAuthorAsync(dto.Author);
+                    var author = await _authorService.GetAuthorAsync(dto.Author.Name);
                     if (author == null)
                     {
-                        return null;
+                        author = await _authorService.CreateAuthorAsync(dto.Author);
+                        if (author == null)
+                        {
+                            return null;
+                        }
                     }
 
                     var book = _mapper.Map<Book>(dto);
@@ -78,9 +82,40 @@ namespace TienDaoAPI.Services
             return await _bookRepository.GetByIdAsync(bookId);
         }
 
-        public async Task<Book?> UpdateBookAsync(Book book)
+        public async Task<Book?> UpdateBookAsync(Book book, UpdateBookDTO dto)
         {
-            return await _bookRepository.UpdateAsync(book);
+            try
+            {
+                using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                {
+                    var author = await _authorService.GetAuthorAsync(dto.Author.Name);
+                    if (author == null)
+                    {
+                        author = await _authorService.CreateAuthorAsync(dto.Author);
+                        if (author == null)
+                        {
+                            return null;
+                        }
+                    }
+
+                    _mapper.Map(dto, book);
+                    book.AuthorId = author.Id;
+                    book.UpdatedAt = DateTime.UtcNow;
+
+                    var updatedBook = await _bookRepository.UpdateAsync(book);
+                    if (updatedBook != null)
+                    {
+                        scope.Complete();
+                    }
+                    return updatedBook;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }
+
         }
 
 

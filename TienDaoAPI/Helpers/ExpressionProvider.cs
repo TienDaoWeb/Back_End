@@ -87,7 +87,11 @@ namespace TienDaoAPI.Helpers
             //    filterParts.Add(Expression.Equal(chapterProperty, chapter));
             //}
 
-            if (filterParts.Count == 0) return b => true; // Return a default filter that matches all books
+            var deletedAtProperty = Expression.Property(b, nameof(Book.DeletedAt));
+            var nullDeletedAt = Expression.Equal(deletedAtProperty, Expression.Constant(null, typeof(DateTime?)));
+            filterParts.Add(nullDeletedAt);
+
+            if (filterParts.Count == 0) return b => b.DeletedAt == null;
 
             var body = filterParts.Aggregate(Expression.AndAlso);
             return Expression.Lambda<Func<Book, bool>>(body, b);
