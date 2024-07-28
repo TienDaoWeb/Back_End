@@ -19,14 +19,17 @@ namespace TienDaoAPI.Services
 
         public async Task<Author?> CreateAuthorAsync(AuthorDTO dto)
         {
-            var author = await GetAuthorAsync(dto.Name);
-            if (author == null)
+            try
             {
-                author = _mapper.Map<Author>(dto);
+                var author = _mapper.Map<Author>(dto);
                 var result = await _authorRepository.CreateAsync(author);
                 return result;
             }
-            return author;
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }
         }
 
         public async Task<Author?> GetAuthorAsync(string name)

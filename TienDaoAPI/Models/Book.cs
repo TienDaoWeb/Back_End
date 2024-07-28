@@ -30,6 +30,8 @@ namespace TienDaoAPI.Models
 
         public int LastestIndex { get; set; } = 0;
 
+        public DateTime? PublishedAt { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -48,8 +50,8 @@ namespace TienDaoAPI.Models
         [ForeignKey(nameof(GenreId))]
         public virtual Genre? Genre { get; set; }
 
-        [ForeignKey("User")]
         public int OwnerId { get; set; }
+        [ForeignKey("OwnerId")]
         public virtual User? User { get; set; }
 
         public ICollection<Chapter> Chapters { get; set; } = new HashSet<Chapter>();

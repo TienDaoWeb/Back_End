@@ -9,6 +9,6 @@ namespace TienDaoAPI.Services.IServices
         public Task<IEnumerable<Book?>> GetAllBooksAsync(BookFilter filter);
         public Task<Book?> GetBookByIdAsync(int bookId);
         public Task<bool> DeleteBookAsync(int id);
-        public Task<Book?> UpdateBookAsync(Book book);
+        public Task<Book?> UpdateBookAsync(Book book, UpdateBookDTO dto);
     }
 }

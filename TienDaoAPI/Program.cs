@@ -52,6 +52,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
+
 builder.Services.Configure<IdentityOptions>(options =>
 {
     options.Password.RequireDigit = false;
@@ -178,6 +188,7 @@ app.UseSwaggerUI(options =>
 
 app.UseHttpsRedirection();
 
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
