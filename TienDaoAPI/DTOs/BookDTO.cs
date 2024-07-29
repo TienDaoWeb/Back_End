@@ -31,9 +31,7 @@ namespace TienDaoAPI.DTOs
 
         public string? StatusName { get; set; }
 
-        public bool IsPublished { get; set; }
-
-        public DateTime PublishedAt { get; set; }
+        public DateTime? PublishedAt { get; set; }
 
         public DateTime CreatedAt { get; set; }
 
