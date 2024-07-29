@@ -13,7 +13,8 @@ namespace TienDaoAPI.Config
             CreateMap<CreateGenreDTO, Genre>().ReverseMap();
             CreateMap<GenreResponse, Genre>().ReverseMap();
             CreateMap<RegisterDTO, User>().ForMember(d => d.UserName, s => s.MapFrom(x => x.Email));
-            CreateMap<UserDTO, User>().ReverseMap();
+            CreateMap<User, UserBaseDTO>().ReverseMap();
+            CreateMap<User, UserDTO>().IncludeBase<User, UserBaseDTO>(); ;
             CreateMap<UpdateProfileDTO, User>().ReverseMap();
             CreateMap<CreateBookDTO, Book>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())

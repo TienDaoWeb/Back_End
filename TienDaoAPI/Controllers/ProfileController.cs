@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using TienDaoAPI.DTOs;
-using TienDaoAPI.Utils;
 using TienDaoAPI.Services.IServices;
+using TienDaoAPI.Utils;
 
 namespace TienDaoAPI.Controllers
 {
@@ -35,29 +34,14 @@ namespace TienDaoAPI.Controllers
                 var result = await _profileService.ChangeAvatarAsync(userId, url);
                 if (result)
                 {
-                    return StatusCode(StatusCodes.Status200OK, new Response
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = "Cập nhật ảnh đại diện thành công",
-                        Data = new { Url = url }
-                    });
+                    return Ok(new Response().Success().SetMessage("Thành công!"));
                 }
-                return StatusCode(StatusCodes.Status400BadRequest, new Response
-                {
-                    StatusCode = HttpStatusCode.BadRequest,
-                    IsSuccess = false,
-                    Message = "Có chút trục trặc trong khi chúng tôi đang cố gắng thay bức hình tuyệt vời này!"
-                });
+                return BadRequest(new Response().BadRequest().SetMessage("Có chút trục trặc trong khi chúng tôi đang cố gắng thay bức hình tuyệt vời này!"));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Máy chủ đang gặp lỗi: " + ex.Message,
-
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
 
@@ -75,28 +59,14 @@ namespace TienDaoAPI.Controllers
                 var result = await _profileService.ChangeProfileAsync(userId, dto);
                 if (result)
                 {
-                    return StatusCode(StatusCodes.Status200OK, new Response
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = "Cập nhật thông tin cá nhân thành công"
-                    });
+                    return Ok(new Response().Success().SetMessage("Cập nhật thông tin cá nhân thành công!"));
                 }
-                return StatusCode(StatusCodes.Status400BadRequest, new Response
-                {
-                    StatusCode = HttpStatusCode.BadRequest,
-                    IsSuccess = false,
-                    Message = "Có chút trục trặc trong khi chúng tôi đang cố gắng thay bức hình tuyệt vời này!"
-                });
+                return BadRequest(new Response().BadRequest().SetMessage("Có chút trục trặc trong khi chúng tôi thông tin cá nhân của bạn!"));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Máy chủ đang gặp lỗi: " + ex.Message,
-
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
     }

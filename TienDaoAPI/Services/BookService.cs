@@ -77,9 +77,9 @@ namespace TienDaoAPI.Services
             return books;
         }
 
-        public async Task<Book?> GetBookByIdAsync(int bookId)
+        public async Task<Book?> GetBookByIdAsync(int id)
         {
-            return await _bookRepository.GetByIdAsync(bookId);
+            return await _bookRepository.GetAsync(b => b.Id == id);
         }
 
         public async Task<Book?> UpdateBookAsync(Book book, UpdateBookDTO dto)
@@ -118,6 +118,24 @@ namespace TienDaoAPI.Services
 
         }
 
-
+        public async Task<bool> ChangePosterAsync(int id, string posterUrl)
+        {
+            try
+            {
+                var book = await _bookRepository.GetByIdAsync(id);
+                if (book == null)
+                {
+                    return false;
+                }
+                book.PosterUrl = posterUrl;
+                await _bookRepository.SaveAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+        }
     }
 }

@@ -10,5 +10,6 @@ namespace TienDaoAPI.Services.IServices
         public Task<Book?> GetBookByIdAsync(int bookId);
         public Task<bool> DeleteBookAsync(int id);
         public Task<Book?> UpdateBookAsync(Book book, UpdateBookDTO dto);
+        public Task<bool> ChangePosterAsync(int id, string posterUrl);
     }
 }

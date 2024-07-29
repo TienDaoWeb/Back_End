@@ -41,6 +41,6 @@ namespace TienDaoAPI.DTOs
 
         public Genre? Genre { get; set; }
 
-        public virtual UserDTO? Owner { get; set; }
+        public UserBaseDTO? Owner { get; set; }
     }
 }

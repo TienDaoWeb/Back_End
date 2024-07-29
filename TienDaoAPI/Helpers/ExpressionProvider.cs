@@ -65,12 +65,20 @@ namespace TienDaoAPI.Helpers
                 filterParts.Add(Expression.Equal(statusProperty, status));
             }
 
-            if (filter.Genres != null && filter.Genres.Any())
+            if (!string.IsNullOrEmpty(filter.Genres))
             {
-                var genreExpressions = filter.Genres.Select(genreId =>
-                    Expression.Equal(Expression.Property(b, nameof(Book.GenreId)), Expression.Constant(genreId))
-                );
-                filterParts.Add(genreExpressions.Aggregate(Expression.OrElse));
+                var genreIds = filter.Genres.Split(',').Select(int.Parse).ToList();
+                if (genreIds.Any())
+                {
+                    var genreExpressions = genreIds.Select(genreId =>
+                        Expression.Equal(
+                            Expression.Property(b, nameof(Book.GenreId)),
+                            Expression.Constant(genreId)
+                        )
+                    );
+
+                    filterParts.Add(genreExpressions.Aggregate(Expression.OrElse));
+                }
             }
 
             //if (!string.IsNullOrEmpty(filter.Tags))

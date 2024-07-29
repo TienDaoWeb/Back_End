@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
-using System.Net;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.DTOs.Requests;
 using TienDaoAPI.Enums;
@@ -51,35 +50,15 @@ namespace TienDaoAPI.Controllers
 
                 return result switch
                 {
-                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new Response
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = "Chúc mừng! Bạn vừa tạo ra một hồn ma mới trong hệ thống!",
-
-                    }),
-                    AccountErrorEnum.Existed => StatusCode(StatusCodes.Status400BadRequest, new Response
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        IsSuccess = false,
-                        Message = "Email đã tồn tại trong hệ thống của chúng tôi"
-                    }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response
-                    {
-                        StatusCode = HttpStatusCode.InternalServerError,
-                        IsSuccess = false,
-                        Message = "Internal Server Error: Không xác định lỗi."
-                    })
+                    AccountErrorEnum.AllOk => Ok(new Response().Success().SetMessage("Chúc mừng! Bạn vừa tạo ra một hồn ma mới trong hệ thống!")),
+                    AccountErrorEnum.Existed => BadRequest(new Response().BadRequest().SetMessage("Email đã tồn tại trong hệ thống của chúng tôi")),
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError())
                 };
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message,
-
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
 
@@ -106,12 +85,7 @@ namespace TienDaoAPI.Controllers
                             var templatePath = "./Templates/otp_register_mail.html";
                             await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "Email Verification", templatePath, new { code });
 
-                            return StatusCode(StatusCodes.Status400BadRequest, new Response
-                            {
-                                StatusCode = HttpStatusCode.BadRequest,
-                                IsSuccess = false,
-                                Message = "Unverified Email"
-                            });
+                            return BadRequest(new Response().BadRequest().SetMessage("Email của bạn chưa được xác thực!"));
                         }
 
                         var jwtToken = _jwtHandler.CreateJWTToken(user);
@@ -123,41 +97,25 @@ namespace TienDaoAPI.Controllers
                         var refreshJti = new JwtSecurityTokenHandler().ReadJwtToken(refreshToken).Payload["jti"].ToString();
 
                         _sessionProvider.SaveSession(user.Id.ToString(), _mapper.Map<UserDTO>(user), accessJti!, refreshJti!);
-                        return StatusCode(StatusCodes.Status200OK, new Response
-                        {
-                            StatusCode = HttpStatusCode.OK,
-                            Message = "Login successfully",
-                            Data = new { AccessToken = jwtToken, RefreshToken = refreshToken, Profile = _mapper.Map<UserDTO>(user) }
-                        });
+                        Ok(new Response().Success()
+                            .SetMessage("Đăng nhập thành công!")
+                            .SetData(new { AccessToken = jwtToken, RefreshToken = refreshToken, Profile = _mapper.Map<UserDTO>(user) }));
                     }
                     else
                     {
-                        return StatusCode(StatusCodes.Status400BadRequest, new Response
-                        {
-                            StatusCode = HttpStatusCode.BadRequest,
-                            IsSuccess = false,
-                            Message = "Password is incorrect"
-                        });
+                        return BadRequest(new Response().BadRequest().SetMessage("Mật khẩu không chính xác"));
                     }
                 }
                 else
                 {
-                    return StatusCode(StatusCodes.Status404NotFound, new Response
-                    {
-                        StatusCode = HttpStatusCode.NotFound,
-                        IsSuccess = false,
-                        Message = "User does not exsit"
-                    });
+                    return NotFound(new Response().NotFound().SetMessage("Email không tồn tại trong hệ thống"));
                 }
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
 
@@ -175,40 +133,16 @@ namespace TienDaoAPI.Controllers
 
                 return result switch
                 {
-                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new Response
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = "Xác thực email thành công!",
-
-                    }),
-                    AccountErrorEnum.InvalidOTP => StatusCode(StatusCodes.Status200OK, new Response
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        Message = "OTP không hợp lệ hoặc đã hết hạn!",
-
-                    }),
-                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status400BadRequest, new Response
-                    {
-                        StatusCode = HttpStatusCode.NotFound,
-                        IsSuccess = false,
-                        Message = "Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi"
-                    }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response
-                    {
-                        StatusCode = HttpStatusCode.InternalServerError,
-                        IsSuccess = false,
-                        Message = "Internal Server Error: Không xác định lỗi."
-                    })
+                    AccountErrorEnum.AllOk => Ok(new Response().Success().SetMessage("Xác thực email thành công!")),
+                    AccountErrorEnum.InvalidOTP => BadRequest(new Response().BadRequest().SetMessage("OTP không hợp lệ hoặc đã hết hạn!")),
+                    AccountErrorEnum.NotExists => NotFound(new Response().NotFound().SetMessage("Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi")),
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError())
                 };
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
 
@@ -225,34 +159,15 @@ namespace TienDaoAPI.Controllers
 
                 return result switch
                 {
-                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new Response
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = $"Vui lòng sử dụng OTP đã được gửi tới địa chỉ {dto.Email} để khôi phục mật khẩu!"
-                    }),
-                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status400BadRequest, new Response
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        IsSuccess = false,
-                        Message = "Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi"
-                    }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response
-                    {
-                        StatusCode = HttpStatusCode.InternalServerError,
-                        IsSuccess = false,
-                        Message = "Internal Server Error: Không xác định lỗi."
-                    })
+                    AccountErrorEnum.AllOk => Ok(new Response().Success().SetMessage($"Vui lòng sử dụng OTP đã được gửi tới địa chỉ {dto.Email} để khôi phục mật khẩu!")),
+                    AccountErrorEnum.NotExists => NotFound(new Response().NotFound().SetMessage("Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi")),
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError())
                 };
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message,
-
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
 
@@ -270,40 +185,16 @@ namespace TienDaoAPI.Controllers
 
                 return result switch
                 {
-                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new Response
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = $"Vui lòng sử dụng mật khẩu đã được gửi tới địa chỉ {dto.Email} để đăng nhập tài khoản!",
-
-                    }),
-                    AccountErrorEnum.InvalidOTP => StatusCode(StatusCodes.Status200OK, new Response
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        Message = "OTP không hợp lệ hoặc đã hết hạn!",
-
-                    }),
-                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status400BadRequest, new Response
-                    {
-                        StatusCode = HttpStatusCode.NotFound,
-                        IsSuccess = false,
-                        Message = "Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi"
-                    }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response
-                    {
-                        StatusCode = HttpStatusCode.InternalServerError,
-                        IsSuccess = false,
-                        Message = "Internal Server Error: Không xác định lỗi."
-                    })
+                    AccountErrorEnum.AllOk => Ok(new Response().Success().SetMessage($"Vui lòng sử dụng OTP đã được gửi tới địa chỉ {dto.Email} để đăng nhập tài khoản!")),
+                    AccountErrorEnum.NotExists => NotFound(new Response().NotFound().SetMessage("Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi")),
+                    AccountErrorEnum.InvalidOTP => BadRequest(new Response().BadRequest().SetMessage("OTP không hợp lệ hoặc đã hết hạn!")),
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError())
                 };
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
 
@@ -319,12 +210,7 @@ namespace TienDaoAPI.Controllers
             {
                 if (!_sessionProvider.VerifyRefreshToken(dto.RefreshToken))
                 {
-                    return StatusCode(StatusCodes.Status400BadRequest, new Response
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        IsSuccess = false,
-                        Message = "Refresh token không chính xác hoặc hết hạn!"
-                    });
+                    return BadRequest(new Response().BadRequest().SetMessage("Refresh token không chính xác hoặc hết hạn!"));
                 }
                 var userId = new JwtSecurityTokenHandler().ReadJwtToken(dto.RefreshToken).Payload["sub"].ToString();
                 var user = await _userManager.FindByIdAsync(userId!);
@@ -336,24 +222,12 @@ namespace TienDaoAPI.Controllers
                 var refreshJti = new JwtSecurityTokenHandler().ReadJwtToken(newRefreshToken).Payload["jti"].ToString();
                 _sessionProvider.SaveSession(userId!, _mapper.Map<UserDTO>(user), accessJti!, refreshJti!);
 
-                return StatusCode(StatusCodes.Status200OK, new Response
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Data = new
-                    {
-                        AccessToken = jwtToken,
-                        RefreshToken = newRefreshToken
-                    }
-                });
+                return Ok(new Response().Success().SetData(new { AccessToken = jwtToken, RefreshToken = newRefreshToken }));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
 
@@ -374,45 +248,17 @@ namespace TienDaoAPI.Controllers
 
                 return result switch
                 {
-                    AccountErrorEnum.AllOk => StatusCode(StatusCodes.Status200OK, new Response
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = "Thay đổi mật khẩu thành công",
-                    }),
-                    AccountErrorEnum.NotExists => StatusCode(StatusCodes.Status404NotFound, new Response
-                    {
-                        StatusCode = HttpStatusCode.NotFound,
-                        IsSuccess = false,
-                        Message = "Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi"
-                    }),
-                    AccountErrorEnum.WeakPassword => StatusCode(StatusCodes.Status400BadRequest, new Response
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        IsSuccess = false,
-                        Message = "Mật khẩu phải dài tối thiểu 8 ký tực và tối đa 30 ký tự, bao gồm ít nhất một chữ thường, một chữ hoa, một chữ số và một ký tự đặc biệt!"
-                    }),
-                    AccountErrorEnum.IncorrectPassword => StatusCode(StatusCodes.Status400BadRequest, new Response
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        IsSuccess = false,
-                        Message = "Mật khẩu hiện tại chưa chính xác!"
-                    }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response
-                    {
-                        StatusCode = HttpStatusCode.InternalServerError,
-                        IsSuccess = false,
-                        Message = "Internal Server Error: ex.Message"
-                    })
+                    AccountErrorEnum.AllOk => Ok(new Response().Success().SetMessage("Thay đổi mật khẩu thành công")),
+                    AccountErrorEnum.NotExists => NotFound(new Response().NotFound().SetMessage("Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi")),
+                    AccountErrorEnum.WeakPassword => BadRequest(new Response().BadRequest().SetMessage("Mật khẩu phải dài tối thiểu 8 ký tực và tối đa 30 ký tự, bao gồm ít nhất một chữ thường, một chữ hoa, một chữ số và một ký tự đặc biệt!")),
+                    AccountErrorEnum.IncorrectPassword => BadRequest(new Response().BadRequest().SetMessage("Mật khẩu hiện tại chưa chính xác!")),
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError())
                 };
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
     }

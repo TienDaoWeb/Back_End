@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.Utils;
 
@@ -22,20 +21,12 @@ namespace TienDaoAPI.Controllers
             {
                 var url = await _firebaseStorageService.UploadImageAsync(dto.Image);
 
-                return StatusCode(StatusCodes.Status200OK, new Response
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Data = new { Url = url }
-                });
+                return Ok(new Response().Success().SetData(new { Url = url }));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Internal Server Error: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
     }

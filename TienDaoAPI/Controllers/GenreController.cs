@@ -1,11 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.Models;
-using TienDaoAPI.Utils;
 using TienDaoAPI.Services.IServices;
+using TienDaoAPI.Utils;
 
 namespace TienDaoAPI.Controllers
 {
@@ -30,20 +29,12 @@ namespace TienDaoAPI.Controllers
             try
             {
                 var genres = await _genreService.GetAllGenresAsync();
-                return StatusCode(StatusCodes.Status200OK, new Response
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Data = genres
-                });
+                return Ok(new Response().Success().SetData(genres));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
 
@@ -60,27 +51,14 @@ namespace TienDaoAPI.Controllers
                 var result = await _genreService.CreateGenreAsync(newGenre);
                 if (result)
                 {
-                    return StatusCode(StatusCodes.Status201Created, new Response
-                    {
-                        StatusCode = HttpStatusCode.Created,
-                        Message = "Thêm thể loại thành công!",
-                    });
+                    return Ok(new Response().Success().SetMessage("Thêm thể loại thành công!"));
                 }
-                return StatusCode(StatusCodes.Status400BadRequest, new Response
-                {
-                    StatusCode = HttpStatusCode.BadRequest,
-                    IsSuccess = false,
-                    Message = "Không thể tạo thể loại. Vui lòng thử lại sau hoặc liên hệ với quản trị viên để biết thêm chi tiết!"
-                });
+                return BadRequest(new Response().BadRequest().SetMessage("Không thể tạo thể loại. Vui lòng thử lại sau hoặc liên hệ với quản trị viên để biết thêm chi tiết!"));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
 
@@ -97,27 +75,14 @@ namespace TienDaoAPI.Controllers
                 var result = await _genreService.DeleteGenreAsync(id);
                 if (result)
                 {
-                    return StatusCode(StatusCodes.Status200OK, new Response
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = "Xóa thể loại thành công!",
-                    });
+                    return Ok(new Response().Success().SetMessage("Xóa thể loại thành công!"));
                 }
-                return StatusCode(StatusCodes.Status400BadRequest, new Response
-                {
-                    StatusCode = HttpStatusCode.BadRequest,
-                    IsSuccess = false,
-                    Message = "Thể loại không tồn tại hoặc đã bị xóa!"
-                });
+                return BadRequest(new Response().BadRequest().SetMessage("Thể loại không tồn tại hoặc đã bị xóa!"));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
     }
