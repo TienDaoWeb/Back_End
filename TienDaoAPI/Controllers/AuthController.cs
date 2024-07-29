@@ -96,7 +96,7 @@ namespace TienDaoAPI.Controllers
                         var refreshJti = new JwtSecurityTokenHandler().ReadJwtToken(refreshToken).Payload["jti"].ToString();
 
                         _sessionProvider.SaveSession(user.Id.ToString(), _mapper.Map<UserDTO>(user), accessJti!, refreshJti!);
-                        Ok(new Response().Success()
+                        return Ok(new Response().Success()
                             .SetMessage("Đăng nhập thành công!")
                             .SetData(new { AccessToken = jwtToken, RefreshToken = refreshToken, Profile = _mapper.Map<UserDTO>(user) }));
                     }
@@ -109,7 +109,6 @@ namespace TienDaoAPI.Controllers
                 {
                     return NotFound(new Response().NotFound().SetMessage("Email không tồn tại trong hệ thống"));
                 }
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
             catch (Exception ex)
             {

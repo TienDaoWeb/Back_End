@@ -17,24 +17,22 @@ namespace TienDaoAPI.Services
         }
 
 
-        public Task<User> CreateNewUser(User user)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CheckPassword(User user, string password)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<User?> GetUserByIdAsync(int id)
         {
-            return await _userRepository.GetByIdAsync(id);
+            try
+            {
+                return await _userRepository.GetAsync(u => u.Id == id);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }
         }
 
-        public Task<User?> FindByEmailAsync(string email)
+        public async Task<IEnumerable<User?>> GetAllUsers()
         {
-            throw new NotImplementedException();
+            return await _userRepository.GetAllAsync();
         }
     }
 }
