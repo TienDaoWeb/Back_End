@@ -20,6 +20,7 @@ namespace TienDaoAPI.Services
             var uploadparams = new ImageUploadParams
             {
                 File = new FileDescription(file.FileName, stream),
+                UseFilename = true,
             };
 
             var result = _cloudinary.Upload(uploadparams);

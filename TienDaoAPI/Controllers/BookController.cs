@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using TienDaoAPI.Attributes;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.Enums;
@@ -22,9 +21,11 @@ namespace TienDaoAPI.Controllers
         private readonly IGenreService _genreService;
         private readonly IUserService _userService;
         private readonly IAuthorService _authorService;
+        private readonly IImageStorageService _imageStorageService;
 
         public BookController(IImageStorageService firebaseStorageService, IBookService bookService,
-            IMapper mapper, IGenreService genreService, IUserService userService, IChapterService chapterService, IAuthorService authorService)
+            IMapper mapper, IGenreService genreService, IUserService userService, IChapterService chapterService,
+            IAuthorService authorService, IImageStorageService imageStorageService)
         {
             _firebaseStorageService = firebaseStorageService;
             _bookService = bookService;
@@ -33,6 +34,7 @@ namespace TienDaoAPI.Controllers
             _genreService = genreService;
             _userService = userService;
             _authorService = authorService;
+            _imageStorageService = imageStorageService;
         }
 
         [HttpPost]
@@ -49,27 +51,14 @@ namespace TienDaoAPI.Controllers
                 var book = await _bookService.CreateBookAsync(dto);
                 if (book == null)
                 {
-                    return StatusCode(StatusCodes.Status400BadRequest, new Response
-                    {
-                        StatusCode = HttpStatusCode.BadRequest,
-                        IsSuccess = false,
-                        Message = "Không thể tạo sách mới. Vui lòng kiểm tra lại thông tin.",
-                    });
+                    return BadRequest(new Response().BadRequest().SetMessage("Không thể tạo sách mới. Vui lòng kiểm tra lại thông tin."));
                 }
-                return StatusCode(StatusCodes.Status200OK, new Response
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Message = "Thêm truyện thành công!",
-                });
+                return Ok(new Response().Success().SetMessage("Thêm truyện thành công!"));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
 
@@ -85,28 +74,14 @@ namespace TienDaoAPI.Controllers
                 var book = await _bookService.GetBookByIdAsync(id);
                 if (book == null)
                 {
-                    return StatusCode(StatusCodes.Status404NotFound, new Response
-                    {
-                        StatusCode = HttpStatusCode.NotFound,
-                        IsSuccess = false,
-                        Message = "Book does not exists"
-                    });
+                    return NotFound(new Response().NotFound().SetMessage("Truyện không tồn tại trong hệ thống"));
                 }
-
-                return StatusCode(StatusCodes.Status200OK, new Response
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Data = _mapper.Map<BookDTO>(book)
-                });
+                return Ok(new Response().Success().SetData(_mapper.Map<BookDTO>(book)));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
 
@@ -125,27 +100,14 @@ namespace TienDaoAPI.Controllers
 
                 if (result)
                 {
-                    return StatusCode(StatusCodes.Status200OK, new Response
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = "Thành công",
-                    });
+                    return Ok(new Response().Success().SetMessage("Thành công!"));
                 }
-                return StatusCode(StatusCodes.Status400BadRequest, new Response
-                {
-                    StatusCode = HttpStatusCode.BadRequest,
-                    IsSuccess = false,
-                    Message = "Truyện không tồn tại hoặc đã bị xóa!",
-                });
+                return BadRequest(new Response().BadRequest().SetMessage("Truyện không tồn tại hoặc đã bị xóa!"));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
 
         }
@@ -165,36 +127,20 @@ namespace TienDaoAPI.Controllers
                 var book = await _bookService.GetBookByIdAsync(id);
                 if (book == null)
                 {
-                    return StatusCode(StatusCodes.Status404NotFound, new Response
-                    {
-                        StatusCode = HttpStatusCode.NotFound,
-                        Message = "Truyện không tồn tại",
-                    });
+                    return NotFound(new Response().NotFound().SetMessage("Truyện không tồn tại trong hệ thống"));
                 }
                 var updatedBook = await _bookService.UpdateBookAsync(book, dto);
 
                 if (updatedBook != null)
                 {
-                    return StatusCode(StatusCodes.Status200OK, new Response
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        Message = "Cập nhật thông tin truyện thành công!",
-                    });
+                    return Ok(new Response().Success().SetMessage("Cập nhật thông tin truyện thành công!"));
                 }
-                return StatusCode(StatusCodes.Status400BadRequest, new Response
-                {
-                    StatusCode = HttpStatusCode.BadRequest,
-                    Message = "Cập nhật thông tin truyện không thành công!",
-                });
+                return BadRequest(new Response().BadRequest().SetMessage("Cập nhật thông tin truyện không thành công!"));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
 
@@ -209,26 +155,45 @@ namespace TienDaoAPI.Controllers
                 var count = books.Count();
                 var paginatedBooks = books.Skip(filter.PageSize * (filter.Page - 1)).Take(filter.PageSize);
 
-                return StatusCode(StatusCodes.Status200OK, new PaginatedResponse
+                return Ok(new PaginatedResponse
                 {
                     PageNumber = filter.Page,
                     PageSize = filter.PageSize,
                     TotalItems = count,
                     TotalPages = (int)Math.Ceiling(count / (double)filter.PageSize),
-                    Data = _mapper.Map<IEnumerable<BookDTO>>(paginatedBooks)
-                });
+                }.SetData(_mapper.Map<IEnumerable<BookDTO>>(paginatedBooks)));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
 
-
+        [HttpPost]
+        [Route("change-poster/{id}")]
+        [Authorize]
+        [Owner(typeof(Book))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ChangePoster(int id, [FromForm] ImageDTO dto)
+        {
+            try
+            {
+                var url = await _imageStorageService.UploadImageAsync(dto.Image);
+                var result = await _bookService.ChangePosterAsync(id, url);
+                if (result)
+                {
+                    return Ok(new Response().Success().SetMessage("Cập nhật ảnh bìa của truyện thành công").SetData(new { Url = url }));
+                }
+                return BadRequest(new Response().BadRequest().SetMessage("Có chút trục trặc trong khi chúng tôi đang cố gắng thay bức hình tuyệt vời này!"));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
+            }
+        }
     }
 }

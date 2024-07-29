@@ -15,9 +15,10 @@ namespace TienDaoAPI.Models
         public string? Keyword { get; set; }
         public string? Include { get; set; }
         public BookStatusEnum? Status { get; set; }
-        public List<int>? Genres { get; set; }
-        public List<int>? Tags { get; set; }
+        public string? Genres { get; set; }
+        public string? Tags { get; set; }
         public string? Chapter { get; set; }
         public string? SortBy { get; set; }
+
     }
 }

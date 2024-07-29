@@ -1,12 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using TienDaoAPI.Enums;
 using TienDaoAPI.Models;
-using TienDaoAPI.Utils;
 using TienDaoAPI.Services.IServices;
+using TienDaoAPI.Utils;
 
 namespace TienDaoAPI.Controllers
 {
@@ -26,29 +24,25 @@ namespace TienDaoAPI.Controllers
         }
 
         [HttpGet]
-        [Route("")]
         [Authorize(Roles = RoleEnum.ADMIN)]
-        public async Task<IActionResult> GetCurrentUser()
+        [Route("{id}")]
+        [Authorize]
+        public async Task<IActionResult> GetUser(int id)
         {
             try
             {
-                var token = await HttpContext.GetTokenAsync("access_token");
-                var user = HttpContext.Items["UserDTO"];
+                var user = await _userService.GetUserByIdAsync(id);
 
-                return StatusCode(StatusCodes.Status200OK, new Response
+                if (user == null)
                 {
-                    StatusCode = HttpStatusCode.OK,
-                    Data = user
-                });
+                    return NotFound(new Response().NotFound().SetMessage("Người dùng không tồn tại trong hệ thống"));
+                }
+                return Ok(new Response().Success().SetData(user));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    IsSuccess = false,
-                    Message = "Máy chủ đang gặp lỗi: " + ex.Message
-                });
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
     }
