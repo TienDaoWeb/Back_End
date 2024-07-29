@@ -5,7 +5,7 @@ using TienDaoAPI.Utils;
 
 namespace TienDaoAPI.Helpers
 {
-    public class SampleAuthorizationMiddlewareResultHandler : IAuthorizationMiddlewareResultHandler
+    public class CustomAuthorizationMiddlewareResultHandler : IAuthorizationMiddlewareResultHandler
     {
         private readonly AuthorizationMiddlewareResultHandler defaultHandler = new();
 

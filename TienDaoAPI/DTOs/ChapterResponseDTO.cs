@@ -1,4 +1,4 @@
-﻿namespace TienDaoAPI.DTOs.Responses
+﻿namespace TienDaoAPI.DTOs
 {
     public class ChapterResponseDTO
     {

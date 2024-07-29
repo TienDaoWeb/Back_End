@@ -1,13 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TienDaoAPI.DTOs.Requests
+namespace TienDaoAPI.DTOs
 {
-    public class CreateChapterDTO
+    public class ChapterUpdateRequestDTO
     {
         [Required]
         public string? Name { get; set; }
         [Required]
         public string? Content { get; set; }
-        public int BookId { get; set; }
     }
 }

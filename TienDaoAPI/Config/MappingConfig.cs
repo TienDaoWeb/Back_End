@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using TienDaoAPI.DTOs;
-using TienDaoAPI.DTOs.Responses;
 using TienDaoAPI.Extensions;
 using TienDaoAPI.Models;
 
@@ -11,7 +10,6 @@ namespace TienDaoAPI.Config
         public MappingConfig()
         {
             CreateMap<CreateGenreDTO, Genre>().ReverseMap();
-            CreateMap<GenreResponse, Genre>().ReverseMap();
             CreateMap<RegisterDTO, User>().ForMember(d => d.UserName, s => s.MapFrom(x => x.Email));
             CreateMap<User, UserBaseDTO>().ReverseMap();
             CreateMap<User, UserDTO>().IncludeBase<User, UserBaseDTO>(); ;
