@@ -16,6 +16,6 @@ namespace TienDaoAPI.Models
         [Required]
         [RoleEnumValidation]
         public string Role { get; set; } = RoleEnum.READER;
-        public bool IsDisabled { get; set; } = false;
+        public string Status { get; set; } = string.Empty;
     }
 }

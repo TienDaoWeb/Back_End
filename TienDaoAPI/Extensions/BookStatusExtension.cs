@@ -4,7 +4,7 @@ namespace TienDaoAPI.Extensions
 {
     public static class BookStatusExtension
     {
-        public static string GetStatusName(this BookStatusEnum status)
+        public static string GetBookStatusName(this BookStatusEnum status)
         {
             return status switch
             {

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
 using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services.IServices;
@@ -30,9 +31,11 @@ namespace TienDaoAPI.Services
             }
         }
 
-        public async Task<IEnumerable<User?>> GetAllUsers()
+        public async Task<IEnumerable<User?>> GetAllUsers(UserFilter filter)
         {
-            return await _userRepository.GetAllAsync();
+            var filterExpression = ExpressionProvider<User>.BuildUserFilter(filter);
+            var sortExpression = filter.SortBy == null ? null : ExpressionProvider<User>.GetSortExpression(filter.SortBy);
+            return await _userRepository.FilterAsync(filterExpression, null, sortExpression);
         }
     }
 }

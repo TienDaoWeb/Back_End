@@ -21,7 +21,7 @@ namespace TienDaoAPI.Services
 
         public async Task<AccountErrorEnum> CreateNewAccountAsync(User user, string password)
         {
-
+            user.Status = AccountStatusEnum.UNVERIFIED;
             var identityResult = await _userManager.CreateAsync(user, password);
 
             if (identityResult.Succeeded)
@@ -79,6 +79,8 @@ namespace TienDaoAPI.Services
             {
                 return AccountErrorEnum.InvalidOTP;
             }
+            user.Status = AccountStatusEnum.ACTIVED;
+            await _userManager.UpdateAsync(user);
             return AccountErrorEnum.AllOk;
         }
 

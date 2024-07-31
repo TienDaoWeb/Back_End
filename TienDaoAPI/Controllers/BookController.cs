@@ -14,26 +14,14 @@ namespace TienDaoAPI.Controllers
     [Route("api/v1/[controller]")]
     public class BookController : ControllerBase
     {
-        private readonly IImageStorageService _firebaseStorageService;
         private readonly IBookService _bookService;
-        private readonly IChapterService _chapterService;
         private readonly IMapper _mapper;
-        private readonly IGenreService _genreService;
-        private readonly IUserService _userService;
-        private readonly IAuthorService _authorService;
         private readonly IImageStorageService _imageStorageService;
 
-        public BookController(IImageStorageService firebaseStorageService, IBookService bookService,
-            IMapper mapper, IGenreService genreService, IUserService userService, IChapterService chapterService,
-            IAuthorService authorService, IImageStorageService imageStorageService)
+        public BookController(IBookService bookService, IMapper mapper, IImageStorageService imageStorageService)
         {
-            _firebaseStorageService = firebaseStorageService;
             _bookService = bookService;
-            _chapterService = chapterService;
             _mapper = mapper;
-            _genreService = genreService;
-            _userService = userService;
-            _authorService = authorService;
             _imageStorageService = imageStorageService;
         }
 

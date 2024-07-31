@@ -12,7 +12,8 @@ namespace TienDaoAPI.Config
             CreateMap<CreateGenreDTO, Genre>().ReverseMap();
             CreateMap<RegisterDTO, User>().ForMember(d => d.UserName, s => s.MapFrom(x => x.Email));
             CreateMap<User, UserBaseDTO>().ReverseMap();
-            CreateMap<User, UserDTO>().IncludeBase<User, UserBaseDTO>(); ;
+            CreateMap<User, UserDTO>().IncludeBase<User, UserBaseDTO>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.DetermineStatus()));
             CreateMap<UpdateProfileDTO, User>().ReverseMap();
             CreateMap<CreateBookDTO, Book>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -35,7 +36,7 @@ namespace TienDaoAPI.Config
 
             CreateMap<Book, BookDTO>()
                 .ForMember(d => d.Owner, s => s.MapFrom(x => x.User))
-                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status.GetStatusName()))
+                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status.GetBookStatusName()))
                 .ReverseMap();
             CreateMap<AuthorDTO, Author>().ReverseMap();
         }
