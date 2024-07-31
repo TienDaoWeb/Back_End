@@ -58,11 +58,11 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAllUser([FromQuery] PaginationFilter filter)
+        public async Task<IActionResult> GetAllUsers([FromQuery] UserFilter filter)
         {
             try
             {
-                var users = await _userService.GetAllUsers();
+                var users = await _userService.GetAllUsers(filter);
                 var count = users.Count();
                 users.Skip(filter.PageSize * (filter.Page - 1)).Take(filter.PageSize);
 

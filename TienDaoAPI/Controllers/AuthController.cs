@@ -45,6 +45,7 @@ namespace TienDaoAPI.Controllers
             try
             {
                 var user = _mapper.Map<User>(registerDTO);
+
                 var result = await _accountService.CreateNewAccountAsync(user, registerDTO.Password);
 
                 return result switch
@@ -78,11 +79,11 @@ namespace TienDaoAPI.Controllers
                     var checkPassword = await _userManager.CheckPasswordAsync(user, dto.Password);
                     if (checkPassword)
                     {
-                        if (!user.EmailConfirmed)
+                        if (user.Status == AccountStatusEnum.UNVERIFIED)
                         {
-                            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                            var otp = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                             var templatePath = "./Templates/otp_register_mail.html";
-                            await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "Email Verification", templatePath, new { code });
+                            await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "Email Verification", templatePath, new { otp });
 
                             return BadRequest(new Response().BadRequest().SetMessage("Email của bạn chưa được xác thực!"));
                         }

@@ -15,5 +15,7 @@ namespace TienDaoAPI.DTOs
         public GenderEnum Gender { get; set; }
 
         public required string Role { get; set; }
+
+        public required string Status { get; set; }
     }
 }
