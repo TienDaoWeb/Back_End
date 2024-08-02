@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using TienDaoAPI.Enums;
 using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
 using TienDaoAPI.Repositories.IRepositories;
@@ -36,6 +37,48 @@ namespace TienDaoAPI.Services
             var filterExpression = ExpressionProvider<User>.BuildUserFilter(filter);
             var sortExpression = filter.SortBy == null ? null : ExpressionProvider<User>.GetSortExpression(filter.SortBy);
             return await _userRepository.FilterAsync(filterExpression, null, sortExpression);
+        }
+
+
+        public async Task<int> LockUser(User user)
+        {
+            try
+            {
+                if (user.Status == AccountStatusEnum.BLOCKED)
+                {
+                    return 1;
+                }
+                user.Status = AccountStatusEnum.BLOCKED;
+                await _userRepository.SaveAsync();
+                return 2;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return 3;
+            }
+        }
+
+        public async Task<bool> UnlockUser(User user)
+        {
+            try
+            {
+                if (user.EmailConfirmed)
+                {
+                    user.Status = AccountStatusEnum.ACTIVED;
+                }
+                else
+                {
+                    user.Status = AccountStatusEnum.UNVERIFIED;
+                }
+                await _userRepository.SaveAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
         }
     }
 }
