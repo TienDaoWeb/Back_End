@@ -21,7 +21,11 @@ namespace TienDaoAPI.Models
 
         public int WordCount { get; set; } = 0;
 
-        public DateTime PublishedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? PublishedAt { get; set; }
 
         [ForeignKey("User")]
         public int OwnerId { get; set; }
