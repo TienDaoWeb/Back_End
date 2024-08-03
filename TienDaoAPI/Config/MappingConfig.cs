@@ -37,6 +37,8 @@ namespace TienDaoAPI.Config
                 .ForMember(d => d.Owner, s => s.MapFrom(x => x.User))
                 .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status.GetBookStatusName()))
                 .ReverseMap();
+            CreateMap<Comment, CreateCommentDTO>().ReverseMap();
+            CreateMap<Comment, CreateReplyCommentDTO>().ReverseMap();
             CreateMap<AuthorDTO, Author>().ReverseMap();
         }
     }

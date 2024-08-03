@@ -13,19 +13,20 @@ namespace TienDaoAPI.Models
         [Required]
         public required string Content { get; set; }
 
-        public int LikeCount { get; set; } = 0;
-
-        public DateTime CreatedAt { get; set; }
-
-        public DateTime UpdatedAt { get; set; }
+        public List<int> UserLike { get; set; } = [];
+        public int? CommentParentId { get; set; } = null;
+        public virtual Comment? CommentParent { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdateAt { get; set; } = DateTime.UtcNow;
 
         [Required]
         public int BookId { get; set; }
-        public virtual required Book Book { get; set; }
+        public virtual Book? Book { get; set; }
 
         public int ChapterNumber { get; set; } = 0;
 
-        public int? UserId { get; set; }
+        public int? OwnerId { get; set; }
+        [ForeignKey("OwnerId")]
         public virtual User? User { get; set; }
     }
 }

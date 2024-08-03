@@ -23,8 +23,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<TienDaoDbContext>(option =>
 {
-    //option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-    option.UseNpgsql(builder.Configuration.GetConnectionString("PostpreConnection"));
+    option.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+    //option.UseNpgsql(builder.Configuration.GetConnectionString("PostpreConnection"));
 });
 
 builder.Services.AddIdentityCore<User>()
@@ -160,6 +160,8 @@ builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IGenreRepository, GenreRepository>();
 builder.Services.AddScoped<IChapterRepository, ChapterRepository>();
 builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+
 
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
@@ -168,6 +170,7 @@ builder.Services.AddScoped<IChapterService, ChapterService>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 
 builder.Services.Configure<RouteOptions>(options =>
 {
@@ -177,6 +180,25 @@ builder.Services.Configure<RouteOptions>(options =>
 
 
 var app = builder.Build();
+//CheckConnect database
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        var context = services.GetRequiredService<TienDaoDbContext>();
+        context.Database.EnsureCreated();
+        logger.LogInformation("Connected to the database successfully.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while connecting to the database.");
+    }
+}
+
+
 // Configure the HTTP request pipeline.
 app.UseSwagger();
 app.UseSwaggerUI(options =>
