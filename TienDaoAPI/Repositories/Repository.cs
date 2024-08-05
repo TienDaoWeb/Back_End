@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using TienDaoAPI.Data;
+using TienDaoAPI.Extensions;
 using TienDaoAPI.Repositories.IRepositories;
 
 namespace TienDaoAPI.Repositories
@@ -51,7 +52,7 @@ namespace TienDaoAPI.Repositories
                     StringSplitOptions.RemoveEmptyEntries);
                 foreach (var includeProperty in includePropertiesArray)
                 {
-                    var trimmedIncludeProperty = includeProperty.Trim();
+                    var trimmedIncludeProperty = includeProperty.Trim().ToPascalCase();
                     query = query.Include(trimmedIncludeProperty);
                 }
             }

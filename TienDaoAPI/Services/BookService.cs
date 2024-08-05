@@ -74,6 +74,7 @@ namespace TienDaoAPI.Services
         {
             var filterExpression = ExpressionProvider<Book>.BuildBookFilter(filter);
             var sortExpression = filter.SortBy == null ? null : ExpressionProvider<Book>.GetSortExpression(filter.SortBy);
+            filter.Include += "Chapters,Comments,Reviews";
             var books = await _bookRepository.FilterAsync(filterExpression, filter.Include, sortExpression);
 
             return books;

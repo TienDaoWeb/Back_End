@@ -10,14 +10,12 @@ namespace TienDaoAPI.Services
     {
         private readonly UserManager<User> _userManager;
         private readonly EmailProvider _emailProvider;
-        private readonly JwtHandler _jwtHandler;
-        public AccountService(UserManager<User> userManager, EmailProvider emailProvider, JwtHandler jwtHandler)
+
+        public AccountService(UserManager<User> userManager, EmailProvider emailProvider)
         {
             _userManager = userManager;
             _emailProvider = emailProvider;
-            _jwtHandler = jwtHandler;
         }
-
 
         public async Task<AccountErrorEnum> CreateNewAccountAsync(User user, string password)
         {
