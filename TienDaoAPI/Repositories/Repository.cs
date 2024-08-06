@@ -24,7 +24,7 @@ namespace TienDaoAPI.Repositories
             return entity;
         }
 
-        public async Task<T?> GetAsync(Expression<Func<T, bool>>? filter = null)
+        public async Task<T?> GetAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null)
         {
             IQueryable<T> query = dbSet;
             query.AsNoTracking();
@@ -32,6 +32,19 @@ namespace TienDaoAPI.Repositories
             {
                 query = query.Where(filter);
             }
+
+            if (includeProperties != null)
+            {
+                var includePropertiesArray = includeProperties.Split(
+                    new char[] { ',' },
+                    StringSplitOptions.RemoveEmptyEntries);
+                foreach (var includeProperty in includePropertiesArray)
+                {
+                    var trimmedIncludeProperty = includeProperty.Trim().ToPascalCase();
+                    query = query.Include(trimmedIncludeProperty);
+                }
+            }
+
             return await query.FirstOrDefaultAsync();
         }
 

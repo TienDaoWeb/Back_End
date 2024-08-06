@@ -9,11 +9,13 @@ namespace TienDaoAPI.Config
     {
         public MappingConfig()
         {
-            CreateMap<CreateGenreDTO, Genre>().ReverseMap();
+            CreateMap<CreateGenreDTO, Genre>();
+
             CreateMap<RegisterDTO, User>().ForMember(d => d.UserName, s => s.MapFrom(x => x.Email));
-            CreateMap<User, UserBaseDTO>().ReverseMap();
+            CreateMap<User, UserBaseDTO>();
             CreateMap<User, UserDTO>().IncludeBase<User, UserBaseDTO>();
-            CreateMap<UpdateProfileDTO, User>().ReverseMap();
+            CreateMap<UpdateProfileDTO, User>();
+
             CreateMap<CreateBookDTO, Book>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
@@ -34,14 +36,19 @@ namespace TienDaoAPI.Config
                 .ForMember(dest => dest.WordCount, opt => opt.MapFrom(src => src.Chapters.Sum(c => c.WordCount)))
                 .ForMember(dest => dest.ViewCount, opt => opt.MapFrom(src => src.Chapters.Sum(c => c.ViewCount)))
                 .ReverseMap();
+
             CreateMap<AuthorDTO, Author>().ReverseMap();
 
             CreateMap<CreateChapterDTO, Chapter>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.PublishedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.ViewCount, opt => opt.Ignore())
                 .ForMember(dest => dest.WordCount, opt => opt.Ignore());
+
+            CreateMap<Chapter, ChapterInfoDTO>();
+            CreateMap<Chapter, ChapterDetailDTO>().IncludeBase<Chapter, ChapterInfoDTO>();
         }
     }
 }

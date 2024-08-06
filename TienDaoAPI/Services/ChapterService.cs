@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using System.Linq.Expressions;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.Extensions;
 using TienDaoAPI.Helpers;
@@ -42,31 +41,38 @@ namespace TienDaoAPI.Services
             }
         }
 
-        public async Task<Chapter?> GetFinalChapterByIdBookAsync(int bookId)
+        public async Task<bool> DeleteChapterAsync(Chapter chapter)
         {
-            var chapters = await _chapterRepository.FilterAsync(chapter => chapter.BookId == bookId);
-            var finalChapter = chapters.Max(chapter => chapter.Index);
-            return await _chapterRepository.GetAsync(chapter => chapter.Index == finalChapter);
-        }
-        public async Task DeleteChapterAsync(Chapter chapter)
-        {
-            await _chapterRepository.DeleteAsync(chapter);
+            try
+            {
+                chapter.DeletedAt = DateTime.UtcNow;
+                await _chapterRepository.SaveAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
         }
 
-        public async Task DeleteAllChapterAsync(IEnumerable<Chapter> chapters)
+        public async Task<bool> DeleteAllChapterAsync(IEnumerable<Chapter> chapters)
         {
             await _chapterRepository.RemoveRangeAsync(chapters);
+            return true;
         }
 
-        public async Task<IEnumerable<Chapter?>> GetAllChapterOfBookAsync(Expression<Func<Chapter, bool>> filter)
+        public async Task<IEnumerable<Chapter?>> GetAllChaptersByBookIdAsync(int bookId)
         {
-            var chapters = _chapterRepository.FilterAsync(filter);
-            return await chapters;
+            var chapters = await _chapterRepository.FilterAsync(c => c.BookId == bookId && c.DeletedAt == null,
+                                                                null,
+                                                                q => q.OrderBy(c => c.Index));
+            return chapters;
         }
 
-        public async Task<Chapter?> GetChapterByIdAsync(int chapterId)
+        public async Task<Chapter?> GetChapterByIdAsync(int id)
         {
-            return await _chapterRepository.GetByIdAsync(chapterId);
+            return await _chapterRepository.GetAsync(c => c.Id == id && c.DeletedAt == null);
         }
 
         public async Task<Chapter?> UpdateChapterAsync(Chapter chapter)
@@ -74,9 +80,9 @@ namespace TienDaoAPI.Services
             return await _chapterRepository.UpdateAsync(chapter);
         }
 
-        public async Task<IEnumerable<Chapter?>> GetAllChapterAsync(Expression<Func<Chapter, bool>> filter)
+        public bool Modifiable(Chapter chapter, UserDTO user)
         {
-            return await _chapterRepository.GetAllAsync();
+            return chapter.OwnerId == user.Id;
         }
     }
 }

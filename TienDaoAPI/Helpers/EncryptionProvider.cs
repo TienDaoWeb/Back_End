@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 using System.Text;
-using TienDaoAPI.Models;
+using TienDaoAPI.Utils;
 
 namespace TienDaoAPI.Helpers
 {

@@ -25,6 +25,8 @@ namespace TienDaoAPI.Models
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        public DateTime? DeletedAt { get; set; }
+
         public DateTime? PublishedAt { get; set; }
 
         [ForeignKey("User")]

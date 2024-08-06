@@ -6,6 +6,7 @@ using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
 using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services.IServices;
+using TienDaoAPI.Utils;
 
 namespace TienDaoAPI.Services
 {
@@ -82,7 +83,7 @@ namespace TienDaoAPI.Services
 
         public async Task<Book?> GetBookByIdAsync(int id)
         {
-            return await _bookRepository.GetAsync(b => b.Id == id);
+            return await _bookRepository.GetAsync(b => b.Id == id, "Chapters,Comments,Reviews");
         }
 
         public async Task<Book?> UpdateBookAsync(Book book, UpdateBookDTO dto)
