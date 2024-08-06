@@ -32,6 +32,7 @@ namespace TienDaoAPI.Config
 
             CreateMap<Book, BookDTO>()
                 .ForMember(d => d.Owner, s => s.MapFrom(x => x.User))
+                .ForMember(d => d.Genre, s => s.MapFrom(x => x.Genre))
                 .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status.GetBookStatusName()))
                 .ForMember(dest => dest.WordCount, opt => opt.MapFrom(src => src.Chapters.Sum(c => c.WordCount)))
                 .ForMember(dest => dest.ViewCount, opt => opt.MapFrom(src => src.Chapters.Sum(c => c.ViewCount)))

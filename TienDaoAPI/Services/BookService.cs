@@ -83,7 +83,7 @@ namespace TienDaoAPI.Services
 
         public async Task<Book?> GetBookByIdAsync(int id)
         {
-            return await _bookRepository.GetAsync(b => b.Id == id, "Chapters,Comments,Reviews");
+            return await _bookRepository.GetAsync(b => b.Id == id, "User,Author,Genre,Chapters,Comments,Reviews");
         }
 
         public async Task<Book?> UpdateBookAsync(Book book, UpdateBookDTO dto)
