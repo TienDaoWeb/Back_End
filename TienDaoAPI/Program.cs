@@ -20,11 +20,10 @@ using TienDaoAPI.Services.IServices;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddDbContext<TienDaoDbContext>(option =>
 {
-    //option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-    option.UseNpgsql(builder.Configuration.GetConnectionString("PostpreConnection"));
+    option.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+    //option.UseNpgsql(builder.Configuration.GetConnectionString("PostpreConnection"));
 });
 
 builder.Services.AddIdentityCore<User>()
@@ -160,6 +159,7 @@ builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IGenreRepository, GenreRepository>();
 builder.Services.AddScoped<IChapterRepository, ChapterRepository>();
 builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
@@ -168,6 +168,7 @@ builder.Services.AddScoped<IChapterService, ChapterService>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
 builder.Services.Configure<RouteOptions>(options =>
 {

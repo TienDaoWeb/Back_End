@@ -14,6 +14,9 @@ namespace TienDaoAPI.Config
             CreateMap<User, UserBaseDTO>().ReverseMap();
             CreateMap<User, UserDTO>().IncludeBase<User, UserBaseDTO>();
             CreateMap<UpdateProfileDTO, User>().ReverseMap();
+            CreateMap<CreateReviewDTO, Review>().ReverseMap();
+            CreateMap<UpdateReviewDTO, Review>().ReverseMap();
+            CreateMap<Review,ReviewDTO>().ReverseMap();
             CreateMap<CreateBookDTO, Book>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())

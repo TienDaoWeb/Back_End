@@ -11,22 +11,27 @@ namespace TienDaoAPI.Models
         public int Id { get; set; }
 
         [Range(0, 5)]
-        public float Score { get; set; }
-
         [Required]
-        public required string Content { get; set; }
+        public float  Score { get; set; }
+
+        public string? Content { get; set; }
 
         public DateTime CreatedAt { get; set; }
 
         public DateTime UpdatedAt { get; set; }
 
+        public List<int> UsersReaction { get; set; } = [];
+
         [Required]
         public int BookId { get; set; }
+        [ForeignKey("BookId")]
         public virtual required Book Book { get; set; }
+        public int IdReadChapter { get; set; } = 0;
+        [ForeignKey("IdReadChapter")]
+        public ReadChapter? ReadChapter { get; set; }
 
-        public int ChapterNumber { get; set; } = 0;
-
-        public int? UserId { get; set; }
+        public int OwnerId { get; set; }
+        [ForeignKey("OwnerId")]
         public virtual User? User { get; set; }
     }
 }
