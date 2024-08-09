@@ -9,7 +9,7 @@ namespace TienDaoAPI.DTOs
         public string? Name { get; set; }
         [Required]
         public string? Content { get; set; }
-        [JsonIgnore]
+        [Required]
         public int Index { get; set; }
         public int BookId { get; set; }
         [JsonIgnore]

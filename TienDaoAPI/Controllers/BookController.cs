@@ -224,7 +224,7 @@ namespace TienDaoAPI.Controllers
                 {
                     return NotFound(new Response().NotFound().SetMessage("Truyện không tồn tại hoặc đã bị xóa trong hệ thống"));
                 }
-                var chapters = await _chapterService.GetAllChaptersByBookIdAsync(id);
+                var chapters = await _chapterService.GetChaptersByBookIdAsync(id);
 
                 return Ok(new Response().Success().SetData(new
                 {
