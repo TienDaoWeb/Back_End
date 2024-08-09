@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Options;
 using MimeKit;
-using TienDaoAPI.Models;
+using TienDaoAPI.Utils;
 
 namespace TienDaoAPI.Helpers
 {

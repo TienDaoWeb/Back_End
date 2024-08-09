@@ -1,4 +1,4 @@
-﻿namespace TienDaoAPI.Models
+﻿namespace TienDaoAPI.Utils
 {
     public class ReviewFilter : PaginationFilter
     {
@@ -10,6 +10,6 @@
         {
 
         }
-        public string? SortBy {get;set;}
+        public string? SortBy { get; set; }
     }
 }

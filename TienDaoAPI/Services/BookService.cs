@@ -6,6 +6,7 @@ using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
 using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services.IServices;
+using TienDaoAPI.Utils;
 
 namespace TienDaoAPI.Services
 {
@@ -55,23 +56,26 @@ namespace TienDaoAPI.Services
             }
         }
 
-        public async Task<bool> DeleteBookAsync(int id)
+        public async Task<bool> DeleteBookAsync(Book book)
         {
-            var book = await _bookRepository.GetByIdAsync(id);
-            if (book != null)
+            try
             {
                 book.DeletedAt = DateTime.UtcNow;
                 await _bookRepository.SaveAsync();
                 return true;
             }
-            return false;
-
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
         }
 
         public async Task<IEnumerable<Book?>> GetAllBooksAsync([FromQuery] BookFilter filter)
         {
             var filterExpression = ExpressionProvider<Book>.BuildBookFilter(filter);
             var sortExpression = filter.SortBy == null ? null : ExpressionProvider<Book>.GetSortExpression(filter.SortBy);
+            filter.Include += "Chapters,Comments,Reviews";
             var books = await _bookRepository.FilterAsync(filterExpression, filter.Include, sortExpression);
 
             return books;
@@ -79,7 +83,7 @@ namespace TienDaoAPI.Services
 
         public async Task<Book?> GetBookByIdAsync(int id)
         {
-            return await _bookRepository.GetAsync(b => b.Id == id);
+            return await _bookRepository.GetAsync(b => b.Id == id, "User,Author,Genre,Chapters,Comments,Reviews");
         }
 
         public async Task<Book?> UpdateBookAsync(Book book, UpdateBookDTO dto)
@@ -96,10 +100,10 @@ namespace TienDaoAPI.Services
                         {
                             return null;
                         }
+                        book.AuthorId = author.Id;
                     }
 
                     _mapper.Map(dto, book);
-                    book.AuthorId = author.Id;
                     book.UpdatedAt = DateTime.UtcNow;
 
                     var updatedBook = await _bookRepository.UpdateAsync(book);
@@ -118,15 +122,10 @@ namespace TienDaoAPI.Services
 
         }
 
-        public async Task<bool> ChangePosterAsync(int id, string posterUrl)
+        public async Task<bool> ChangePosterAsync(Book book, string posterUrl)
         {
             try
             {
-                var book = await _bookRepository.GetByIdAsync(id);
-                if (book == null)
-                {
-                    return false;
-                }
                 book.PosterUrl = posterUrl;
                 await _bookRepository.SaveAsync();
                 return true;
@@ -136,6 +135,11 @@ namespace TienDaoAPI.Services
                 Console.WriteLine(ex.Message);
                 return false;
             }
+        }
+
+        public bool Modifiable(Book book, UserDTO user)
+        {
+            return book.OwnerId == user.Id;
         }
     }
 }

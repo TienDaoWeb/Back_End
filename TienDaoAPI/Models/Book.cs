@@ -18,16 +18,6 @@ namespace TienDaoAPI.Models
 
         public string? PosterUrl { get; set; }
 
-        public int ReviewCount { get; set; } = 0;
-
-        public int BookmarkCount { get; set; } = 0;
-
-        public int ViewCount { get; set; } = 0;
-
-        public int VoteCount { get; set; } = 0;
-
-        public int WordCount { get; set; } = 0;
-
         public int LastestIndex { get; set; } = 0;
 
         public DateTime? PublishedAt { get; set; }

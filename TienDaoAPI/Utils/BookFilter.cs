@@ -1,6 +1,6 @@
 ﻿using TienDaoAPI.Enums;
 
-namespace TienDaoAPI.Models
+namespace TienDaoAPI.Utils
 {
     public class BookFilter : PaginationFilter
     {

@@ -1,10 +1,8 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualBasic;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.Enums;
-using TienDaoAPI.Models;
 using TienDaoAPI.Services.IServices;
 using TienDaoAPI.Utils;
 
@@ -56,7 +54,7 @@ namespace TienDaoAPI.Controllers
             }
         }
         [HttpDelete]
-        [Route("delete/{id}")]
+        [Route("{id}")]
         [Authorize(Roles = RoleEnum.CONVERTER)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -87,8 +85,8 @@ namespace TienDaoAPI.Controllers
         }
 
         [HttpPut]
-        [Route("update/{id}")]
-        [Authorize(Roles = RoleEnum.CONVERTER)]
+        [Route("{id}")]
+        [Authorize(Roles = RoleEnum.READER)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -96,7 +94,7 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-                dto.OwnerId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
+                var OwnerId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
                 var review = await _reviewService.GetReviewAsync(id);
                 if (review == null)
                 {
@@ -104,9 +102,9 @@ namespace TienDaoAPI.Controllers
                 }
                 else
                 {
-                    if (dto.OwnerId != review.OwnerId)
+                    if (OwnerId != review.OwnerId)
                     {
-                        return BadRequest(new Response().BadRequest().SetMessage("Tài khoản này không thể chỉnh sửa đánh giá của người khác"));
+                        return StatusCode(StatusCodes.Status403Forbidden, new Response().Forbidden());
                     }
                     var updateReview = await _reviewService.UpdateReviewAsync(review, dto);
                     if (updateReview == null)
@@ -160,34 +158,5 @@ namespace TienDaoAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
-        [HttpGet]
-        [Route("reviews")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<IEnumerable<Review>>> Reviews([FromQuery] ReviewFilter filter)
-        {
-            try
-            {
-                var reviews = await _reviewService.GetAllReviewAsync(filter);
-                var count = reviews.Count();
-                var paginatedComment = reviews.Skip(filter.PageSize * (filter.Page - 1)).Take(filter.PageSize);
-
-                return Ok(new PaginatedResponse
-                {
-                    PageNumber = filter.Page,
-                    PageSize = filter.PageSize,
-                    TotalItems = count,
-                    TotalPages = (int)Math.Ceiling(count / (double)filter.PageSize),
-                }.SetData(_mapper.Map<IEnumerable<ReviewDTO>>(paginatedComment)));
-
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message.ToString());
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
-            }
-        }
-
     }
 }

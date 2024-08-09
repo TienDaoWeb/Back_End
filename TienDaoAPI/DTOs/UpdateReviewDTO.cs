@@ -10,8 +10,5 @@ namespace TienDaoAPI.DTOs
         public float Score { get; set; }
 
         public string? Content { get; set; }
-
-        [JsonIgnore]
-        public int OwnerId { get; set; }
     }
 }

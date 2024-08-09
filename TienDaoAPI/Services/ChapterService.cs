@@ -1,5 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using AutoMapper;
 using TienDaoAPI.DTOs;
+using TienDaoAPI.Extensions;
+using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
 using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services.IServices;
@@ -9,65 +11,88 @@ namespace TienDaoAPI.Services
     public class ChapterService : IChapterService
     {
         private readonly IChapterRepository _chapterRepository;
+        private readonly IBookService _bookService;
         private readonly IBookRepository _bookRepository;
-        public ChapterService(IChapterRepository chapterRepository, IBookRepository bookRepository)
+        private readonly IMapper _mapper;
+        private readonly EncryptionProvider _encryptionProvider;
+        public ChapterService(IChapterRepository chapterRepository, IBookRepository bookRepository,
+            IMapper mapper, EncryptionProvider encryptionProvider, IBookService bookService)
         {
             _chapterRepository = chapterRepository;
             _bookRepository = bookRepository;
+            _mapper = mapper;
+            _encryptionProvider = encryptionProvider;
+            _bookService = bookService;
         }
 
-        public async Task<Chapter?> CreateChapterAsync(CreateChapterDTO chapterRequestDTO)
+        public async Task<Chapter?> CreateChapterAsync(CreateChapterDTO dto)
         {
-            // Set order new Chapter
-            var finalChapter = await GetFinalChapterByIdBookAsync(chapterRequestDTO.BookId);
-            var orderNewChapter = (finalChapter?.Index ?? 0) + 1;
-            //Create the new Chapter
-            Chapter newChapter = new Chapter
+            try
             {
-                Name = chapterRequestDTO.Name,
-                Content = chapterRequestDTO.Content,
-                Index = orderNewChapter,
-                BookId = chapterRequestDTO.BookId,
-                PublishedAt = DateTime.Now,
-            };
-
-            return await _chapterRepository.CreateAsync(newChapter);
-        }
-        public async Task<Chapter?> GetFinalChapterByIdBookAsync(int bookId)
-        {
-            var chapters = await _chapterRepository.FilterAsync(chapter => chapter.BookId == bookId);
-            var finalChapter = chapters.Max(chapter => chapter.Index);
-            return await _chapterRepository.GetAsync(chapter => chapter.Index == finalChapter);
-        }
-        public async Task DeleteChapterAsync(Chapter chapter)
-        {
-            await _chapterRepository.DeleteAsync(chapter);
+                var chapter = _mapper.Map<Chapter>(dto);
+                chapter.WordCount = chapter.Content!.CountWords();
+                chapter.Content = _encryptionProvider.Encrypt(chapter.Content!);
+                return await _chapterRepository.CreateAsync(chapter);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }
         }
 
-        public async Task DeleteAllChapterAsync(IEnumerable<Chapter> chapters)
+        public async Task<bool> DeleteChapterAsync(Chapter chapter)
+        {
+            try
+            {
+                chapter.DeletedAt = DateTime.UtcNow;
+                await _chapterRepository.SaveAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteAllChapterAsync(IEnumerable<Chapter> chapters)
         {
             await _chapterRepository.RemoveRangeAsync(chapters);
+            return true;
         }
 
-        public async Task<IEnumerable<Chapter?>> GetAllChapterOfBookAsync(Expression<Func<Chapter, bool>> filter)
+        public async Task<IEnumerable<Chapter?>> GetAllChaptersByBookIdAsync(int bookId)
         {
-            var chapters = _chapterRepository.FilterAsync(filter);
-            return await chapters;
+            var chapters = await _chapterRepository.FilterAsync(c => c.BookId == bookId && c.DeletedAt == null,
+                                                                null,
+                                                                q => q.OrderBy(c => c.Index));
+            return chapters;
         }
 
-        public async Task<Chapter?> GetChapterByIdAsync(int chapterId)
+        public async Task<Chapter?> GetChapterByIdAsync(int id)
         {
-            return await _chapterRepository.GetByIdAsync(chapterId);
+            return await _chapterRepository.GetAsync(c => c.Id == id && c.DeletedAt == null);
         }
 
-        public async Task<Chapter?> UpdateChapterAsync(Chapter chapter)
+        public async Task<Chapter?> UpdateChapterAsync(Chapter chapter, UpdateChapterDTO dto)
         {
-            return await _chapterRepository.UpdateAsync(chapter);
+            try
+            {
+                _mapper.Map(dto, chapter);
+                chapter.UpdatedAt = DateTime.UtcNow;
+                return await _chapterRepository.UpdateAsync(chapter);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }
         }
 
-        public async Task<IEnumerable<Chapter?>> GetAllChapterAsync(Expression<Func<Chapter, bool>> filter)
+        public bool Modifiable(Chapter chapter, UserDTO user)
         {
-            return await _chapterRepository.GetAllAsync();
+            return chapter.OwnerId == user.Id;
         }
     }
 }
