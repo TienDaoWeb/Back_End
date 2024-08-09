@@ -35,7 +35,7 @@ namespace TienDaoAPI.Controllers
                 var book = await _bookService.GetBookByIdAsync(dto.BookId);
                 if (book == null)
                 {
-                    return NotFound(new Response().NotFound().SetMessage("Truyện không tồn tại trong hệ thống"));
+                    return NotFound(new Response().NotFound().SetMessage("Chương không tồn tại hoặc đã bị xóa trong hệ thống"));
                 }
 
                 var user = HttpContext.Items["UserDTO"] as UserDTO;
@@ -73,7 +73,7 @@ namespace TienDaoAPI.Controllers
                 var chapter = await _chapterService.GetChapterByIdAsync(id);
                 if (chapter == null)
                 {
-                    return NotFound(new Response().NotFound().SetMessage("Chương không tồn tại trong hệ thống"));
+                    return NotFound(new Response().NotFound().SetMessage("Chương không tồn tại hoặc đã bị xóa trong hệ thống"));
                 }
 
                 var user = HttpContext.Items["UserDTO"] as UserDTO;
@@ -108,9 +108,45 @@ namespace TienDaoAPI.Controllers
                 var chapter = await _chapterService.GetChapterByIdAsync(id);
                 if (chapter == null)
                 {
-                    return NotFound(new Response().NotFound().SetMessage("Truyện không tồn tại hoặc đã bị xóa trong hệ thống"));
+                    return NotFound(new Response().NotFound().SetMessage("Chương không tồn tại hoặc đã bị xóa trong hệ thống"));
                 }
                 return Ok(new Response().Success().SetData(_mapper.Map<ChapterDetailDTO>(chapter)));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
+            }
+        }
+
+        [HttpPut]
+        [Route("{id}")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateChapterDTO dto)
+        {
+            try
+            {
+                var chapter = await _chapterService.GetChapterByIdAsync(id);
+                if (chapter == null)
+                {
+                    return NotFound(new Response().NotFound().SetMessage("Chương không tồn tại hoặc đã bị xóa trong hệ thống"));
+                }
+
+                var user = HttpContext.Items["UserDTO"] as UserDTO;
+                if (!_chapterService.Modifiable(chapter, user!))
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden, new Response().Forbidden());
+                }
+
+                var updatedChapter = await _chapterService.UpdateChapterAsync(chapter, dto);
+                if (updatedChapter != null)
+                {
+                    return Ok(new Response().Success().SetMessage("Cập nhật thông tin chương thành công!"));
+                }
+                return BadRequest(new Response().BadRequest().SetMessage("Cập nhật thông tin chương không thành công!"));
             }
             catch (Exception ex)
             {

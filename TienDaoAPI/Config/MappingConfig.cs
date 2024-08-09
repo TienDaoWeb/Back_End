@@ -30,6 +30,8 @@ namespace TienDaoAPI.Config
                 .ForMember(dest => dest.AuthorId, opt => opt.Ignore())
                 .ForMember(dest => dest.PublishedAt, opt => opt.Ignore());
 
+            CreateMap<UpdateBookDTO, Book>();
+
             CreateMap<Book, BookDTO>()
                 .ForMember(d => d.Owner, s => s.MapFrom(x => x.User))
                 .ForMember(d => d.Genre, s => s.MapFrom(x => x.Genre))
@@ -48,6 +50,7 @@ namespace TienDaoAPI.Config
                 .ForMember(dest => dest.ViewCount, opt => opt.Ignore())
                 .ForMember(dest => dest.WordCount, opt => opt.Ignore());
 
+            CreateMap<UpdateChapterDTO, Chapter>();
             CreateMap<Chapter, ChapterInfoDTO>();
             CreateMap<Chapter, ChapterDetailDTO>().IncludeBase<Chapter, ChapterInfoDTO>();
         }

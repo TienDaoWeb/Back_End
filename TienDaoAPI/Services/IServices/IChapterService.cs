@@ -10,7 +10,7 @@ namespace TienDaoAPI.Services.IServices
         public Task<Chapter?> GetChapterByIdAsync(int chapterId);
         public Task<bool> DeleteChapterAsync(Chapter chapter);
         public Task<bool> DeleteAllChapterAsync(IEnumerable<Chapter> chapters);
-        public Task<Chapter?> UpdateChapterAsync(Chapter chapter);
+        public Task<Chapter?> UpdateChapterAsync(Chapter chapter, UpdateChapterDTO dto);
         public bool Modifiable(Chapter chapter, UserDTO user);
     }
 }

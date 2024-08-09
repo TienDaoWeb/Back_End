@@ -129,7 +129,6 @@ namespace TienDaoAPI.Controllers
                 }
 
                 var user = HttpContext.Items["UserDTO"] as UserDTO;
-                dto.OwnerId = user!.Id;
                 if (!_bookService.Modifiable(book, user!))
                 {
                     return StatusCode(StatusCodes.Status403Forbidden, new Response().Forbidden());

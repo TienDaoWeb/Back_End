@@ -100,10 +100,10 @@ namespace TienDaoAPI.Services
                         {
                             return null;
                         }
+                        book.AuthorId = author.Id;
                     }
 
                     _mapper.Map(dto, book);
-                    book.AuthorId = author.Id;
                     book.UpdatedAt = DateTime.UtcNow;
 
                     var updatedBook = await _bookRepository.UpdateAsync(book);

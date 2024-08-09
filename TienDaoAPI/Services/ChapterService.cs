@@ -75,9 +75,19 @@ namespace TienDaoAPI.Services
             return await _chapterRepository.GetAsync(c => c.Id == id && c.DeletedAt == null);
         }
 
-        public async Task<Chapter?> UpdateChapterAsync(Chapter chapter)
+        public async Task<Chapter?> UpdateChapterAsync(Chapter chapter, UpdateChapterDTO dto)
         {
-            return await _chapterRepository.UpdateAsync(chapter);
+            try
+            {
+                _mapper.Map(dto, chapter);
+                chapter.UpdatedAt = DateTime.UtcNow;
+                return await _chapterRepository.UpdateAsync(chapter);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }
         }
 
         public bool Modifiable(Chapter chapter, UserDTO user)
