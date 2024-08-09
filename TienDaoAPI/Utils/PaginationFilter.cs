@@ -1,4 +1,4 @@
-﻿namespace TienDaoAPI.Models
+﻿namespace TienDaoAPI.Utils
 {
     public class PaginationFilter
     {
