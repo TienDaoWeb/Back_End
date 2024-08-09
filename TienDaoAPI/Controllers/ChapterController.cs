@@ -35,7 +35,7 @@ namespace TienDaoAPI.Controllers
                 var book = await _bookService.GetBookByIdAsync(dto.BookId);
                 if (book == null)
                 {
-                    return NotFound(new Response().NotFound().SetMessage("Chương không tồn tại hoặc đã bị xóa trong hệ thống"));
+                    return NotFound(new Response().NotFound().SetMessage("Truyện không tồn tại hoặc đã bị xóa trong hệ thống"));
                 }
 
                 var user = HttpContext.Items["UserDTO"] as UserDTO;
@@ -45,7 +45,6 @@ namespace TienDaoAPI.Controllers
                 }
 
                 dto.OwnerId = user!.Id;
-                dto.Index = ++book.LastestIndex;
                 var chapter = await _chapterService.CreateChapterAsync(dto);
                 if (chapter == null)
                 {

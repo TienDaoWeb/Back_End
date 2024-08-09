@@ -12,14 +12,11 @@ namespace TienDaoAPI.Services
     {
         private readonly IChapterRepository _chapterRepository;
         private readonly IBookService _bookService;
-        private readonly IBookRepository _bookRepository;
         private readonly IMapper _mapper;
         private readonly EncryptionProvider _encryptionProvider;
-        public ChapterService(IChapterRepository chapterRepository, IBookRepository bookRepository,
-            IMapper mapper, EncryptionProvider encryptionProvider, IBookService bookService)
+        public ChapterService(IChapterRepository chapterRepository, IMapper mapper, EncryptionProvider encryptionProvider, IBookService bookService)
         {
             _chapterRepository = chapterRepository;
-            _bookRepository = bookRepository;
             _mapper = mapper;
             _encryptionProvider = encryptionProvider;
             _bookService = bookService;
@@ -29,6 +26,18 @@ namespace TienDaoAPI.Services
         {
             try
             {
+                var book = await _bookService.GetBookByIdAsync(dto.BookId);
+                if (dto.Index == 0 || dto.Index > book!.LastestIndex)
+                {
+                    dto.Index = ++book!.LastestIndex;
+                }
+
+                var chaptersToShift = await GetChaptersByBookIdAsync(dto.BookId);
+                foreach (var existingChapter in chaptersToShift.Where(c => c!.Index >= dto.Index))
+                {
+                    existingChapter!.Index++;
+                }
+
                 var chapter = _mapper.Map<Chapter>(dto);
                 chapter.WordCount = chapter.Content!.CountWords();
                 chapter.Content = _encryptionProvider.Encrypt(chapter.Content!);
@@ -62,7 +71,7 @@ namespace TienDaoAPI.Services
             return true;
         }
 
-        public async Task<IEnumerable<Chapter?>> GetAllChaptersByBookIdAsync(int bookId)
+        public async Task<IEnumerable<Chapter?>> GetChaptersByBookIdAsync(int bookId)
         {
             var chapters = await _chapterRepository.FilterAsync(c => c.BookId == bookId && c.DeletedAt == null,
                                                                 null,
@@ -79,7 +88,29 @@ namespace TienDaoAPI.Services
         {
             try
             {
+                var book = await _bookService.GetBookByIdAsync(chapter.BookId);
+                if (dto.Index <= 0)
+                {
+                    return null;
+                }
+                var chaptersToShift = await GetChaptersByBookIdAsync(chapter.BookId);
+                if (chapter.Index > dto.Index)
+                {
+                    foreach (var existingChapter in chaptersToShift.Where(c => c!.Index >= dto.Index && c!.Index < chapter.Index))
+                    {
+                        existingChapter!.Index++;
+                    }
+                }
+                else if (chapter.Index < dto.Index)
+                {
+                    foreach (var existingChapter in chaptersToShift.Where(c => c!.Index <= dto.Index && c!.Index > chapter.Index))
+                    {
+                        existingChapter!.Index--;
+                    }
+                }
                 _mapper.Map(dto, chapter);
+                chapter.WordCount = chapter.Content!.CountWords();
+                chapter.Content = _encryptionProvider.Encrypt(chapter.Content!);
                 chapter.UpdatedAt = DateTime.UtcNow;
                 return await _chapterRepository.UpdateAsync(chapter);
             }

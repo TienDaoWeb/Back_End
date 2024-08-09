@@ -6,7 +6,7 @@ namespace TienDaoAPI.Services.IServices
     public interface IChapterService
     {
         public Task<Chapter?> CreateChapterAsync(CreateChapterDTO dto);
-        public Task<IEnumerable<Chapter?>> GetAllChaptersByBookIdAsync(int bookId);
+        public Task<IEnumerable<Chapter?>> GetChaptersByBookIdAsync(int bookId);
         public Task<Chapter?> GetChapterByIdAsync(int chapterId);
         public Task<bool> DeleteChapterAsync(Chapter chapter);
         public Task<bool> DeleteAllChapterAsync(IEnumerable<Chapter> chapters);
