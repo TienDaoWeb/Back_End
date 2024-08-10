@@ -41,7 +41,8 @@ namespace TienDaoAPI.Config
                 .ForMember(dest => dest.WordCount, opt => opt.MapFrom(src => src.Chapters.Sum(c => c.WordCount)))
                 .ForMember(dest => dest.ViewCount, opt => opt.MapFrom(src => src.Chapters.Sum(c => c.ViewCount)))
                 .ReverseMap();
-
+            CreateMap<Comment, CreateCommentDTO>().ReverseMap();
+            CreateMap<Comment, CreateReplyCommentDTO>().ReverseMap();
             CreateMap<AuthorDTO, Author>().ReverseMap();
 
             CreateMap<CreateChapterDTO, Chapter>()

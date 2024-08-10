@@ -9,7 +9,6 @@ namespace TienDaoAPI.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-
         [Range(0, 5)]
         [Required]
         public float  Score { get; set; }

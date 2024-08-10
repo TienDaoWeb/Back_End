@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using Microsoft.Identity.Client;
+using System.Net;
 
 namespace TienDaoAPI.Utils
 {
@@ -40,6 +41,11 @@ namespace TienDaoAPI.Utils
             StatusCode = HttpStatusCode.NotFound;
             return this;
         }
+        public Response ForBidden()
+        {
+            StatusCode = HttpStatusCode.Forbidden;
+            return this;
+        } 
 
         public Response BadRequest()
         {
