@@ -11,7 +11,7 @@ namespace TienDaoAPI.Models
         public int Id { get; set; }
         [Range(0, 5)]
         [Required]
-        public float  Score { get; set; }
+        public float Score { get; set; }
 
         public string? Content { get; set; }
 
@@ -25,9 +25,6 @@ namespace TienDaoAPI.Models
         public int BookId { get; set; }
         [ForeignKey("BookId")]
         public virtual required Book Book { get; set; }
-        public int IdReadChapter { get; set; } = 0;
-        [ForeignKey("IdReadChapter")]
-        public ReadChapter? ReadChapter { get; set; }
 
         public int OwnerId { get; set; }
         [ForeignKey("OwnerId")]

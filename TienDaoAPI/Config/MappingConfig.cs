@@ -56,6 +56,12 @@ namespace TienDaoAPI.Config
             CreateMap<UpdateChapterDTO, Chapter>();
             CreateMap<Chapter, ChapterInfoDTO>();
             CreateMap<Chapter, ChapterDetailDTO>().IncludeBase<Chapter, ChapterInfoDTO>();
+
+            CreateMap<CreateReadingDTO, Reading>();
+            CreateMap<Reading, ReadingDTO>()
+                .ForMember(dest => dest.ChapterIndex, opt => opt.MapFrom(src => src.Chapter.Index))
+                .ForMember(dest => dest.BookId, opt => opt.MapFrom(src => src.Chapter.BookId))
+                .ForMember(dest => dest.Book, opt => opt.MapFrom(src => src.Chapter.Book));
         }
     }
 }
