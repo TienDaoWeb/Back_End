@@ -11,13 +11,24 @@ namespace TienDaoAPI.Config
         {
             CreateMap<CreateGenreDTO, Genre>();
 
+            CreateMap<CreateTagDTO, Tag>();
+
+            CreateMap<CreateTagTypeDTO, TagType>();
+
             CreateMap<RegisterDTO, User>().ForMember(d => d.UserName, s => s.MapFrom(x => x.Email));
+
             CreateMap<User, UserBaseDTO>();
+
             CreateMap<User, UserDTO>().IncludeBase<User, UserBaseDTO>();
+
             CreateMap<UpdateProfileDTO, User>().ReverseMap();
+
             CreateMap<CreateReviewDTO, Review>().ReverseMap();
+
             CreateMap<UpdateReviewDTO, Review>().ReverseMap();
-            CreateMap<Review,ReviewDTO>().ReverseMap();
+
+            CreateMap<Review, ReviewDTO>().ReverseMap();
+
             CreateMap<CreateBookDTO, Book>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
@@ -41,8 +52,11 @@ namespace TienDaoAPI.Config
                 .ForMember(dest => dest.WordCount, opt => opt.MapFrom(src => src.Chapters.Sum(c => c.WordCount)))
                 .ForMember(dest => dest.ViewCount, opt => opt.MapFrom(src => src.Chapters.Sum(c => c.ViewCount)))
                 .ReverseMap();
+
             CreateMap<Comment, CreateCommentDTO>().ReverseMap();
+
             CreateMap<Comment, CreateReplyCommentDTO>().ReverseMap();
+
             CreateMap<AuthorDTO, Author>().ReverseMap();
 
             CreateMap<CreateChapterDTO, Chapter>()
@@ -54,10 +68,13 @@ namespace TienDaoAPI.Config
                 .ForMember(dest => dest.WordCount, opt => opt.Ignore());
 
             CreateMap<UpdateChapterDTO, Chapter>();
+
             CreateMap<Chapter, ChapterInfoDTO>();
+
             CreateMap<Chapter, ChapterDetailDTO>().IncludeBase<Chapter, ChapterInfoDTO>();
 
             CreateMap<CreateReadingDTO, Reading>();
+
             CreateMap<Reading, ReadingDTO>()
                 .ForMember(dest => dest.ChapterIndex, opt => opt.MapFrom(src => src.Chapter.Index))
                 .ForMember(dest => dest.BookId, opt => opt.MapFrom(src => src.Chapter.BookId))

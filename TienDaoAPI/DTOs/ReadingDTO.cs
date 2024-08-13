@@ -14,6 +14,6 @@
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        public BookDTO Book { get; set; }
+        public BookDTO? Book { get; set; }
     }
 }
