@@ -58,7 +58,7 @@ namespace TienDaoAPI.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError().SetMessage(ex.ToString()));
             }
         }
 

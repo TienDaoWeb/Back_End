@@ -29,7 +29,8 @@ namespace TienDaoAPI.Data
         public DbSet<Reading> ReadingChapters { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Comment> Comments { get; set; }
-
+        public DbSet<Tag> Tags { get; set; }
+        public DbSet<TagType> TagTypes { get; set; }
     }
 
 }
