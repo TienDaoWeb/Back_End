@@ -25,7 +25,7 @@ namespace TienDaoAPI.Services
             if (identityResult.Succeeded)
             {
                 var otp = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                var templatePath = Path.GetFullPath(@"/Templates/otp_register_mail.html");
+                var templatePath = Path.Combine(Environment.CurrentDirectory, @"Templates\", "otp_register_mail.html");
                 await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "OTP Verification", templatePath, new { otp });
                 return AccountErrorEnum.AllOk;
             }

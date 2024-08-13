@@ -66,7 +66,7 @@ namespace TienDaoAPI.Controllers
                 }
                 else
                 {
-                    if(comment.OwnerId != OwnerId)
+                    if (comment.OwnerId != OwnerId)
                     {
                         return BadRequest(new Response().BadRequest().SetMessage("Bạn không đủ quyền để xóa comment này!"));
                     }
@@ -92,7 +92,7 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Update([FromBody] UpdateCommentDTO dto ,int id)
+        public async Task<IActionResult> Update([FromBody] UpdateCommentDTO dto, int id)
         {
             try
             {
@@ -104,7 +104,7 @@ namespace TienDaoAPI.Controllers
                 }
                 else
                 {
-                    if(comment.OwnerId != OwnerId)
+                    if (comment.OwnerId != OwnerId)
                     {
                         return BadRequest(new Response().BadRequest().SetMessage("Bạn không có quyền sửa bình luận!"));
                     }
@@ -129,13 +129,13 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> ReplyComment([FromBody]CreateReplyCommentDTO dto)
+        public async Task<IActionResult> ReplyComment([FromBody] CreateReplyCommentDTO dto)
         {
             try
             {
                 dto.OwnerId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
                 var commentParent = await _commentService.GetCommentbyIdAsync(dto.CommentParentId);
-                if(commentParent == null)
+                if (commentParent == null)
                 {
                     return NotFound(new Response().NotFound().SetMessage("Không tìm thấy bình luận để phản hồi!"));
                 }
@@ -184,7 +184,7 @@ namespace TienDaoAPI.Controllers
                 }
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
@@ -200,8 +200,8 @@ namespace TienDaoAPI.Controllers
             {
 
                 var comments = await _commentService.GetAllCommentAsync(filter);
-                var count = comments.Count();
-                var paginatedComment = comments.Skip(filter.PageSize * (filter.Page - 1)).Take(filter.PageSize);
+                var count = comments!.Count();
+                var paginatedComment = comments!.Skip(filter.PageSize * (filter.Page - 1)).Take(filter.PageSize);
 
                 return Ok(new PaginatedResponse
                 {
