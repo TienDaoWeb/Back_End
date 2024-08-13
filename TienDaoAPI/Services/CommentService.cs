@@ -33,14 +33,14 @@ namespace TienDaoAPI.Services
             {
                 using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
                 {
-                    var book = await  _bookRepository.GetByIdAsync(dto.BookId);
-                    if(book == null)
+                    var book = await _bookRepository.GetByIdAsync(dto.BookId);
+                    if (book == null)
                     {
                         Console.WriteLine("Truyện không tồn tại.");
                         return null;
                     }
                     var chapter = await _chapterRepository.GetByIdAsync(dto.ChapterId);
-                    if(chapter == null)
+                    if (chapter == null)
                     {
                         Console.WriteLine("Chapter không tồn tại.");
                         return null;
@@ -101,21 +101,17 @@ namespace TienDaoAPI.Services
         {
             return await _commentRepository.GetByIdAsync(id);
         }
-        public async Task<IEnumerable<Comment?>> GetAllCommentAsync(CommentFilter filter)
+        public async Task<IEnumerable<Comment>?> GetAllCommentAsync(CommentFilter filter)
         {
             try
             {
                 var sortExpression = filter.SortBy == null ? null : ExpressionProvider<Comment>.GetSortExpression(filter.SortBy);
-                if (sortExpression == null)
-                {
-                    return null;
-                }
 
                 var comments = await _commentRepository.FilterAsync(null, null, sortExpression);
 
                 return comments;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine("Server Error : " + ex.Message);
                 return null;
@@ -124,7 +120,7 @@ namespace TienDaoAPI.Services
         public async Task<Comment?> ReplyComment(CreateReplyCommentDTO dto)
         {
             var comment = await _commentRepository.GetByIdAsync(dto.CommentParentId);
-            if(comment != null)
+            if (comment != null)
             {
                 try
                 {
@@ -157,7 +153,7 @@ namespace TienDaoAPI.Services
         public async Task<ReactionEnum?> UserLikeComment(int commentId, int userId)
         {
             var comment = await _commentRepository.GetByIdAsync(commentId);
-            if(comment != null)
+            if (comment != null)
             {
                 var userReact = comment.UserLike.Exists(userid => userid == userId);
                 if (userReact == true)

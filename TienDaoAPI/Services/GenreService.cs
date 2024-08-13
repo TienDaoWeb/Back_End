@@ -15,8 +15,16 @@ namespace TienDaoAPI.Services
 
         public async Task<bool> CreateGenreAsync(Genre genre)
         {
-            Genre? result = await _genreRepository.CreateAsync(genre);
-            return result != null;
+            try
+            {
+                Genre? result = await _genreRepository.CreateAsync(genre);
+                return result != null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return true;
+            }
         }
 
         public async Task<bool> DeleteGenreAsync(int genreId)
@@ -31,8 +39,9 @@ namespace TienDaoAPI.Services
                 }
                 return false;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.ToString());
                 return true;
             }
         }
