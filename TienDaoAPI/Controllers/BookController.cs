@@ -39,7 +39,7 @@ namespace TienDaoAPI.Controllers
                 dto.OwnerId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
 
                 var book = await _bookService.CreateBookAsync(dto);
-                if (book == null)
+                if (!book)
                 {
                     return BadRequest(new Response().BadRequest().SetMessage("Không thể tạo sách mới. Vui lòng kiểm tra lại thông tin."));
                 }
@@ -62,7 +62,7 @@ namespace TienDaoAPI.Controllers
             try
             {
                 var book = await _bookService.GetBookByIdAsync(id);
-                if (book == null)
+                if (book is null)
                 {
                     return NotFound(new Response().NotFound().SetMessage("Truyện không tồn tại trong hệ thống"));
                 }
@@ -86,7 +86,7 @@ namespace TienDaoAPI.Controllers
             try
             {
                 var book = await _bookService.GetBookByIdAsync(id);
-                if (book == null)
+                if (book is null)
                 {
                     return NotFound(new Response().NotFound().SetMessage("Truyện không tồn tại trong hệ thống"));
                 }
@@ -123,7 +123,7 @@ namespace TienDaoAPI.Controllers
             try
             {
                 var book = await _bookService.GetBookByIdAsync(id);
-                if (book == null)
+                if (book is null)
                 {
                     return NotFound(new Response().NotFound().SetMessage("Truyện không tồn tại trong hệ thống"));
                 }
@@ -134,8 +134,8 @@ namespace TienDaoAPI.Controllers
                     return StatusCode(StatusCodes.Status403Forbidden, new Response().Forbidden());
                 }
 
-                var updatedBook = await _bookService.UpdateBookAsync(book, dto);
-                if (updatedBook != null)
+                var result = await _bookService.UpdateBookAsync(book, dto);
+                if (result)
                 {
                     return Ok(new Response().Success().SetMessage("Cập nhật thông tin truyện thành công!"));
                 }

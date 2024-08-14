@@ -42,7 +42,7 @@ namespace TienDaoAPI.Controllers
                 {
                     return NotFound(new Response().NotFound().SetMessage("Người dùng không tồn tại trong hệ thống"));
                 }
-                return Ok(new Response().Success().SetData(user));
+                return Ok(new Response().Success().SetData(_mapper.Map<UserDTO>(user)));
             }
             catch (Exception ex)
             {
@@ -62,7 +62,7 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-                var users = await _userService.GetAllUsers(filter);
+                var users = await _userService.FilterUser(filter);
                 var count = users.Count();
                 users.Skip(filter.PageSize * (filter.Page - 1)).Take(filter.PageSize);
 

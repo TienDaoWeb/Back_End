@@ -1,24 +1,25 @@
-﻿using TienDaoAPI.Models;
-using TienDaoAPI.Repositories.IRepositories;
+﻿using Microsoft.EntityFrameworkCore;
+using TienDaoAPI.Data;
+using TienDaoAPI.Models;
 using TienDaoAPI.Services.IServices;
 
 namespace TienDaoAPI.Services
 {
     public class TagTypeService : ITagTypeService
     {
-        private readonly ITagTypeRepository _tagTypeRepository;
-
-        public TagTypeService(ITagTypeRepository tagTypeRepository)
+        private readonly TienDaoDbContext _dbContext;
+        public TagTypeService(TienDaoDbContext dbContext)
         {
-            _tagTypeRepository = tagTypeRepository;
+            _dbContext = dbContext;
         }
 
         public async Task<bool> CreateTagTypeAsync(TagType tagType)
         {
             try
             {
-                var result = await _tagTypeRepository.CreateAsync(tagType);
-                return result != null;
+                var result = _dbContext.TagTypes.Add(tagType);
+                await _dbContext.SaveChangesAsync();
+                return result is not null;
             }
             catch
             {
@@ -30,12 +31,14 @@ namespace TienDaoAPI.Services
         {
             try
             {
-                var tag = await _tagTypeRepository.GetAsync(t => t.Id == id);
-                if (tag == null)
+                var tag = await _dbContext.TagTypes.FirstOrDefaultAsync(x => x.Id == id);
+
+                if (tag is null)
                 {
                     return false;
                 }
-                await _tagTypeRepository.DeleteAsync(tag);
+                _dbContext.TagTypes.Remove(tag);
+                await _dbContext.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
@@ -47,7 +50,7 @@ namespace TienDaoAPI.Services
 
         public async Task<IEnumerable<TagType>> GetTagTypesAsync()
         {
-            return await _tagTypeRepository.GetAllAsync();
+            return await _dbContext.TagTypes.ToListAsync();
         }
     }
 }

@@ -16,6 +16,6 @@ namespace TienDaoAPI.DTOs
         public int OwnerId { get; set; }
         [Required]
         public int GenreId { get; set; }
-
+        public List<int> Tags { get; set; } = new List<int>();
     }
 }

@@ -12,5 +12,7 @@ namespace TienDaoAPI.DTOs
         public string Synopsis { get; set; } = string.Empty;
         [Required]
         public int GenreId { get; set; }
+
+        public List<int> TagIds { get; set; } = new List<int>();
     }
 }

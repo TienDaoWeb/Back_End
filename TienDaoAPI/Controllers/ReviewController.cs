@@ -14,16 +14,14 @@ namespace TienDaoAPI.Controllers
     {
         private readonly IReviewService _reviewService;
         private readonly IMapper _mapper;
-        public ReviewController(
-            IReviewService reviewService,
-            IMapper mapper
-        )
+        public ReviewController(IReviewService reviewService, IMapper mapper)
         {
             _mapper = mapper;
             _reviewService = reviewService;
         }
+
         [HttpPost]
-        [Authorize(Roles = RoleEnum.CONVERTER)]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -32,19 +30,13 @@ namespace TienDaoAPI.Controllers
             try
             {
                 dto.OwnerId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
-                var review = await _reviewService.CreateReviewAsync(dto);
+                var result = await _reviewService.CreateReviewAsync(dto);
 
-                if(review == null)
+                if (result)
                 {
-                    return BadRequest(
-                        new Response().BadRequest().SetMessage("Không thể tạo bài đánh giá này")
-                    );
-                } 
-                var result = _mapper.Map<ReviewDTO>(review);
-                return Ok(new Response().Success()
-                                .SetData(result!)
-                                .SetMessage("Tạo bài đánh giá thành công.")
-                );
+                    return BadRequest(new Response().BadRequest().SetMessage("Không thể tạo bài đánh giá này"));
+                }
+                return Ok(new Response().Success().SetMessage("Tạo bài đánh giá thành công."));
 
             }
             catch (Exception ex)
@@ -55,7 +47,7 @@ namespace TienDaoAPI.Controllers
         }
         [HttpDelete]
         [Route("{id}")]
-        [Authorize(Roles = RoleEnum.CONVERTER)]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -63,21 +55,21 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-                var review = await _reviewService.GetReviewAsync(id);
-                if(review == null)
+                var review = await _reviewService.GetReviewByIdAsync(id);
+                if (review == null)
                 {
                     return NotFound(
                         new Response().NotFound().SetMessage("Không thể tìm thấy bài đánh giá này")
                     );
                 }
                 bool result = await _reviewService.DeleteReviewAsync(review);
-                if(result == false)
+                if (result == false)
                 {
                     return BadRequest(new Response().BadRequest().SetMessage("Bạn không thể xóa hoặc không có quyền xóa bài viết này."));
                 }
                 return Ok(new Response().Success().SetMessage("Xóa bài đánh giá thành công."));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
@@ -86,39 +78,32 @@ namespace TienDaoAPI.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        [Authorize(Roles = RoleEnum.READER)]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateReviewDTO dto )
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateReviewDTO dto)
         {
             try
             {
                 var OwnerId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
-                var review = await _reviewService.GetReviewAsync(id);
-                if (review == null)
+                var review = await _reviewService.GetReviewByIdAsync(id);
+                if (review is null)
                 {
                     return NotFound(new Response().NotFound().SetMessage("Không tìm thấy bài đánh giá."));
                 }
-                else
+                if (OwnerId != review.OwnerId)
                 {
-                    if (OwnerId != review.OwnerId)
-                    {
-                        return StatusCode(StatusCodes.Status403Forbidden, new Response().Forbidden());
-                    }
-                    var updateReview = await _reviewService.UpdateReviewAsync(review, dto);
-                    if (updateReview == null)
-                    {
-                        return BadRequest(new Response().BadRequest().SetMessage("Không thể cập nhật hay chỉnh sửa bài đánh giá."));
-                    }
-                    var response = _mapper.Map<ReviewDTO>(updateReview);
-                    return Ok(
-                        new Response()
-                            .Success()
-                            .SetMessage("Cập nhật bài đánh giá thành công.")
-                            .SetData(response)
-                    );
+                    return StatusCode(StatusCodes.Status403Forbidden, new Response().Forbidden());
                 }
+
+                var result = await _reviewService.UpdateReviewAsync(review, dto);
+                if (result)
+                {
+                    return BadRequest(new Response().BadRequest().SetMessage("Không thể cập nhật hay chỉnh sửa bài đánh giá."));
+                }
+
+                return Ok(new Response().Success().SetMessage("Cập nhật bài đánh giá thành công."));
             }
             catch (Exception ex)
             {
@@ -126,9 +111,10 @@ namespace TienDaoAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
+
         [HttpPost]
         [Route("react")]
-        [Authorize(Roles = RoleEnum.CONVERTER)]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -137,8 +123,8 @@ namespace TienDaoAPI.Controllers
             try
             {
                 var OwnerId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
-                var review = await _reviewService.GetReviewAsync(reviewId);
-                if(review == null)
+                var review = await _reviewService.GetReviewByIdAsync(reviewId);
+                if (review == null)
                 {
                     return NotFound(new Response().NotFound().SetMessage("Không tìm thấy bài đánh giá"));
                 }

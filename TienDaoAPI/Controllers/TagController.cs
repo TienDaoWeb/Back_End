@@ -29,7 +29,7 @@ namespace TienDaoAPI.Controllers
             try
             {
                 var tags = await _tagService.GetTagsAsync();
-                return Ok(new Response().Success().SetData(tags));
+                return Ok(new Response().Success().SetData(_mapper.Map<IEnumerable<TagDTO>>(tags)));
             }
             catch (Exception ex)
             {

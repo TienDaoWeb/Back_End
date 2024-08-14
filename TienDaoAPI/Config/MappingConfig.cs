@@ -13,6 +13,8 @@ namespace TienDaoAPI.Config
 
             CreateMap<CreateTagDTO, Tag>();
 
+            CreateMap<Tag, TagDTO>();
+
             CreateMap<CreateTagTypeDTO, TagType>();
 
             CreateMap<RegisterDTO, User>().ForMember(d => d.UserName, s => s.MapFrom(x => x.Email));
@@ -48,11 +50,13 @@ namespace TienDaoAPI.Config
             CreateMap<Book, BookDTO>()
                 .ForMember(d => d.Owner, s => s.MapFrom(x => x.User))
                 .ForMember(d => d.Genre, s => s.MapFrom(x => x.Genre))
+                .ForMember(d => d.Tags, s => s.MapFrom(x => x.BookTags.Select(bt => bt.Tag)))
                 .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status.GetBookStatusName()))
                 .ForMember(dest => dest.WordCount, opt => opt.MapFrom(src => src.Chapters.Sum(c => c.WordCount)))
                 .ForMember(dest => dest.ViewCount, opt => opt.MapFrom(src => src.Chapters.Sum(c => c.ViewCount)))
                 .ReverseMap();
 
+            CreateMap<Book, BookReadingDTO>();
             CreateMap<Comment, CreateCommentDTO>().ReverseMap();
 
             CreateMap<Comment, CreateReplyCommentDTO>().ReverseMap();
@@ -79,6 +83,8 @@ namespace TienDaoAPI.Config
                 .ForMember(dest => dest.ChapterIndex, opt => opt.MapFrom(src => src.Chapter.Index))
                 .ForMember(dest => dest.BookId, opt => opt.MapFrom(src => src.Chapter.BookId))
                 .ForMember(dest => dest.Book, opt => opt.MapFrom(src => src.Chapter.Book));
+
+
         }
     }
 }

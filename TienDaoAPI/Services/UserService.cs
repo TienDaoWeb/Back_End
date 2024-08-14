@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.EntityFrameworkCore;
+using TienDaoAPI.Data;
 using TienDaoAPI.Enums;
 using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
-using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services.IServices;
 using TienDaoAPI.Utils;
 
@@ -10,21 +10,18 @@ namespace TienDaoAPI.Services
 {
     public class UserService : IUserService
     {
-        private readonly IUserRepository _userRepository;
-        private readonly UserManager<User> _userManager;
+        private readonly TienDaoDbContext _dbContext;
 
-        public UserService(IUserRepository userRepository, UserManager<User> userManager)
+        public UserService(TienDaoDbContext dbContext)
         {
-            _userRepository = userRepository;
-            _userManager = userManager;
+            _dbContext = dbContext;
         }
-
 
         public async Task<User?> GetUserByIdAsync(int id)
         {
             try
             {
-                return await _userRepository.GetAsync(u => u.Id == id);
+                return await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
             }
             catch (Exception ex)
             {
@@ -33,11 +30,22 @@ namespace TienDaoAPI.Services
             }
         }
 
-        public async Task<IEnumerable<User?>> GetAllUsers(UserFilter filter)
+        public async Task<IEnumerable<User?>> FilterUser(UserFilter filter)
         {
             var filterExpression = ExpressionProvider<User>.BuildUserFilter(filter);
-            var sortExpression = filter.SortBy == null ? null : ExpressionProvider<User>.GetSortExpression(filter.SortBy);
-            return await _userRepository.FilterAsync(filterExpression, null, sortExpression);
+
+            var user = _dbContext.Users.Where(filterExpression);
+
+            var sortExpression = ExpressionProvider<User>.GetSortExpression(filter.SortBy);
+            if (filter.SortBy!.StartsWith("-"))
+            {
+                user = user.OrderByDescending(sortExpression);
+            }
+            else
+            {
+                user = user.OrderBy(sortExpression);
+            }
+            return await user.ToListAsync();
         }
 
 
@@ -50,7 +58,7 @@ namespace TienDaoAPI.Services
                     return 1;
                 }
                 user.Status = AccountStatusEnum.BLOCKED;
-                await _userRepository.SaveAsync();
+                await _dbContext.SaveChangesAsync();
                 return 2;
             }
             catch (Exception ex)
@@ -72,7 +80,7 @@ namespace TienDaoAPI.Services
                 {
                     user.Status = AccountStatusEnum.UNVERIFIED;
                 }
-                await _userRepository.SaveAsync();
+                await _dbContext.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)

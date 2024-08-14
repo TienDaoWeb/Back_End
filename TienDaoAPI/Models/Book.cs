@@ -47,6 +47,6 @@ namespace TienDaoAPI.Models
         public ICollection<Chapter> Chapters { get; set; } = new HashSet<Chapter>();
         public ICollection<Comment> Comments { get; set; } = new HashSet<Comment>();
         public ICollection<Review> Reviews { get; set; } = new HashSet<Review>();
-        public ICollection<BookTag> BookTag { get; set; } = new HashSet<BookTag>();
+        public ICollection<BookTag> BookTags { get; set; } = new HashSet<BookTag>();
     }
 }

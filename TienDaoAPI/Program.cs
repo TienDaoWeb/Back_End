@@ -11,8 +11,6 @@ using System.Text;
 using TienDaoAPI.Data;
 using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
-using TienDaoAPI.Repositories;
-using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services;
 using TienDaoAPI.Services.IServices;
 using TienDaoAPI.Utils;
@@ -154,17 +152,6 @@ builder.Services.AddSingleton<IPolicyEvaluator, CustomPolicyEvaluator>();
 builder.Services.AddSingleton<SessionProvider>();
 builder.Services.AddSingleton<JwtHandler>();
 builder.Services.AddSingleton<EncryptionProvider>();
-
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IBookRepository, BookRepository>();
-builder.Services.AddScoped<IGenreRepository, GenreRepository>();
-builder.Services.AddScoped<IChapterRepository, ChapterRepository>();
-builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
-builder.Services.AddScoped<IReadingRepository, ReadingRepository>();
-builder.Services.AddScoped<ICommentRepository, CommentRepository>();
-builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
-builder.Services.AddScoped<ITagRepository, TagRepository>();
-builder.Services.AddScoped<ITagTypeRepository, TagTypeRepository>();
 
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IAccountService, AccountService>();

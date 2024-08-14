@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TienDaoAPI.Models
 {
+    [Table("Authors")]
     public class Author
     {
         [Key]

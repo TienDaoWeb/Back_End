@@ -43,8 +43,8 @@ namespace TienDaoAPI.Controllers
                 var user = HttpContext.Items["UserDTO"] as UserDTO;
 
                 dto.UserId = user!.Id;
-                var reading = await _readingService.CreateReadingAsync(dto, chapter);
-                if (reading == null)
+                var result = await _readingService.CreateReadingAsync(dto, chapter);
+                if (!result)
                 {
                     return BadRequest(new Response().BadRequest().SetMessage("Không thể thêm chương đang đọc. Vui lòng kiểm tra lại thông tin."));
                 }

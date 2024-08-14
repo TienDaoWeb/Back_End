@@ -1,58 +1,78 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using TienDaoAPI.Data;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.Models;
-using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services.IServices;
 
 namespace TienDaoAPI.Services
 {
     public class ReadingService : IReadingService
     {
-        private readonly IReadingRepository _readingChapterRepository;
+        private readonly TienDaoDbContext _dbContext;
         private readonly IMapper _mapper;
 
-        public ReadingService(IReadingRepository readingChapterRepository, IMapper mapper)
+        public ReadingService(IMapper mapper, TienDaoDbContext dbContext)
         {
-            _readingChapterRepository = readingChapterRepository;
             _mapper = mapper;
+            _dbContext = dbContext;
         }
 
-        public async Task<Reading?> CreateReadingAsync(CreateReadingDTO dto, Chapter chapter)
+        public async Task<bool> CreateReadingAsync(CreateReadingDTO dto, Chapter chapter)
         {
             try
             {
-                var existingReading = await _readingChapterRepository.GetAsync(r => r.Chapter.BookId == chapter.BookId && r.UserId == dto.UserId, "Chapter");
-                if (existingReading != null)
+                var existingReading = await _dbContext.Readings
+                    .Include(r => r.Chapter)
+                    .FirstOrDefaultAsync(r => r.Chapter.BookId == chapter.BookId && r.UserId == dto.UserId);
+                if (existingReading is not null)
                 {
                     existingReading.ChapterId = dto.ChapterId;
                     existingReading.UpdatedAt = DateTime.UtcNow;
-                    return await _readingChapterRepository.UpdateAsync(existingReading);
+                    _dbContext.Readings.Update(existingReading);
                 }
-                var newReading = _mapper.Map<Reading>(dto);
-                return await _readingChapterRepository.CreateAsync(newReading);
+                else
+                {
+                    var newReading = _mapper.Map<Reading>(dto);
+                    _dbContext.Readings.Add(newReading);
+                }
+                await _dbContext.SaveChangesAsync();
+                return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return null;
+                return false;
             }
         }
 
         public async Task<Reading?> GetReadingByIdAsync(int id)
         {
-            return await _readingChapterRepository.GetAsync(r => r.Id == id);
+            return await _dbContext.Readings.FirstOrDefaultAsync(r => r.Id == id);
         }
 
         public async Task<IEnumerable<Reading>?> GetReadingsByUserIdAsync(int userId)
         {
-            return await _readingChapterRepository.FilterAsync(r => r.UserId == userId, "Chapter,Chapter.Book", q => q.OrderByDescending(r => r.UpdatedAt));
+            return await _dbContext.Readings
+                .Include(r => r.Chapter)
+                .ThenInclude(c => c.Book)
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.UpdatedAt)
+                .ToListAsync();
         }
 
         public async Task<bool> DeleteReadingAsync(int id)
         {
             try
             {
-                await _readingChapterRepository.DeleteByIdAsync(id);
+                var reading = await _dbContext.Readings.FirstOrDefaultAsync(x => x.Id == id);
+
+                if (reading is null)
+                {
+                    return false;
+                }
+                _dbContext.Readings.Remove(reading);
+                await _dbContext.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)

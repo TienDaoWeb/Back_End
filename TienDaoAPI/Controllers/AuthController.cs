@@ -189,7 +189,7 @@ namespace TienDaoAPI.Controllers
 
                 return result switch
                 {
-                    AccountErrorEnum.AllOk => Ok(new Response().Success().SetMessage($"Vui lòng sử dụng OTP đã được gửi tới địa chỉ {dto.Email} để đăng nhập tài khoản!")),
+                    AccountErrorEnum.AllOk => Ok(new Response().Success().SetMessage($"Vui lòng sử dụng mật khẩu đã được gửi tới địa chỉ {dto.Email} để đăng nhập tài khoản!")),
                     AccountErrorEnum.NotExists => NotFound(new Response().NotFound().SetMessage("Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi")),
                     AccountErrorEnum.InvalidOTP => BadRequest(new Response().BadRequest().SetMessage("OTP không hợp lệ hoặc đã hết hạn!")),
                     _ => StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError())

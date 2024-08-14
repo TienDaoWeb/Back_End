@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
-using System.Transactions;
+using Microsoft.EntityFrameworkCore;
+using TienDaoAPI.Data;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.Enums;
-using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
-using TienDaoAPI.Repositories;
-using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services.IServices;
 using TienDaoAPI.Utils;
 
@@ -13,45 +11,22 @@ namespace TienDaoAPI.Services
 {
     public class ReviewService : IReviewService
     {
-        private readonly IReviewRepository _reviewRepository;
+        private readonly TienDaoDbContext _dbContext;
         private readonly IMapper _mapper;
-        public ReviewService (
-            IReviewRepository reviewRepository,
-            IMapper mapper
-        )
-        {
-            _reviewRepository = reviewRepository;
-            _mapper = mapper;
-        }
-        public async Task<Review?> CreateReviewAsync(CreateReviewDTO dto)
-        {
-            try
-            {
-                using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
-                {
-                    var createReview = _mapper.Map<Review>(dto);
-                    createReview.CreatedAt = DateTime.UtcNow;
-                    createReview.UpdatedAt = DateTime.UtcNow;
 
-                    var review = await _reviewRepository.CreateAsync(createReview);
-                    if (review != null)
-                    {
-                        scope.Complete();
-                    }
-                    return review;
-                }
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine("Error : " + ex.Message.ToString());
-                return null;
-            }
+        public ReviewService(IMapper mapper, TienDaoDbContext dbContext)
+        {
+            _mapper = mapper;
+            _dbContext = dbContext;
         }
-        public async Task<bool> DeleteReviewAsync(Review review)
+
+        public async Task<bool> CreateReviewAsync(CreateReviewDTO dto)
         {
             try
             {
-                await _reviewRepository.DeleteAsync(review);
+                var review = _mapper.Map<Review>(dto);
+                _dbContext.Reviews.Add(review);
+                await _dbContext.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
@@ -60,53 +35,66 @@ namespace TienDaoAPI.Services
                 return false;
             }
         }
-        public async Task<Review?> GetReviewAsync(int id)
-        {
-            return await _reviewRepository.GetByIdAsync(id);
 
-        }
-        public async Task<Review?> UpdateReviewAsync(Review review , UpdateReviewDTO dto)
+        public async Task<bool> DeleteReviewAsync(Review review)
         {
             try
             {
-                using(var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
-                {
-                    _mapper.Map(dto, review);
-                    review.UpdatedAt = DateTime.UtcNow;
-
-                    var result = await _reviewRepository.UpdateAsync(review);
-
-                    if(result != null)
-                    {
-                        scope.Complete();
-                    }
-                    return result;
-                }
+                _dbContext.Reviews.Remove(review);
+                await _dbContext.SaveChangesAsync();
+                return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine("Error : " + ex.Message.ToString());
-                return null;
+                return false;
+            }
+        }
+
+        public async Task<Review?> GetReviewByIdAsync(int id)
+        {
+            return await _dbContext.Reviews.FirstOrDefaultAsync(r => r.Id == id);
+        }
+
+        public async Task<bool> UpdateReviewAsync(Review review, UpdateReviewDTO dto)
+        {
+            try
+            {
+                _mapper.Map(dto, review);
+                review.UpdatedAt = DateTime.UtcNow;
+
+                _dbContext.Reviews.Update(review);
+                await _dbContext.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error : " + ex.Message.ToString());
+                return false;
             }
 
         }
+
         public async Task<ReactionEnum> UserLikeComment(Review review, int userId)
         {
             try
             {
-                if (review != null)
+                if (review is not null)
                 {
                     var userReact = review.UsersReaction.Exists(userid => userid == userId);
                     if (userReact == true)
                     {
                         review.UsersReaction.Remove(userId);
-                        await _reviewRepository.UpdateAsync(review);
+                        _dbContext.Reviews.Update(review);
+                        await _dbContext.SaveChangesAsync();
                         return ReactionEnum.UnLike;
                     }
                     else
                     {
                         review.UsersReaction.Add(userId);
-                        await _reviewRepository.UpdateAsync(review);
+                        _dbContext.Reviews.Update(review);
+                        await _dbContext.SaveChangesAsync();
                         return ReactionEnum.Like;
                     }
                 }
@@ -115,31 +103,16 @@ namespace TienDaoAPI.Services
                     return ReactionEnum.Fail;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine("Error : " + ex.Message.ToString());
                 return ReactionEnum.Fail;
             }
         }
-        public async Task<IEnumerable<Review>> GetAllReviewAsync(ReviewFilter filter)
+
+        public async Task<IEnumerable<Review>?> GetAllReviewAsync(ReviewFilter filter)
         {
-            try
-            {
-                var sortExpression = filter.SortBy == null ? null : ExpressionProvider<Review>.GetSortExpression(filter.SortBy);
-                if (sortExpression == null)
-                {
-                    return Enumerable.Empty<Review>();
-                }
-
-                var reviews = await _reviewRepository.FilterAsync(null, null, sortExpression);
-
-                return reviews;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Server Error : " + ex.Message);
-                return Enumerable.Empty<Review>();
-            }
+            return await _dbContext.Reviews.ToListAsync();
         }
     }
 }

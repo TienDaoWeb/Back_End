@@ -45,8 +45,8 @@ namespace TienDaoAPI.Controllers
                 }
 
                 dto.OwnerId = user!.Id;
-                var chapter = await _chapterService.CreateChapterAsync(dto);
-                if (chapter == null)
+                var result = await _chapterService.CreateChapterAsync(dto);
+                if (!result)
                 {
                     return BadRequest(new Response().BadRequest().SetMessage("Không thể thêm chương mới. Vui lòng kiểm tra lại thông tin."));
                 }
@@ -140,8 +140,8 @@ namespace TienDaoAPI.Controllers
                     return StatusCode(StatusCodes.Status403Forbidden, new Response().Forbidden());
                 }
 
-                var updatedChapter = await _chapterService.UpdateChapterAsync(chapter, dto);
-                if (updatedChapter != null)
+                var result = await _chapterService.UpdateChapterAsync(chapter, dto);
+                if (result)
                 {
                     return Ok(new Response().Success().SetMessage("Cập nhật thông tin chương thành công!"));
                 }
