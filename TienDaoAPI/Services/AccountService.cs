@@ -38,7 +38,7 @@ namespace TienDaoAPI.Services
             if (user != null)
             {
                 var otp = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var templatePath = "./Templates/otp_reset_password.html";
+                var templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", "otp_reset_password.html");
                 await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "OTP Verification", templatePath, new { otp });
                 return AccountErrorEnum.AllOk;
             }
@@ -58,7 +58,7 @@ namespace TienDaoAPI.Services
             {
                 return AccountErrorEnum.InvalidOTP;
             }
-            var templatePath = "./Templates/reset_password_mail.html";
+            var templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", "reset_password_mail.html"); ;
             await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "New your password", templatePath, new { newPassword });
             return AccountErrorEnum.AllOk;
         }

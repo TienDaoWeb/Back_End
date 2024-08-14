@@ -79,10 +79,15 @@ namespace TienDaoAPI.Controllers
                     var checkPassword = await _userManager.CheckPasswordAsync(user, dto.Password);
                     if (checkPassword)
                     {
+                        if (user.Status == AccountStatusEnum.BLOCKED)
+                        {
+                            return BadRequest(new Response().BadRequest().SetMessage("Tài khoản đã bị khóa"));
+                        }
+
                         if (user.Status == AccountStatusEnum.UNVERIFIED)
                         {
                             var otp = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                            var templatePath = "./Templates/otp_register_mail.html";
+                            var templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", "otp_register_mail.html");
                             await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "Email Verification", templatePath, new { otp });
 
                             return BadRequest(new Response().BadRequest().SetMessage("Email của bạn chưa được xác thực!"));
