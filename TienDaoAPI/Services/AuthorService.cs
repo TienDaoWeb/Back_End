@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using TienDaoAPI.Data;
-using TienDaoAPI.DTOs;
+using TienDaoAPI.DTOs.Authors;
 using TienDaoAPI.Models;
 using TienDaoAPI.Services.IServices;
 

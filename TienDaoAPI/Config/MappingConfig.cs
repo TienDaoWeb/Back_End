@@ -1,5 +1,14 @@
 ﻿using AutoMapper;
-using TienDaoAPI.DTOs;
+using TienDaoAPI.DTOs.Authors;
+using TienDaoAPI.DTOs.Books;
+using TienDaoAPI.DTOs.Chapters;
+using TienDaoAPI.DTOs.Comments;
+using TienDaoAPI.DTOs.Genres;
+using TienDaoAPI.DTOs.Readings;
+using TienDaoAPI.DTOs.Reviews;
+using TienDaoAPI.DTOs.Tags;
+using TienDaoAPI.DTOs.TagTypes;
+using TienDaoAPI.DTOs.Users;
 using TienDaoAPI.Extensions;
 using TienDaoAPI.Models;
 

@@ -19,8 +19,6 @@ namespace TienDaoAPI.Models
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        public List<int> UsersReaction { get; set; } = [];
-
         [Required]
         public int BookId { get; set; }
         [ForeignKey("BookId")]
@@ -29,5 +27,7 @@ namespace TienDaoAPI.Models
         public int OwnerId { get; set; }
         [ForeignKey("OwnerId")]
         public virtual User? User { get; set; }
+
+        public ICollection<ReviewLike> ReviewLikes { get; set; } = new HashSet<ReviewLike>();
     }
 }

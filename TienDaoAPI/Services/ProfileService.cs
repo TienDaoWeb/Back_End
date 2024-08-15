@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
-using TienDaoAPI.DTOs;
+using TienDaoAPI.DTOs.Users;
 using TienDaoAPI.Models;
 using TienDaoAPI.Services.IServices;
 

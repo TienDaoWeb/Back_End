@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using TienDaoAPI.Data;
-using TienDaoAPI.DTOs;
+using TienDaoAPI.DTOs.Reviews;
 using TienDaoAPI.Enums;
 using TienDaoAPI.Models;
 using TienDaoAPI.Services.IServices;
@@ -76,36 +76,33 @@ namespace TienDaoAPI.Services
 
         }
 
-        public async Task<ReactionEnum> UserLikeComment(Review review, int userId)
+        public async Task<ReactionEnum> LikeOrUnlikeReview(int reviewId, int userId)
         {
             try
             {
-                if (review is not null)
+                var reviewLike = await _dbContext.ReviewLikes.FirstOrDefaultAsync(x => x.OwnerId == userId && x.ReviewId == reviewId);
+                if (reviewLike is null)
                 {
-                    var userReact = review.UsersReaction.Exists(userid => userid == userId);
-                    if (userReact == true)
+                    var like = new ReviewLike()
                     {
-                        review.UsersReaction.Remove(userId);
-                        _dbContext.Reviews.Update(review);
-                        await _dbContext.SaveChangesAsync();
-                        return ReactionEnum.UnLike;
-                    }
-                    else
-                    {
-                        review.UsersReaction.Add(userId);
-                        _dbContext.Reviews.Update(review);
-                        await _dbContext.SaveChangesAsync();
-                        return ReactionEnum.Like;
-                    }
+                        ReviewId = reviewId,
+                        OwnerId = userId
+                    };
+
+                    _dbContext.ReviewLikes.Add(like);
+                    await _dbContext.SaveChangesAsync();
+                    return ReactionEnum.Like;
                 }
                 else
                 {
-                    return ReactionEnum.Fail;
+                    _dbContext.ReviewLikes.Remove(reviewLike);
+                    await _dbContext.SaveChangesAsync();
+                    return ReactionEnum.UnLike;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error : " + ex.Message.ToString());
+                Console.WriteLine(ex.Message);
                 return ReactionEnum.Fail;
             }
         }

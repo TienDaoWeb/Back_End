@@ -2,7 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TienDaoAPI.Data;
-using TienDaoAPI.DTOs;
+using TienDaoAPI.DTOs.Books;
+using TienDaoAPI.DTOs.Users;
 using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
 using TienDaoAPI.Services.IServices;

@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
-using TienDaoAPI.DTOs;
+using TienDaoAPI.DTOs.Users;
 using TienDaoAPI.Services.IServices;
 
 namespace TienDaoAPI.Helpers

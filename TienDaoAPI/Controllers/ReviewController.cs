@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TienDaoAPI.DTOs;
+using TienDaoAPI.DTOs.Reviews;
+using TienDaoAPI.DTOs.Users;
 using TienDaoAPI.Enums;
 using TienDaoAPI.Services.IServices;
 using TienDaoAPI.Utils;
@@ -13,10 +14,8 @@ namespace TienDaoAPI.Controllers
     public class ReviewController : ControllerBase
     {
         private readonly IReviewService _reviewService;
-        private readonly IMapper _mapper;
         public ReviewController(IReviewService reviewService, IMapper mapper)
         {
-            _mapper = mapper;
             _reviewService = reviewService;
         }
 
@@ -45,6 +44,7 @@ namespace TienDaoAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
+
         [HttpDelete]
         [Route("{id}")]
         [Authorize]
@@ -58,10 +58,9 @@ namespace TienDaoAPI.Controllers
                 var review = await _reviewService.GetReviewByIdAsync(id);
                 if (review == null)
                 {
-                    return NotFound(
-                        new Response().NotFound().SetMessage("Không thể tìm thấy bài đánh giá này")
-                    );
+                    return NotFound(new Response().NotFound().SetMessage("Không thể tìm thấy bài đánh giá này"));
                 }
+
                 bool result = await _reviewService.DeleteReviewAsync(review);
                 if (result == false)
                 {
@@ -86,12 +85,13 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-                var OwnerId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
                 var review = await _reviewService.GetReviewByIdAsync(id);
                 if (review is null)
                 {
                     return NotFound(new Response().NotFound().SetMessage("Không tìm thấy bài đánh giá."));
                 }
+
+                var OwnerId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
                 if (OwnerId != review.OwnerId)
                 {
                     return StatusCode(StatusCodes.Status403Forbidden, new Response().Forbidden());
@@ -113,30 +113,30 @@ namespace TienDaoAPI.Controllers
         }
 
         [HttpPost]
-        [Route("react")]
+        [Route("{id}/like")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> ReactionReview([FromQuery] int reviewId)
+        public async Task<IActionResult> ReactionReview(int id)
         {
             try
             {
-                var OwnerId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
-                var review = await _reviewService.GetReviewByIdAsync(reviewId);
+                var review = await _reviewService.GetReviewByIdAsync(id);
                 if (review == null)
                 {
                     return NotFound(new Response().NotFound().SetMessage("Không tìm thấy bài đánh giá"));
                 }
-                var result = await _reviewService.UserLikeComment(review, OwnerId);
+
+                var OwnerId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
+                var result = await _reviewService.LikeOrUnlikeReview(id, OwnerId);
                 return result switch
                 {
-                    ReactionEnum.Like => Ok(new Response().Success().SetMessage("Bạn đã yêu thích bài review này!")),
-                    ReactionEnum.UnLike => Ok(new Response().Success().SetMessage("Bạn đã bỏ yêu thích bài review này")),
-                    ReactionEnum.Fail => BadRequest(new Response().BadRequest().SetMessage("Không thể tương tác với review này!")),
+                    ReactionEnum.Like => Ok(new Response().Success().SetMessage("Bạn đã yêu thích bài đánh giá này!")),
+                    ReactionEnum.UnLike => Ok(new Response().Success().SetMessage("Bạn đã bỏ yêu thích bài đánh giá này")),
+                    ReactionEnum.Fail => BadRequest(new Response().BadRequest().SetMessage("Không thể tương tác với đánh giá này!")),
                     _ => StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError())
                 };
-
             }
             catch (Exception ex)
             {
