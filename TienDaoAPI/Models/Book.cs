@@ -36,7 +36,7 @@ namespace TienDaoAPI.Models
         public int AuthorId { get; set; }
         public virtual Author? Author { get; set; }
 
-        public int? GenreId { get; set; }
+        public int GenreId { get; set; }
         [ForeignKey(nameof(GenreId))]
         public virtual Genre? Genre { get; set; }
 

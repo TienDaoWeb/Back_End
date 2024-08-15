@@ -1,24 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
-using TienDaoAPI.Models;
+﻿using TienDaoAPI.DTOs.Users;
 
 namespace TienDaoAPI.DTOs.Reviews
 {
     public class ReviewDTO
     {
-        [Range(0, 5)]
-        public float Score { get; set; } = 5;
-
+        public int Id { get; set; }
+        public float Score { get; set; }
         public string? Content { get; set; }
-
-        public DateTime CreateAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
-        public List<int>? UsersReaction { get; set; } = [];
-
+        public int LikeCount { get; set; }
+        public UserBaseDTO? Owner { get; set; }
         public int BookId { get; set; } = 0;
-        public int IdReadChapter { get; set; } = 0;
-        public int? OwnerId { get; set; }
-
+        public DateTime CreateAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TienDaoAPI.Data;
 using TienDaoAPI.DTOs.Reviews;
 using TienDaoAPI.Enums;
+using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
 using TienDaoAPI.Services.IServices;
 using TienDaoAPI.Utils;
@@ -107,9 +108,20 @@ namespace TienDaoAPI.Services
             }
         }
 
-        public async Task<IEnumerable<Review>?> GetAllReviewAsync(ReviewFilter filter)
+        public async Task<IEnumerable<Review>?> GetAllReviewsByBookIdAsync(int bookId, ReviewFilter filter)
         {
-            return await _dbContext.Reviews.ToListAsync();
+            var sortExpression = ExpressionProvider<Review>.GetSortExpression(filter.SortBy);
+            var reviews = _dbContext.Reviews
+                .Include(c => c.ReviewLikes)
+                .Include(c => c.Book)
+                .Include(c => c.User)
+                .Where(c => c.BookId == bookId);
+
+            reviews = filter.SortBy != null && filter.SortBy.StartsWith("-")
+            ? reviews.OrderByDescending(sortExpression)
+            : reviews.OrderBy(sortExpression);
+
+            return await reviews.ToListAsync();
         }
     }
 }

@@ -5,6 +5,7 @@ using TienDaoAPI.DTOs.Books;
 using TienDaoAPI.DTOs.Chapters;
 using TienDaoAPI.DTOs.Comments;
 using TienDaoAPI.DTOs.Common;
+using TienDaoAPI.DTOs.Reviews;
 using TienDaoAPI.DTOs.Users;
 using TienDaoAPI.Enums;
 using TienDaoAPI.Models;
@@ -22,15 +23,17 @@ namespace TienDaoAPI.Controllers
         private readonly IImageStorageService _imageStorageService;
         private readonly IChapterService _chapterService;
         private readonly ICommentService _commentService;
+        private readonly IReviewService _reviewService;
 
         public BookController(IBookService bookService, IMapper mapper, IImageStorageService imageStorageService,
-            IChapterService chapterService, ICommentService commentService)
+            IChapterService chapterService, ICommentService commentService, IReviewService reviewService)
         {
             _bookService = bookService;
             _mapper = mapper;
             _imageStorageService = imageStorageService;
             _chapterService = chapterService;
             _commentService = commentService;
+            _reviewService = reviewService;
         }
 
         [HttpPost]
@@ -249,7 +252,7 @@ namespace TienDaoAPI.Controllers
         [Route("{id}/comment")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<IEnumerable<Comment>>> Comments(int id, [FromQuery] CommentFilter filter)
+        public async Task<ActionResult<IEnumerable<Comment>>> GetCommentsByBookId(int id, [FromQuery] CommentFilter filter)
         {
             try
             {
@@ -264,6 +267,34 @@ namespace TienDaoAPI.Controllers
                     TotalItems = count,
                     TotalPages = (int)Math.Ceiling(count / (double)filter.PageSize),
                 }.SetData(_mapper.Map<IEnumerable<CommentDTO>>(paginatedComment)));
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
+            }
+        }
+
+        [HttpGet]
+        [Route("{id}/review")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<IEnumerable<Comment>>> GetReviewsByBookId(int id, [FromQuery] ReviewFilter filter)
+        {
+            try
+            {
+                var reviews = await _reviewService.GetAllReviewsByBookIdAsync(id, filter);
+                var count = reviews!.Count();
+                var paginatedReview = reviews!.Skip(filter.PageSize * (filter.Page - 1)).Take(filter.PageSize);
+
+                return Ok(new PaginatedResponse
+                {
+                    PageNumber = filter.Page,
+                    PageSize = filter.PageSize,
+                    TotalItems = count,
+                    TotalPages = (int)Math.Ceiling(count / (double)filter.PageSize),
+                }.SetData(_mapper.Map<IEnumerable<ReviewDTO>>(paginatedReview)));
 
             }
             catch (Exception ex)

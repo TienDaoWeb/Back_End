@@ -110,19 +110,65 @@ namespace TienDaoAPI.Helpers
                 }
             }
 
-            //if (!string.IsNullOrEmpty(filter.Tags))
-            //{
-            //    var tagsProperty = Expression.Property(b, nameof(Book.Tags));
-            //    var tags = Expression.Constant(filter.Tags, typeof(string));
-            //    filterParts.Add(Expression.Equal(tagsProperty, tags));
-            //}
+            if (!string.IsNullOrEmpty(filter.Tags))
+            {
+                var tagIds = filter.Tags.Split(',').Select(int.Parse).ToList();
+                if (tagIds.Any())
+                {
+                    var bookTagsProperty = Expression.Property(b, nameof(Book.BookTags));
 
-            //if (!string.IsNullOrEmpty(filter.Chapter))
-            //{
-            //    var chapterProperty = Expression.Property(b, nameof(Book.Chapter));
-            //    var chapter = Expression.Constant(filter.Chapter, typeof(string));
-            //    filterParts.Add(Expression.Equal(chapterProperty, chapter));
-            //}
+                    var bt = Expression.Parameter(typeof(BookTag), "bt");
+
+                    var tagIdProperty = Expression.Property(bt, nameof(BookTag.TagId));
+
+                    var tagExpressions = tagIds.Select(tagId =>
+                        Expression.Equal(tagIdProperty, Expression.Constant(tagId))
+                    );
+
+                    var anyTagExpression = tagExpressions.Aggregate(Expression.OrElse);
+
+                    // Create the Any() method call to check if any BookTag matches the TagId
+                    var anyCall = Expression.Call(
+                        typeof(Enumerable),
+                        "Any",
+                        new[] { typeof(BookTag) },
+                        bookTagsProperty,
+                        Expression.Lambda<Func<BookTag, bool>>(anyTagExpression, bt)
+                    );
+
+                    filterParts.Add(anyCall);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(filter.Chapter))
+            {
+                var chaptersProperty = Expression.Property(b, nameof(Book.Chapters));
+                var chapterCount = Expression.Property(chaptersProperty, "Count");
+
+                var rangeParts = filter.Chapter.Split('-');
+                if (rangeParts.Length == 2 && int.TryParse(rangeParts[0], out var lowerBound) && int.TryParse(rangeParts[1], out var upperBound))
+                {
+                    var lowerBoundExpression = Expression.GreaterThanOrEqual(chapterCount, Expression.Constant(lowerBound));
+                    var upperBoundExpression = Expression.LessThanOrEqual(chapterCount, Expression.Constant(upperBound));
+                    filterParts.Add(Expression.AndAlso(lowerBoundExpression, upperBoundExpression));
+                }
+                else if (filter.Chapter.StartsWith("<"))
+                {
+                    if (int.TryParse(filter.Chapter.Substring(1).Trim(), out var lessThanValue))
+                    {
+                        var lessThanExpression = Expression.LessThan(chapterCount, Expression.Constant(lessThanValue));
+                        filterParts.Add(lessThanExpression);
+                    }
+                }
+                else if (filter.Chapter.StartsWith(">"))
+                {
+                    if (int.TryParse(filter.Chapter.Substring(1).Trim(), out var greaterThanValue))
+                    {
+                        var greaterThanExpression = Expression.GreaterThan(chapterCount, Expression.Constant(greaterThanValue));
+                        filterParts.Add(greaterThanExpression);
+                    }
+                }
+            }
 
             var deletedAtProperty = Expression.Property(b, nameof(Book.DeletedAt));
             var nullDeletedAt = Expression.Equal(deletedAtProperty, Expression.Constant(null, typeof(DateTime?)));

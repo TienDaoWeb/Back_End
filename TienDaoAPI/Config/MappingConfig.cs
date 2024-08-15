@@ -30,7 +30,7 @@ namespace TienDaoAPI.Config
 
             CreateMap<User, UserBaseDTO>();
 
-            CreateMap<User, UserDTO>().IncludeBase<User, UserBaseDTO>();
+            CreateMap<User, UserDTO>();
 
             CreateMap<UpdateProfileDTO, User>().ReverseMap();
 
@@ -63,6 +63,8 @@ namespace TienDaoAPI.Config
                 .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status.GetBookStatusName()))
                 .ForMember(dest => dest.WordCount, opt => opt.MapFrom(src => src.Chapters.Sum(c => c.WordCount)))
                 .ForMember(dest => dest.ViewCount, opt => opt.MapFrom(src => src.Chapters.Sum(c => c.ViewCount)))
+                .ForMember(dest => dest.ReviewCount, opt => opt.MapFrom(src => src.Reviews.Count))
+                .ForMember(dest => dest.ReviewScore, opt => opt.MapFrom(src => Math.Round(src.Reviews.Average(r => r.Score), 2)))
                 .ReverseMap();
 
             CreateMap<Book, BookReadingDTO>();
@@ -98,9 +100,14 @@ namespace TienDaoAPI.Config
             CreateMap<Comment, CommentDTO>()
                 .ForMember(d => d.Owner, s => s.MapFrom(x => x.User))
                 .ForMember(dest => dest.LikeCount, opt => opt.MapFrom(src => src.CommentLikes.Count));
+
             CreateMap<Comment, CommentReplyDTO>()
                 .ForMember(d => d.Owner, s => s.MapFrom(x => x.User))
                 .ForMember(dest => dest.LikeCount, opt => opt.MapFrom(src => src.CommentLikes.Count));
+
+            CreateMap<Review, ReviewDTO>()
+                .ForMember(d => d.Owner, s => s.MapFrom(x => x.User))
+                .ForMember(dest => dest.LikeCount, opt => opt.MapFrom(src => src.ReviewLikes.Count));
         }
     }
 }
