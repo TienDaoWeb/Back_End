@@ -165,6 +165,7 @@ builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IReadingService, ReadingService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<ITagTypeService, TagTypeService>();
+builder.Services.AddScoped<IBookmarkService, BookmarkService>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
