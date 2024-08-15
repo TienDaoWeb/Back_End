@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using System.Security.Claims;
-using TienDaoAPI.DTOs;
+using TienDaoAPI.DTOs.Users;
 
 namespace TienDaoAPI.Helpers
 {

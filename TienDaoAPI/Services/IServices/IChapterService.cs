@@ -1,4 +1,5 @@
-﻿using TienDaoAPI.DTOs;
+﻿using TienDaoAPI.DTOs.Chapters;
+using TienDaoAPI.DTOs.Users;
 using TienDaoAPI.Models;
 
 namespace TienDaoAPI.Services.IServices

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TienDaoAPI.DTOs;
+using TienDaoAPI.DTOs.Common;
+using TienDaoAPI.DTOs.Users;
 using TienDaoAPI.Services.IServices;
 using TienDaoAPI.Utils;
 

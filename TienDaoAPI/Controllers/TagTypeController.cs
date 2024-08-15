@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TienDaoAPI.DTOs;
+using TienDaoAPI.DTOs.TagTypes;
 using TienDaoAPI.Models;
 using TienDaoAPI.Services.IServices;
 using TienDaoAPI.Utils;

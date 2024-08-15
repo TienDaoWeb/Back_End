@@ -1,4 +1,4 @@
-﻿using TienDaoAPI.DTOs;
+﻿using TienDaoAPI.DTOs.Authors;
 using TienDaoAPI.Models;
 
 namespace TienDaoAPI.Services.IServices

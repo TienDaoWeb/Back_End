@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using TienDaoAPI.Data;
-using TienDaoAPI.DTOs;
+using TienDaoAPI.DTOs.Comments;
 using TienDaoAPI.Enums;
 using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
@@ -114,6 +114,7 @@ namespace TienDaoAPI.Services
             }
 
         }
+
         public async Task<ReactionEnum> LikeOrUnlikeComment(int commentId, int userId)
         {
             try
@@ -143,8 +144,6 @@ namespace TienDaoAPI.Services
                 Console.WriteLine("Like comment fail : " + ex.Message);
                 return ReactionEnum.Fail;
             }
-
         }
-
     }
 }

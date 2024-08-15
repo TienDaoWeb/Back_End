@@ -1,4 +1,4 @@
-﻿using TienDaoAPI.DTOs;
+﻿using TienDaoAPI.DTOs.Comments;
 using TienDaoAPI.Enums;
 using TienDaoAPI.Models;
 
