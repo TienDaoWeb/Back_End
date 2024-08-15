@@ -40,5 +40,7 @@ namespace TienDaoAPI.DTOs
         public Genre? Genre { get; set; }
 
         public UserBaseDTO? Owner { get; set; }
+
+        public List<TagDTO> Tags { get; set; } = new List<TagDTO>();
     }
 }

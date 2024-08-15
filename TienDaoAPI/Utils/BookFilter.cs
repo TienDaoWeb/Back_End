@@ -1,6 +1,6 @@
 ﻿using TienDaoAPI.Enums;
 
-namespace TienDaoAPI.Models
+namespace TienDaoAPI.Utils
 {
     public class BookFilter : PaginationFilter
     {
@@ -13,7 +13,6 @@ namespace TienDaoAPI.Models
 
         }
         public string? Keyword { get; set; }
-        public string? Include { get; set; }
         public BookStatusEnum? Status { get; set; }
         public string? Genres { get; set; }
         public string? Tags { get; set; }

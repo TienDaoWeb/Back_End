@@ -1,5 +1,4 @@
-﻿
-using CloudinaryDotNet;
+﻿using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
@@ -12,19 +11,17 @@ using System.Text;
 using TienDaoAPI.Data;
 using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
-using TienDaoAPI.Repositories;
-using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services;
 using TienDaoAPI.Services.IServices;
+using TienDaoAPI.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddDbContext<TienDaoDbContext>(option =>
 {
-    option.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-    //option.UseNpgsql(builder.Configuration.GetConnectionString("PostpreConnection"));
+    //option.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+    option.UseNpgsql(builder.Configuration.GetConnectionString("PostpreConnection"));
 });
 
 builder.Services.AddIdentityCore<User>()
@@ -92,10 +89,9 @@ builder.Services.Configure<CustomTwoFactorTokenProviderOptions>(options =>
 });
 
 builder.Services.AddOptions();
-var mailsettings = builder.Configuration.GetSection("MailSettings");
-builder.Services.Configure<MailSettings>(mailsettings);
 
-builder.Services.AddTransient<EmailProvider>();
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
+builder.Services.Configure<EncryptionSettings>(builder.Configuration.GetSection("EncryptionSettings"));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -138,6 +134,9 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
+builder.Services.AddTransient<EmailProvider>();
+
 var cloudinaryUrl = Environment.GetEnvironmentVariable("CLOUDINARY_URL") ?? builder.Configuration["Cloudinary:Url"];
 Cloudinary cloudinary = new Cloudinary(cloudinaryUrl);
 cloudinary.Api.Secure = true;
@@ -150,18 +149,9 @@ builder.Services.AddSingleton<IRedisCacheService>(provider =>
 
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, CustomAuthorizationMiddlewareResultHandler>();
 builder.Services.AddSingleton<IPolicyEvaluator, CustomPolicyEvaluator>();
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddSingleton<SessionProvider>();
 builder.Services.AddSingleton<JwtHandler>();
-
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IBookRepository, BookRepository>();
-builder.Services.AddScoped<IGenreRepository, GenreRepository>();
-builder.Services.AddScoped<IChapterRepository, ChapterRepository>();
-builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
-builder.Services.AddScoped<ICommentRepository, CommentRepository>();
-
+builder.Services.AddSingleton<EncryptionProvider>();
 
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
@@ -170,14 +160,18 @@ builder.Services.AddScoped<IChapterService, ChapterService>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IReadingService, ReadingService>();
+builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<ITagTypeService, TagTypeService>();
+
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.Configure<RouteOptions>(options =>
 {
     options.LowercaseUrls = true;
 });
-
-
 
 var app = builder.Build();
 //CheckConnect database

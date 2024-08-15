@@ -29,6 +29,13 @@ namespace TienDaoAPI.Utils
             return this;
         }
 
+        public Response Forbidden()
+        {
+            StatusCode = HttpStatusCode.Forbidden;
+            Message = "Bạn không có đủ quyền để thực hiện hành động này!";
+            return this;
+        }
+
         public Response NotFound()
         {
             StatusCode = HttpStatusCode.NotFound;

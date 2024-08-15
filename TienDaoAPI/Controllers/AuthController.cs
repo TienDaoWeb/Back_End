@@ -58,7 +58,7 @@ namespace TienDaoAPI.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError().SetMessage(ex.ToString()));
             }
         }
 
@@ -79,10 +79,15 @@ namespace TienDaoAPI.Controllers
                     var checkPassword = await _userManager.CheckPasswordAsync(user, dto.Password);
                     if (checkPassword)
                     {
+                        if (user.Status == AccountStatusEnum.BLOCKED)
+                        {
+                            return BadRequest(new Response().BadRequest().SetMessage("Tài khoản đã bị khóa"));
+                        }
+
                         if (user.Status == AccountStatusEnum.UNVERIFIED)
                         {
                             var otp = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                            var templatePath = "./Templates/otp_register_mail.html";
+                            var templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", "otp_register_mail.html");
                             await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "Email Verification", templatePath, new { otp });
 
                             return BadRequest(new Response().BadRequest().SetMessage("Email của bạn chưa được xác thực!"));
@@ -184,7 +189,7 @@ namespace TienDaoAPI.Controllers
 
                 return result switch
                 {
-                    AccountErrorEnum.AllOk => Ok(new Response().Success().SetMessage($"Vui lòng sử dụng OTP đã được gửi tới địa chỉ {dto.Email} để đăng nhập tài khoản!")),
+                    AccountErrorEnum.AllOk => Ok(new Response().Success().SetMessage($"Vui lòng sử dụng mật khẩu đã được gửi tới địa chỉ {dto.Email} để đăng nhập tài khoản!")),
                     AccountErrorEnum.NotExists => NotFound(new Response().NotFound().SetMessage("Tài khoản của bạn không tồn tại trong hệ thống của chúng tôi")),
                     AccountErrorEnum.InvalidOTP => BadRequest(new Response().BadRequest().SetMessage("OTP không hợp lệ hoặc đã hết hạn!")),
                     _ => StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError())

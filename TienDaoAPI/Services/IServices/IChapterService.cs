@@ -1,19 +1,15 @@
-﻿using System.Linq.Expressions;
-using TienDaoAPI.DTOs;
+﻿using TienDaoAPI.DTOs;
 using TienDaoAPI.Models;
 
 namespace TienDaoAPI.Services.IServices
 {
     public interface IChapterService
     {
-        public Task<Chapter?> CreateChapterAsync(CreateChapterDTO chapterRequestDTO);
-        public Task<IEnumerable<Chapter?>> GetAllChapterAsync(Expression<Func<Chapter, bool>> filter);
-        public Task<IEnumerable<Chapter?>> GetAllChapterOfBookAsync(Expression<Func<Chapter, bool>> filter);
+        public Task<bool> CreateChapterAsync(CreateChapterDTO dto);
+        public Task<IEnumerable<Chapter?>> GetChaptersByBookIdAsync(int bookId);
         public Task<Chapter?> GetChapterByIdAsync(int chapterId);
-        public Task<Chapter?> GetFinalChapterByIdBookAsync(int storyId);
-        public Task DeleteChapterAsync(Chapter chapter);
-        public Task DeleteAllChapterAsync(IEnumerable<Chapter> chapters);
-        public Task<Chapter?> UpdateChapterAsync(Chapter chapter);
-
+        public Task<bool> DeleteChapterAsync(Chapter chapter);
+        public Task<bool> UpdateChapterAsync(Chapter chapter, UpdateChapterDTO dto);
+        public bool Modifiable(Chapter chapter, UserDTO user);
     }
 }

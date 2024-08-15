@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TienDaoAPI.Models
 {
-    [Table("ReadChapters")]
-    public class ReadChapter
+    [Table("Readings")]
+    public class Reading
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -16,6 +16,8 @@ namespace TienDaoAPI.Models
         public int ChapterId { get; set; }
         public required Chapter Chapter { get; set; }
 
-        public DateTime ReadTime { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 }

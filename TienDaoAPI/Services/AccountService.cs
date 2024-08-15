@@ -10,14 +10,12 @@ namespace TienDaoAPI.Services
     {
         private readonly UserManager<User> _userManager;
         private readonly EmailProvider _emailProvider;
-        private readonly JwtHandler _jwtHandler;
-        public AccountService(UserManager<User> userManager, EmailProvider emailProvider, JwtHandler jwtHandler)
+
+        public AccountService(UserManager<User> userManager, EmailProvider emailProvider)
         {
             _userManager = userManager;
             _emailProvider = emailProvider;
-            _jwtHandler = jwtHandler;
         }
-
 
         public async Task<AccountErrorEnum> CreateNewAccountAsync(User user, string password)
         {
@@ -27,12 +25,11 @@ namespace TienDaoAPI.Services
             if (identityResult.Succeeded)
             {
                 var otp = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                var templatePath = "./Templates/otp_register_mail.html";
+                var templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", "otp_register_mail.html");
                 await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "OTP Verification", templatePath, new { otp });
                 return AccountErrorEnum.AllOk;
             }
             return AccountErrorEnum.Existed;
-
         }
 
         public async Task<AccountErrorEnum> RequestResetPasswordAsync(string email)
@@ -41,7 +38,7 @@ namespace TienDaoAPI.Services
             if (user != null)
             {
                 var otp = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var templatePath = "./Templates/otp_reset_password.html";
+                var templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", "otp_reset_password.html");
                 await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "OTP Verification", templatePath, new { otp });
                 return AccountErrorEnum.AllOk;
             }
@@ -61,7 +58,7 @@ namespace TienDaoAPI.Services
             {
                 return AccountErrorEnum.InvalidOTP;
             }
-            var templatePath = "./Templates/reset_password_mail.html";
+            var templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", "reset_password_mail.html"); ;
             await _emailProvider.SendEmailWithTemplateAsync(user.Email!, "New your password", templatePath, new { newPassword });
             return AccountErrorEnum.AllOk;
         }

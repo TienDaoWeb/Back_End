@@ -1,175 +1,133 @@
 ﻿using AutoMapper;
-using System.Transactions;
+using Microsoft.EntityFrameworkCore;
+using TienDaoAPI.Data;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.Enums;
-using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
-using TienDaoAPI.Repositories.IRepositories;
 using TienDaoAPI.Services.IServices;
 
 namespace TienDaoAPI.Services
 {
     public class CommentService : ICommentService
     {
-        private readonly ICommentRepository _commentRepository;
         private readonly IMapper _mapper;
-        private readonly IBookRepository _bookRepository;
-        private readonly IChapterRepository _chapterRepository;
-        public CommentService(
-            ICommentRepository commentRepository,
-            IBookRepository bookRepository,
-            IChapterRepository chapterRepository,
-            IMapper mapper
-        )
+        private readonly TienDaoDbContext _dbContext;
+        public CommentService(IMapper mapper, TienDaoDbContext dbContext)
         {
             _mapper = mapper;
-            _commentRepository = commentRepository;
-            _bookRepository = bookRepository;
-            _chapterRepository = chapterRepository;
+            _dbContext = dbContext;
         }
-        public async Task<Comment?> CreateCommentAsync(CreateCommentDTO dto)
+
+        public async Task<bool> CreateCommentAsync(CreateCommentDTO dto)
         {
             try
             {
-                using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
-                {
-                    var book = await  _bookRepository.GetByIdAsync(dto.BookId);
-                    if(book == null)
-                    {
-                        Console.WriteLine("Truyện không tồn tại.");
-                        return null;
-                    }
-                    var chapter = await _chapterRepository.GetByIdAsync(dto.ChapterId);
-                    if(chapter == null)
-                    {
-                        Console.WriteLine("Chapter không tồn tại.");
-                        return null;
-                    }
-                    //Mapping CommentDTO with comment
-                    var comment = _mapper.Map<Comment>(dto);
-                    var newComment = await _commentRepository.CreateAsync(comment);
-                    if (newComment != null)
-                    {
-                        scope.Complete();
-                    }
-                    return newComment;
-                }
+                var comment = _mapper.Map<Comment>(dto);
+                _dbContext.Comments.Add(comment);
+                await _dbContext.SaveChangesAsync();
+                return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Create Comment fail : " + ex.Message);
-                return null;
+                return false;
             }
-        }
-        public async Task<bool> DeleteCommentAsync(int commentId)
-        {
-            var comment = await _commentRepository.GetByIdAsync(commentId);
-            if (comment != null)
-            {
-                await _commentRepository.DeleteAsync(comment);
-                return true;
-            }
-            return false;
         }
 
-        public async Task<Comment?> UpdateCommentAsync(Comment comment, UpdateCommentDTO dto)
+        public async Task<bool> DeleteCommentAsync(int id)
         {
             try
             {
-                using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                var comment = await _dbContext.Comments.FirstOrDefaultAsync(x => x.Id == id);
+                if (comment is null)
                 {
-                    comment.Content = dto.Content;
-                    comment.UpdateAt = DateTime.UtcNow;
-
-                    var updateComment = await _commentRepository.UpdateAsync(comment);
-                    if (updateComment != null)
-                    {
-                        scope.Complete();
-                    }
-                    return updateComment;
+                    return false;
                 }
+                _dbContext.Comments.Remove(comment);
+                await _dbContext.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Create Comment fail : " + ex.Message);
+                return false;
+            }
+        }
 
+        public async Task<bool> UpdateCommentAsync(Comment comment, UpdateCommentDTO dto)
+        {
+            try
+            {
+                comment.Content = dto.Content;
+                comment.UpdateAt = DateTime.UtcNow;
+
+                _dbContext.Comments.Update(comment);
+                await _dbContext.SaveChangesAsync();
+                return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error : " + ex.Message);
-                return null;
-
+                return false;
             }
         }
+
         public async Task<Comment?> GetCommentbyIdAsync(int id)
         {
-            return await _commentRepository.GetByIdAsync(id);
+            return await _dbContext.Comments.FirstOrDefaultAsync(c => c.Id == id);
         }
-        public async Task<IEnumerable<Comment?>> GetAllCommentAsync(CommentFilter filter)
+
+        public async Task<IEnumerable<Comment>?> GetAllCommentAsync(CommentFilter filter)
         {
-            try
-            {
-                var sortExpression = filter.SortBy == null ? null : ExpressionProvider<Comment>.GetSortExpression(filter.SortBy);
-                if (sortExpression == null)
-                {
-                    return null;
-                }
+            //var sortExpression = filter.SortBy == null ? null : ExpressionProvider<Comment>.GetSortExpression(filter.SortBy);
 
-                var comments = await _commentRepository.FilterAsync(null, null, sortExpression);
-
-                return comments;
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine("Server Error : " + ex.Message);
-                return null;
-            }
+            return await _dbContext.Comments.ToListAsync();
         }
-        public async Task<Comment?> ReplyComment(CreateReplyCommentDTO dto)
+
+        public async Task<bool> ReplyComment(CreateReplyCommentDTO dto)
         {
-            var comment = await _commentRepository.GetByIdAsync(dto.CommentParentId);
-            if(comment != null)
+            var comment = await _dbContext.Comments.FirstOrDefaultAsync(c => c.Id == dto.CommentParentId);
+            if (comment != null)
             {
                 try
                 {
-
-                    using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
-                    {
-                        //Mapping reply comment with comment
-                        var replyComment = _mapper.Map<Comment>(dto);
-                        replyComment.ChapterNumber = comment.ChapterNumber;
-                        replyComment.BookId = comment.BookId;
-                        var createReplyComment = await _commentRepository.CreateAsync(replyComment);
-                        if (createReplyComment != null)
-                        {
-                            scope.Complete();
-                        }
-                        return createReplyComment;
-                    }
+                    var replyComment = _mapper.Map<Comment>(dto);
+                    replyComment.ChapterNumber = comment.ChapterNumber;
+                    replyComment.BookId = comment.BookId;
+                    _dbContext.Comments.Add(replyComment);
+                    await _dbContext.SaveChangesAsync();
+                    return true;
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine("Create reply comment fail : " + ex.Message);
-                    return null;
+                    return false;
                 }
             }
             else
             {
-                return null;
+                return false;
             }
         }
+
         public async Task<ReactionEnum?> UserLikeComment(int commentId, int userId)
         {
-            var comment = await _commentRepository.GetByIdAsync(commentId);
-            if(comment != null)
+            var comment = await _dbContext.Comments.FirstOrDefaultAsync(c => c.Id == commentId);
+            if (comment is not null)
             {
                 var userReact = comment.UserLike.Exists(userid => userid == userId);
                 if (userReact == true)
                 {
                     comment.UserLike.Remove(userId);
-                    await _commentRepository.UpdateAsync(comment);
+                    _dbContext.Comments.Update(comment);
+                    await _dbContext.SaveChangesAsync();
                     return ReactionEnum.UnLike;
                 }
                 else
                 {
                     comment.UserLike.Add(userId);
-                    await _commentRepository.UpdateAsync(comment);
+                    _dbContext.Comments.Update(comment);
+                    await _dbContext.SaveChangesAsync();
                     return ReactionEnum.Like;
                 }
             }

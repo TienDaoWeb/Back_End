@@ -1,50 +1,78 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using TienDaoAPI.Models;
+using TienDaoAPI.Utils;
 
 namespace TienDaoAPI.Helpers
 {
     public static class ExpressionProvider<T>
     {
-        public static Func<IQueryable<T>, IOrderedQueryable<T>> GetSortExpression(string? sortBy)
+        //public static Func<IQueryable<T>, IOrderedQueryable<T>> GetSortExpression(string? sortBy)
+        //{
+        //    if (string.IsNullOrEmpty(sortBy))
+        //    {
+        //        return query => query.OrderBy(o => EF.Property<object>(o!, "Id"));
+        //    }
+
+        //    var sortParts = sortBy!.Trim().Split(' ');
+
+        //    var sortField = sortParts[0];
+        //    var sortDirection = "asc";
+
+        //    if (sortField.StartsWith("-"))
+        //    {
+        //        sortField = sortField.Substring(1);
+        //        sortDirection = "desc";
+        //    }
+        //    var parameter = Expression.Parameter(typeof(T), "b");
+        //    var property = Expression.Property(parameter, sortField);
+        //    var sortExpression = Expression.Lambda(property, parameter);
+
+        //    var methodName = sortDirection == "desc" ? "OrderByDescending" : "OrderBy";
+        //    var method = typeof(Queryable).GetMethods()
+        //        .FirstOrDefault(m => m.Name == methodName && m.GetParameters().Length == 2)?
+        //        .MakeGenericMethod(typeof(T), property.Type);
+
+        //    if (method == null)
+        //    {
+        //        throw new InvalidOperationException($"Method '{methodName}' not found.");
+        //    }
+        //    var queryParam = Expression.Parameter(typeof(IQueryable<T>), "query");
+        //    var resultExpression = Expression.Call(method, queryParam, sortExpression);
+
+        //    var sortFunction = Expression.Lambda<Func<IQueryable<T>, IOrderedQueryable<T>>>(
+        //        resultExpression,
+        //        queryParam
+        //        ).Compile();
+        //    return sortFunction;
+        //}
+
+        public static Expression<Func<T, object>> GetSortExpression(string? sortBy)
         {
             if (string.IsNullOrEmpty(sortBy))
             {
-                return query => query.OrderBy(o => EF.Property<object>(o!, "Id"));
+                return x => EF.Property<object>(x!, "Id");
             }
 
-            var sortParts = sortBy!.Trim().Split(' ');
-
-            var sortField = sortParts[0];
-            var sortDirection = "asc";
+            var sortField = sortBy.Trim();
 
             if (sortField.StartsWith("-"))
             {
                 sortField = sortField.Substring(1);
-                sortDirection = "desc";
             }
-            var parameter = Expression.Parameter(typeof(T), "b");
+
+            var parameter = Expression.Parameter(typeof(T), "x");
+
             var property = Expression.Property(parameter, sortField);
-            var sortExpression = Expression.Lambda(property, parameter);
 
-            var methodName = sortDirection == "desc" ? "OrderByDescending" : "OrderBy";
-            var method = typeof(Queryable).GetMethods()
-                .FirstOrDefault(m => m.Name == methodName && m.GetParameters().Length == 2)?
-                .MakeGenericMethod(typeof(T), property.Type);
+            var sortExpression = Expression.Lambda<Func<T, object>>(
+                Expression.Convert(property, typeof(object)),
+                parameter
+            );
 
-            if (method == null)
-            {
-                throw new InvalidOperationException($"Method '{methodName}' not found.");
-            }
-            var queryParam = Expression.Parameter(typeof(IQueryable<T>), "query");
-            var resultExpression = Expression.Call(method, queryParam, sortExpression);
-
-            var sortFunction = Expression.Lambda<Func<IQueryable<T>, IOrderedQueryable<T>>>(
-                resultExpression,
-                queryParam
-                ).Compile();
-            return sortFunction;
+            return sortExpression;
         }
+
 
         public static Expression<Func<Book, bool>> BuildBookFilter(BookFilter filter)
         {

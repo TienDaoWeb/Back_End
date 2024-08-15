@@ -1,45 +1,57 @@
-﻿using TienDaoAPI.Models;
-using TienDaoAPI.Repositories.IRepositories;
+﻿using Microsoft.EntityFrameworkCore;
+using TienDaoAPI.Data;
+using TienDaoAPI.Models;
 using TienDaoAPI.Services.IServices;
 
 namespace TienDaoAPI.Services
 {
     public class GenreService : IGenreService
     {
-        private readonly IGenreRepository _genreRepository;
-
-        public GenreService(IGenreRepository genreRepository)
+        private readonly TienDaoDbContext _dbContext;
+        public GenreService(TienDaoDbContext dbContext)
         {
-            _genreRepository = genreRepository;
+            _dbContext = dbContext;
         }
 
         public async Task<bool> CreateGenreAsync(Genre genre)
         {
-            Genre? result = await _genreRepository.CreateAsync(genre);
-            return result != null;
+            try
+            {
+                var result = _dbContext.Genres.Add(genre);
+                await _dbContext.SaveChangesAsync();
+                return result is not null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return true;
+            }
         }
 
-        public async Task<bool> DeleteGenreAsync(int genreId)
+        public async Task<bool> DeleteGenreAsync(int id)
         {
             try
             {
-                var genre = await _genreRepository.GetByIdAsync(genreId);
-                if (genre != null)
+                var genre = await _dbContext.Genres.FirstOrDefaultAsync(x => x.Id == id);
+
+                if (genre is null)
                 {
-                    await _genreRepository.DeleteAsync(genre);
-                    return true;
+                    return false;
                 }
-                return false;
+                _dbContext.Genres.Remove(genre);
+                await _dbContext.SaveChangesAsync();
+                return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.ToString());
                 return true;
             }
         }
 
         public async Task<IEnumerable<Genre>> GetAllGenresAsync()
         {
-            return await _genreRepository.GetAllAsync();
+            return await _dbContext.Genres.ToListAsync();
         }
     }
 }
