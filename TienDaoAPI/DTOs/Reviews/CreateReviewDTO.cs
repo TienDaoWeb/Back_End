@@ -14,9 +14,6 @@ namespace TienDaoAPI.DTOs.Reviews
         [Required]
         public int BookId { get; set; }
 
-        [Required]
-        public int IdReadChapter { get; set; }
-
         [JsonIgnore]
         public int OwnerId { get; set; }
     }

@@ -17,6 +17,8 @@ namespace TienDaoAPI.DTOs.Books
 
         public string? PosterUrl { get; set; }
 
+        public float ReviewScore { get; set; } = 0;
+
         public int ReviewCount { get; set; } = 0;
 
         public int BookmarkCount { get; set; } = 0;

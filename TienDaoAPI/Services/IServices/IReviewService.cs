@@ -11,7 +11,7 @@ namespace TienDaoAPI.Services.IServices
         public Task<bool> DeleteReviewAsync(Review review);
         public Task<bool> UpdateReviewAsync(Review review, UpdateReviewDTO dto);
         public Task<ReactionEnum> LikeOrUnlikeReview(int reviewId, int userId);
-        public Task<IEnumerable<Review>?> GetAllReviewAsync(ReviewFilter filter);
+        public Task<IEnumerable<Review>?> GetAllReviewsByBookIdAsync(int bookId, ReviewFilter filter);
         public Task<Review?> GetReviewByIdAsync(int id);
     }
 }

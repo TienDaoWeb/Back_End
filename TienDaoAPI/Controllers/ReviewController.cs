@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TienDaoAPI.DTOs.Reviews;
 using TienDaoAPI.DTOs.Users;
@@ -14,7 +13,7 @@ namespace TienDaoAPI.Controllers
     public class ReviewController : ControllerBase
     {
         private readonly IReviewService _reviewService;
-        public ReviewController(IReviewService reviewService, IMapper mapper)
+        public ReviewController(IReviewService reviewService)
         {
             _reviewService = reviewService;
         }
@@ -31,7 +30,7 @@ namespace TienDaoAPI.Controllers
                 dto.OwnerId = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
                 var result = await _reviewService.CreateReviewAsync(dto);
 
-                if (result)
+                if (!result)
                 {
                     return BadRequest(new Response().BadRequest().SetMessage("Không thể tạo bài đánh giá này"));
                 }
@@ -56,13 +55,13 @@ namespace TienDaoAPI.Controllers
             try
             {
                 var review = await _reviewService.GetReviewByIdAsync(id);
-                if (review == null)
+                if (review is null)
                 {
                     return NotFound(new Response().NotFound().SetMessage("Không thể tìm thấy bài đánh giá này"));
                 }
 
                 bool result = await _reviewService.DeleteReviewAsync(review);
-                if (result == false)
+                if (!result)
                 {
                     return BadRequest(new Response().BadRequest().SetMessage("Bạn không thể xóa hoặc không có quyền xóa bài viết này."));
                 }
@@ -118,7 +117,7 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> ReactionReview(int id)
+        public async Task<IActionResult> LikeReview(int id)
         {
             try
             {
