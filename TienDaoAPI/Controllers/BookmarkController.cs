@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TienDaoAPI.DTOs.Readings;
+using TienDaoAPI.DTOs.Bookmarks;
 using TienDaoAPI.DTOs.Users;
 using TienDaoAPI.Models;
 using TienDaoAPI.Services.IServices;
@@ -11,15 +11,15 @@ namespace TienDaoAPI.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]
-    public class ReadingController : ControllerBase
+    public class BookmarkController : ControllerBase
     {
-        private readonly IChapterService _chapterService;
-        private readonly IReadingService _readingService;
+        private readonly IBookService _bookService;
+        private readonly IBookmarkService _bookmarkService;
         private readonly IMapper _mapper;
-        public ReadingController(IChapterService chapterService, IReadingService readingService, IMapper mapper)
+        public BookmarkController(IBookService bookService, IBookmarkService bookmarkService, IMapper mapper)
         {
-            _chapterService = chapterService;
-            _readingService = readingService;
+            _bookService = bookService;
+            _bookmarkService = bookmarkService;
             _mapper = mapper;
         }
 
@@ -28,25 +28,25 @@ namespace TienDaoAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Create([FromBody] CreateReadingDTO dto)
+        public async Task<IActionResult> Create([FromBody] CreateBookmarkDTO dto)
         {
             try
             {
-                var chapter = await _chapterService.GetChapterByIdAsync(dto.ChapterId);
-                if (chapter == null)
+                var book = await _bookService.GetBookByIdAsync(dto.BookId);
+                if (book == null)
                 {
-                    return NotFound(new Response().NotFound().SetMessage("Chương không tồn tại hoặc đã bị xóa trong hệ thống"));
+                    return NotFound(new Response().NotFound().SetMessage("Truyện không tồn tại hoặc đã bị xóa trong hệ thống"));
                 }
 
                 var user = HttpContext.Items["UserDTO"] as UserDTO;
 
                 dto.UserId = user!.Id;
-                var result = await _readingService.CreateReadingAsync(dto, chapter);
+                var result = await _bookmarkService.CreateBookmarkAsync(dto);
                 if (!result)
                 {
-                    return BadRequest(new Response().BadRequest().SetMessage("Không thể thêm chương đang đọc. Vui lòng kiểm tra lại thông tin."));
+                    return BadRequest(new Response().BadRequest().SetMessage("Không thể đánh dấu truyện. Vui lòng kiểm tra lại thông tin."));
                 }
-                return Ok(new Response().Success().SetMessage("Thêm chương đang đọc thành công!"));
+                return Ok(new Response().Success().SetMessage("Thêm dấu trang thành công!"));
             }
             catch (Exception ex)
             {
@@ -59,13 +59,13 @@ namespace TienDaoAPI.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<IEnumerable<Book>>> GetReadings([FromQuery] PaginationFilter filter)
+        public async Task<ActionResult<IEnumerable<Book>>> GetBookmarks([FromQuery] PaginationFilter filter)
         {
             try
             {
                 var user = HttpContext.Items["UserDTO"] as UserDTO;
 
-                var readings = await _readingService.GetReadingsByUserIdAsync(user!.Id);
+                var readings = await _bookmarkService.GetBookmarksByUserIdAsync(user!.Id);
                 var count = readings!.Count();
                 var paginatedBooks = readings!.Skip(filter.PageSize * (filter.Page - 1)).Take(filter.PageSize);
 
@@ -75,7 +75,7 @@ namespace TienDaoAPI.Controllers
                     PageSize = filter.PageSize,
                     TotalItems = count,
                     TotalPages = (int)Math.Ceiling(count / (double)filter.PageSize),
-                }.SetData(_mapper.Map<IEnumerable<ReadingDTO>>(readings)));
+                }.SetData(_mapper.Map<IEnumerable<BookmarkDTO>>(readings)));
             }
             catch (Exception ex)
             {
@@ -93,25 +93,25 @@ namespace TienDaoAPI.Controllers
         {
             try
             {
-                var reading = await _readingService.GetReadingByIdAsync(id);
-                if (reading == null)
+                var bookmark = await _bookmarkService.GetBookmarkByIdAsync(id);
+                if (bookmark == null)
                 {
-                    return NotFound(new Response().NotFound().SetMessage("Chương đang đọc không tồn tại trong hệ thống"));
+                    return NotFound(new Response().NotFound().SetMessage("Dấu trang không tồn tại trong hệ thống"));
                 }
 
                 var user = HttpContext.Items["UserDTO"] as UserDTO;
-                if (!_readingService.Modifiable(reading, user!))
+                if (!_bookmarkService.Modifiable(bookmark, user!))
                 {
                     return StatusCode(StatusCodes.Status403Forbidden, new Response().Forbidden());
                 }
 
-                var result = await _readingService.DeleteReadingAsync(id);
+                var result = await _bookmarkService.DeleteBookmarkAsync(id);
                 if (!result)
                 {
-                    BadRequest(new Response().BadRequest().SetMessage("Có lỗi xảy ra khi xóa chương đang đọc!"));
+                    BadRequest(new Response().BadRequest().SetMessage("Có lỗi xảy ra khi xóa dấu trang!"));
                 }
 
-                return Ok(new Response().Success().SetMessage("Xóa chương đang đọc thành công!"));
+                return Ok(new Response().Success().SetMessage("Xóa dấu trang thành công!"));
             }
             catch (Exception ex)
             {

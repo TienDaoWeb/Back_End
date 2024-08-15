@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using TienDaoAPI.DTOs.Authors;
+using TienDaoAPI.DTOs.Bookmarks;
 using TienDaoAPI.DTOs.Books;
 using TienDaoAPI.DTOs.Chapters;
 using TienDaoAPI.DTOs.Comments;
@@ -68,6 +69,9 @@ namespace TienDaoAPI.Config
                 .ReverseMap();
 
             CreateMap<Book, BookReadingDTO>();
+
+            CreateMap<Book, BookBookmarkDTO>();
+
             CreateMap<Comment, CreateCommentDTO>().ReverseMap();
 
             CreateMap<Comment, CreateReplyCommentDTO>().ReverseMap();
@@ -108,6 +112,10 @@ namespace TienDaoAPI.Config
             CreateMap<Review, ReviewDTO>()
                 .ForMember(d => d.Owner, s => s.MapFrom(x => x.User))
                 .ForMember(dest => dest.LikeCount, opt => opt.MapFrom(src => src.ReviewLikes.Count));
+
+            CreateMap<CreateBookmarkDTO, Bookmark>();
+
+            CreateMap<Bookmark, BookmarkDTO>();
         }
     }
 }

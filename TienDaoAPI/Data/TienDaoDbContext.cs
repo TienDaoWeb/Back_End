@@ -35,6 +35,7 @@ namespace TienDaoAPI.Data
         public DbSet<BookTag> BookTags { get; set; }
         public DbSet<CommentLike> CommentLikes { get; set; }
         public DbSet<ReviewLike> ReviewLikes { get; set; }
+        public DbSet<Bookmark> Bookmarks { get; set; }
     }
 
 }
