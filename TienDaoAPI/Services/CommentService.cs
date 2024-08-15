@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using TienDaoAPI.Data;
 using TienDaoAPI.DTOs;
-using TienDaoAPI.Enums;
 using TienDaoAPI.Models;
 using TienDaoAPI.Services.IServices;
 
@@ -92,7 +91,6 @@ namespace TienDaoAPI.Services
                 try
                 {
                     var replyComment = _mapper.Map<Comment>(dto);
-                    replyComment.ChapterNumber = comment.ChapterNumber;
                     replyComment.BookId = comment.BookId;
                     _dbContext.Comments.Add(replyComment);
                     await _dbContext.SaveChangesAsync();
@@ -110,31 +108,31 @@ namespace TienDaoAPI.Services
             }
         }
 
-        public async Task<ReactionEnum?> UserLikeComment(int commentId, int userId)
-        {
-            var comment = await _dbContext.Comments.FirstOrDefaultAsync(c => c.Id == commentId);
-            if (comment is not null)
-            {
-                var userReact = comment.UserLike.Exists(userid => userid == userId);
-                if (userReact == true)
-                {
-                    comment.UserLike.Remove(userId);
-                    _dbContext.Comments.Update(comment);
-                    await _dbContext.SaveChangesAsync();
-                    return ReactionEnum.UnLike;
-                }
-                else
-                {
-                    comment.UserLike.Add(userId);
-                    _dbContext.Comments.Update(comment);
-                    await _dbContext.SaveChangesAsync();
-                    return ReactionEnum.Like;
-                }
-            }
-            else
-            {
-                return ReactionEnum.Fail;
-            }
-        }
+        //public async Task<ReactionEnum?> UserLikeComment(int commentId, int userId)
+        //{
+        //    var comment = await _dbContext.Comments.FirstOrDefaultAsync(c => c.Id == commentId);
+        //    if (comment is not null)
+        //    {
+        //        var userReact = comment.UserLike.Exists(userid => userid == userId);
+        //        if (userReact == true)
+        //        {
+        //            comment.UserLike.Remove(userId);
+        //            _dbContext.Comments.Update(comment);
+        //            await _dbContext.SaveChangesAsync();
+        //            return ReactionEnum.UnLike;
+        //        }
+        //        else
+        //        {
+        //            comment.UserLike.Add(userId);
+        //            _dbContext.Comments.Update(comment);
+        //            await _dbContext.SaveChangesAsync();
+        //            return ReactionEnum.Like;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        return ReactionEnum.Fail;
+        //    }
+        //}
     }
 }
