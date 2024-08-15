@@ -168,43 +168,44 @@ namespace TienDaoAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
-        [HttpPost]
-        [Route("reaction-comment/{id}")]
-        [Authorize(Roles = RoleEnum.CONVERTER)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Reactions(int id)
-        {
-            try
-            {
-                var comment = await _commentService.GetCommentbyIdAsync(id);
-                var userLike = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
 
-                if (comment == null)
-                {
-                    return NotFound(new Response().NotFound().SetMessage("Không tìm thấy bình luận để phản hồi!"));
-                }
-                else
-                {
-                    var result = await _commentService.UserLikeComment(id, userLike);
-                    return result switch
-                    {
-                        ReactionEnum.Like => Ok(new Response().Success().SetMessage("Bạn đã yêu thích bình luận này!")),
-                        ReactionEnum.UnLike => Ok(new Response().Success().SetMessage("Bạn đã bỏ yêu thích comment này")),
-                        ReactionEnum.Fail => BadRequest(new Response().BadRequest().SetMessage("Không thể tương tác với comment này!")),
-                        _ => StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError())
-                    };
-                }
+        //[HttpPost]
+        //[Route("reaction-comment/{id}")]
+        //[Authorize(Roles = RoleEnum.CONVERTER)]
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
+        //[ProducesResponseType(StatusCodes.Status404NotFound)]
+        //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        //public async Task<IActionResult> Reactions(int id)
+        //{
+        //    try
+        //    {
+        //        var comment = await _commentService.GetCommentbyIdAsync(id);
+        //        var userLike = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
 
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
-            }
-        }
+        //        if (comment == null)
+        //        {
+        //            return NotFound(new Response().NotFound().SetMessage("Không tìm thấy bình luận để phản hồi!"));
+        //        }
+        //        else
+        //        {
+        //            var result = await _commentService.UserLikeComment(id, userLike);
+        //            return result switch
+        //            {
+        //                ReactionEnum.Like => Ok(new Response().Success().SetMessage("Bạn đã yêu thích bình luận này!")),
+        //                ReactionEnum.UnLike => Ok(new Response().Success().SetMessage("Bạn đã bỏ yêu thích comment này")),
+        //                ReactionEnum.Fail => BadRequest(new Response().BadRequest().SetMessage("Không thể tương tác với comment này!")),
+        //                _ => StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError())
+        //            };
+        //        }
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine(ex.ToString());
+        //        return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
+        //    }
+        //}
         [HttpGet]
         [Route("comments")]
         [ProducesResponseType(StatusCodes.Status200OK)]

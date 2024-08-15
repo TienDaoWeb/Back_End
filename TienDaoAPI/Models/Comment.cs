@@ -13,9 +13,9 @@ namespace TienDaoAPI.Models
         [Required]
         public required string Content { get; set; }
 
-        public List<int> UserLike { get; set; } = [];
-        public int? CommentParentId { get; set; } = null;
+        public int? CommentParentId { get; set; }
         public virtual Comment? CommentParent { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdateAt { get; set; } = DateTime.UtcNow;
 
@@ -23,10 +23,14 @@ namespace TienDaoAPI.Models
         public int BookId { get; set; }
         public virtual Book? Book { get; set; }
 
-        public int ChapterNumber { get; set; } = 0;
+        [Required]
+        public int ChapterId { get; set; }
+        public virtual Chapter? Chapter { get; set; }
 
         public int? OwnerId { get; set; }
         [ForeignKey("OwnerId")]
         public virtual User? User { get; set; }
+
+        public ICollection<CommentLike> CommentLikes { get; set; } = new HashSet<CommentLike>();
     }
 }
