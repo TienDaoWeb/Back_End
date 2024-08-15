@@ -17,14 +17,16 @@ namespace TienDaoAPI.Controllers
         private readonly IMapper _mapper;
         private readonly IImageStorageService _imageStorageService;
         private readonly IChapterService _chapterService;
+        private readonly ICommentService _commentService;
 
         public BookController(IBookService bookService, IMapper mapper, IImageStorageService imageStorageService,
-            IChapterService chapterService)
+            IChapterService chapterService, ICommentService commentService)
         {
             _bookService = bookService;
             _mapper = mapper;
             _imageStorageService = imageStorageService;
             _chapterService = chapterService;
+            _commentService = commentService;
         }
 
         [HttpPost]
@@ -235,6 +237,34 @@ namespace TienDaoAPI.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
+            }
+        }
+
+        [HttpGet]
+        [Route("{id}/comment")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<IEnumerable<Comment>>> Comments(int id, [FromQuery] CommentFilter filter)
+        {
+            try
+            {
+                var comments = await _commentService.GetAllCommentsByBookIdAsync(id, filter);
+                var count = comments!.Count();
+                var paginatedComment = comments!.Skip(filter.PageSize * (filter.Page - 1)).Take(filter.PageSize);
+
+                return Ok(new PaginatedResponse
+                {
+                    PageNumber = filter.Page,
+                    PageSize = filter.PageSize,
+                    TotalItems = count,
+                    TotalPages = (int)Math.Ceiling(count / (double)filter.PageSize),
+                }.SetData(_mapper.Map<IEnumerable<CommentDTO>>(paginatedComment)));
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message.ToString());
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
