@@ -1,4 +1,5 @@
 ﻿using TienDaoAPI.DTOs;
+using TienDaoAPI.Enums;
 using TienDaoAPI.Models;
 
 namespace TienDaoAPI.Services.IServices
@@ -9,8 +10,8 @@ namespace TienDaoAPI.Services.IServices
         public Task<bool> DeleteCommentAsync(int commentId);
         public Task<bool> UpdateCommentAsync(Comment comment, UpdateCommentDTO dto);
         public Task<Comment?> GetCommentbyIdAsync(int id);
-        public Task<IEnumerable<Comment>?> GetAllCommentAsync(CommentFilter filter);
-        public Task<bool> ReplyComment(CreateReplyCommentDTO dto);
-        //public Task<ReactionEnum?> UserLikeComment(int commentId, int userId);
+        public Task<IEnumerable<Comment>?> GetAllCommentsByBookIdAsync(int bookId, CommentFilter filter);
+        public Task<bool> ReplyComment(Comment comment, CreateReplyCommentDTO dto);
+        public Task<ReactionEnum> LikeOrUnlikeComment(int commentId, int userId);
     }
 }

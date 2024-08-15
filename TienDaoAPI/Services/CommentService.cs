@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using TienDaoAPI.Data;
 using TienDaoAPI.DTOs;
+using TienDaoAPI.Enums;
+using TienDaoAPI.Helpers;
 using TienDaoAPI.Models;
 using TienDaoAPI.Services.IServices;
 
@@ -76,63 +78,73 @@ namespace TienDaoAPI.Services
             return await _dbContext.Comments.FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        public async Task<IEnumerable<Comment>?> GetAllCommentAsync(CommentFilter filter)
+        public async Task<IEnumerable<Comment>?> GetAllCommentsByBookIdAsync(int bookId, CommentFilter filter)
         {
-            //var sortExpression = filter.SortBy == null ? null : ExpressionProvider<Comment>.GetSortExpression(filter.SortBy);
+            var sortExpression = ExpressionProvider<Comment>.GetSortExpression(filter.SortBy);
+            var comments = _dbContext.Comments
+                .Include(c => c.CommentLikes)
+                .Include(c => c.CommentReplies).ThenInclude(cr => cr.User)
+                .Include(c => c.CommentReplies).ThenInclude(cr => cr.CommentLikes)
+                .Include(c => c.Chapter)
+                .Include(c => c.User)
+                .Where(c => c.BookId == bookId && c.CommentParentId == null);
 
-            return await _dbContext.Comments.ToListAsync();
+            comments = filter.SortBy != null && filter.SortBy.StartsWith("-")
+            ? comments.OrderByDescending(sortExpression)
+            : comments.OrderBy(sortExpression);
+
+            return await comments.ToListAsync();
         }
 
-        public async Task<bool> ReplyComment(CreateReplyCommentDTO dto)
+        public async Task<bool> ReplyComment(Comment comment, CreateReplyCommentDTO dto)
         {
-            var comment = await _dbContext.Comments.FirstOrDefaultAsync(c => c.Id == dto.CommentParentId);
-            if (comment != null)
+            try
             {
-                try
-                {
-                    var replyComment = _mapper.Map<Comment>(dto);
-                    replyComment.BookId = comment.BookId;
-                    _dbContext.Comments.Add(replyComment);
-                    await _dbContext.SaveChangesAsync();
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Create reply comment fail : " + ex.Message);
-                    return false;
-                }
+                var replyComment = _mapper.Map<Comment>(dto);
+                replyComment.BookId = comment.BookId;
+                replyComment.ChapterId = comment.ChapterId;
+                _dbContext.Comments.Add(replyComment);
+                await _dbContext.SaveChangesAsync();
+                return true;
             }
-            else
+            catch (Exception ex)
             {
+                Console.WriteLine("Create reply comment fail : " + ex.Message);
                 return false;
             }
+
+        }
+        public async Task<ReactionEnum> LikeOrUnlikeComment(int commentId, int userId)
+        {
+            try
+            {
+                var commentLike = await _dbContext.CommentLikes.FirstOrDefaultAsync(x => x.OwnerId == userId && x.CommentId == commentId);
+                if (commentLike is null)
+                {
+                    var like = new CommentLike()
+                    {
+                        CommentId = commentId,
+                        OwnerId = userId
+                    };
+
+                    _dbContext.CommentLikes.Add(like);
+                    await _dbContext.SaveChangesAsync();
+                    return ReactionEnum.Like;
+                }
+                else
+                {
+                    _dbContext.CommentLikes.Remove(commentLike);
+                    await _dbContext.SaveChangesAsync();
+                    return ReactionEnum.UnLike;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Like comment fail : " + ex.Message);
+                return ReactionEnum.Fail;
+            }
+
         }
 
-        //public async Task<ReactionEnum?> UserLikeComment(int commentId, int userId)
-        //{
-        //    var comment = await _dbContext.Comments.FirstOrDefaultAsync(c => c.Id == commentId);
-        //    if (comment is not null)
-        //    {
-        //        var userReact = comment.UserLike.Exists(userid => userid == userId);
-        //        if (userReact == true)
-        //        {
-        //            comment.UserLike.Remove(userId);
-        //            _dbContext.Comments.Update(comment);
-        //            await _dbContext.SaveChangesAsync();
-        //            return ReactionEnum.UnLike;
-        //        }
-        //        else
-        //        {
-        //            comment.UserLike.Add(userId);
-        //            _dbContext.Comments.Update(comment);
-        //            await _dbContext.SaveChangesAsync();
-        //            return ReactionEnum.Like;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        return ReactionEnum.Fail;
-        //    }
-        //}
     }
 }

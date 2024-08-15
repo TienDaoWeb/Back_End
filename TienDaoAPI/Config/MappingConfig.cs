@@ -73,6 +73,8 @@ namespace TienDaoAPI.Config
 
             CreateMap<UpdateChapterDTO, Chapter>();
 
+            CreateMap<Chapter, ChapterShortDTO>();
+
             CreateMap<Chapter, ChapterInfoDTO>();
 
             CreateMap<Chapter, ChapterDetailDTO>().IncludeBase<Chapter, ChapterInfoDTO>();
@@ -84,7 +86,12 @@ namespace TienDaoAPI.Config
                 .ForMember(dest => dest.BookId, opt => opt.MapFrom(src => src.Chapter.BookId))
                 .ForMember(dest => dest.Book, opt => opt.MapFrom(src => src.Chapter.Book));
 
-
+            CreateMap<Comment, CommentDTO>()
+                .ForMember(d => d.Owner, s => s.MapFrom(x => x.User))
+                .ForMember(dest => dest.LikeCount, opt => opt.MapFrom(src => src.CommentLikes.Count));
+            CreateMap<Comment, CommentReplyDTO>()
+                .ForMember(d => d.Owner, s => s.MapFrom(x => x.User))
+                .ForMember(dest => dest.LikeCount, opt => opt.MapFrom(src => src.CommentLikes.Count));
         }
     }
 }

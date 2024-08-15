@@ -33,6 +33,7 @@ namespace TienDaoAPI.Data
         public DbSet<TagType> TagTypes { get; set; }
         public DbSet<Author> Authors { get; set; }
         public DbSet<BookTag> BookTags { get; set; }
+        public DbSet<CommentLike> CommentLikes { get; set; }
     }
 
 }

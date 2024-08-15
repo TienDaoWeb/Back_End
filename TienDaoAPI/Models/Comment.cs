@@ -32,5 +32,6 @@ namespace TienDaoAPI.Models
         public virtual User? User { get; set; }
 
         public ICollection<CommentLike> CommentLikes { get; set; } = new HashSet<CommentLike>();
+        public ICollection<Comment> CommentReplies { get; set; } = new HashSet<Comment>();
     }
 }

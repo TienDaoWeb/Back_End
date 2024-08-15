@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TienDaoAPI.DTOs;
 using TienDaoAPI.Enums;
-using TienDaoAPI.Models;
 using TienDaoAPI.Services.IServices;
 using TienDaoAPI.Utils;
 
@@ -62,7 +61,7 @@ namespace TienDaoAPI.Controllers
         }
         [HttpDelete]
         [Route("{id}")]
-        [Authorize(Roles = RoleEnum.CONVERTER)]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -155,7 +154,7 @@ namespace TienDaoAPI.Controllers
                     return NotFound(new Response().NotFound().SetMessage("Không tìm thấy bình luận để phản hồi!"));
                 }
 
-                var result = await _commentService.ReplyComment(dto);
+                var result = await _commentService.ReplyComment(commentParent, dto);
                 if (!result)
                 {
                     return NotFound(new Response().NotFound().SetMessage("Không thể tạo phản hồi bình luận. Vui lòng kiểm tra lại thông tin."));
@@ -169,71 +168,40 @@ namespace TienDaoAPI.Controllers
             }
         }
 
-        //[HttpPost]
-        //[Route("reaction-comment/{id}")]
-        //[Authorize(Roles = RoleEnum.CONVERTER)]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-        //[ProducesResponseType(StatusCodes.Status404NotFound)]
-        //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        //public async Task<IActionResult> Reactions(int id)
-        //{
-        //    try
-        //    {
-        //        var comment = await _commentService.GetCommentbyIdAsync(id);
-        //        var userLike = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
-
-        //        if (comment == null)
-        //        {
-        //            return NotFound(new Response().NotFound().SetMessage("Không tìm thấy bình luận để phản hồi!"));
-        //        }
-        //        else
-        //        {
-        //            var result = await _commentService.UserLikeComment(id, userLike);
-        //            return result switch
-        //            {
-        //                ReactionEnum.Like => Ok(new Response().Success().SetMessage("Bạn đã yêu thích bình luận này!")),
-        //                ReactionEnum.UnLike => Ok(new Response().Success().SetMessage("Bạn đã bỏ yêu thích comment này")),
-        //                ReactionEnum.Fail => BadRequest(new Response().BadRequest().SetMessage("Không thể tương tác với comment này!")),
-        //                _ => StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError())
-        //            };
-        //        }
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine(ex.ToString());
-        //        return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
-        //    }
-        //}
-        [HttpGet]
-        [Route("comments")]
+        [HttpPost]
+        [Route("{id}/like")]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<IEnumerable<Comment>>> Comments([FromQuery] CommentFilter filter)
+        public async Task<IActionResult> Like(int id)
         {
             try
             {
-
-                var comments = await _commentService.GetAllCommentAsync(filter);
-                var count = comments!.Count();
-                var paginatedComment = comments!.Skip(filter.PageSize * (filter.Page - 1)).Take(filter.PageSize);
-
-                return Ok(new PaginatedResponse
+                var comment = await _commentService.GetCommentbyIdAsync(id);
+                if (comment is null)
                 {
-                    PageNumber = filter.Page,
-                    PageSize = filter.PageSize,
-                    TotalItems = count,
-                    TotalPages = (int)Math.Ceiling(count / (double)filter.PageSize),
-                }.SetData(_mapper.Map<IEnumerable<Comment>>(paginatedComment)));
+                    return NotFound(new Response().NotFound().SetMessage("Không tìm thấy bình luận để thích!"));
+                }
 
+                var user = (HttpContext.Items["UserDTO"] as UserDTO)!.Id;
+                var result = await _commentService.LikeOrUnlikeComment(id, user);
+                return result switch
+                {
+                    ReactionEnum.Like => Ok(new Response().Success().SetMessage("Bạn đã yêu thích bình luận này!")),
+                    ReactionEnum.UnLike => Ok(new Response().Success().SetMessage("Bạn đã bỏ yêu thích bình luận này")),
+                    ReactionEnum.Fail => BadRequest(new Response().BadRequest().SetMessage("Không thể tương tác với bình luận này!")),
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError())
+                };
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message.ToString());
+                Console.WriteLine(ex.ToString());
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response().InternalServerError());
             }
         }
+
 
     }
 }
